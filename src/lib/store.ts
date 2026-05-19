@@ -3,6 +3,7 @@ import { contratos as seedContratos, eventos as seedEventos, produtos, metricas 
 import type { Contrato, EventoDeUso, ItemDeContrato } from './types';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
+import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
 
 interface StoreState {
   contratos: Contrato[];
@@ -37,7 +38,32 @@ function nextId(prefix: string) {
   return `${prefix}${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
 }
 
+function nextContratoNumero(): string {
+  const year = new Date().getFullYear();
+  const seq = String(state.contratos.length + 1).padStart(4, '0');
+  return `CT-${year}-${seq}`;
+}
+
 export const store = {
+  addContrato(values: ContratoFormValues): Contrato {
+    const novo: Contrato = {
+      id: nextId('ct_'),
+      numero: values.numero || nextContratoNumero(),
+      clienteId: values.clienteId,
+      status: values.status,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      readjustmentIndex: values.readjustmentIndex,
+      readjustmentPercent: values.readjustmentPercent,
+      itens: [],
+      reajustes: [],
+      mrr: 0,
+    };
+    state = { ...state, contratos: [novo, ...state.contratos] };
+    emit();
+    return novo;
+  },
+
   addItem(contratoId: string, values: ItemFormValues) {
     const produto = produtos.find((p) => p.id === values.produtoId);
     const metrica = values.metricaId ? metricas.find((m) => m.id === values.metricaId) : undefined;

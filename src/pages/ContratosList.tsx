@@ -4,8 +4,9 @@ import { Plus, Filter, Search, ArrowRight } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { StatusPill } from '../components/ui/StatusPill';
 import { Badge } from '../components/ui/Badge';
+import { ContratoFormModal } from '../components/modals/ContratoFormModal';
 import { clientes } from '../lib/mockData';
-import { useStore } from '../lib/store';
+import { useStore, store } from '../lib/store';
 import { fmtBRL, fmtDate } from '../lib/format';
 import type { ContratoStatus } from '../lib/types';
 import type { Route } from '../lib/router';
@@ -26,6 +27,7 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
   const { contratos } = useStore();
   const [status, setStatus] = useState<'ALL' | ContratoStatus>('ALL');
   const [q, setQ] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
 
   const rows = useMemo(() => {
     return contratos
@@ -68,7 +70,11 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
           <Button variant="outline" size="sm" leftIcon={<Filter className="size-4" />}>
             Filtros
           </Button>
-          <Button size="sm" leftIcon={<Plus className="size-4" />}>
+          <Button
+            size="sm"
+            leftIcon={<Plus className="size-4" />}
+            onClick={() => setModalOpen(true)}
+          >
             Novo contrato
           </Button>
         </div>
@@ -154,6 +160,15 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
           </table>
         </CardBody>
       </Card>
+
+      <ContratoFormModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreate={(values) => {
+          const novo = store.addContrato(values);
+          onNavigate({ name: 'contrato', id: novo.id });
+        }}
+      />
     </div>
   );
 }

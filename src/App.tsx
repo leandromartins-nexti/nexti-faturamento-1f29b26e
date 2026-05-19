@@ -1,18 +1,45 @@
-import { Button } from '@/ds';
+import { useState } from 'react';
+import { Sidebar } from './components/layout/Sidebar';
+import { Topbar } from './components/layout/Topbar';
+import { Dashboard } from './pages/Dashboard';
+import { ContratosList } from './pages/ContratosList';
+import { ContratoDetail } from './pages/ContratoDetail';
+import { ClientesList } from './pages/ClientesList';
+import { Catalogo } from './pages/Catalogo';
+import { EventosGlobal } from './pages/EventosGlobal';
+import { Faturas } from './pages/Faturas';
+import type { Route } from './lib/router';
+
+const titles: Record<Route['name'], { title: string; subtitle?: string }> = {
+  dashboard: { title: 'Dashboard', subtitle: 'Visão geral do faturamento e atenção operacional' },
+  contratos: { title: 'Contratos', subtitle: 'Gestão de contratos SaaS + HaaS' },
+  contrato: { title: 'Contrato', subtitle: 'Detalhamento e operação' },
+  clientes: { title: 'Clientes', subtitle: 'Empresas contratantes e estabelecimentos' },
+  cliente: { title: 'Cliente', subtitle: '' },
+  catalogo: { title: 'Catálogo', subtitle: 'Produtos e métricas de apuração' },
+  eventos: { title: 'Eventos de uso', subtitle: 'Histórico consolidado de movimentações' },
+  faturas: { title: 'Faturas', subtitle: 'Geração mensal e documentos fiscais' },
+};
 
 export default function App() {
+  const [route, setRoute] = useState<Route>({ name: 'dashboard' });
+  const meta = titles[route.name];
+
   return (
-    <div className="min-h-screen bg-bg flex items-center justify-center p-6">
-      <div className="text-center max-w-xl">
-        <h1 className="nx-h1 mb-4">Nexti Studio</h1>
-        <p className="nx-lead mb-8">
-          Edite este arquivo para começar. O preview atualiza automaticamente.
-        </p>
-        <div className="flex gap-3 justify-center">
-          <Button>Começar</Button>
-          <Button variant="outline">Saiba mais</Button>
+    <div className="min-h-screen bg-bg-subtle flex">
+      <Sidebar route={route} onNavigate={setRoute} />
+      <main className="flex-1 min-w-0">
+        <Topbar title={meta.title} subtitle={meta.subtitle} />
+        <div className="max-w-[1400px]">
+          {route.name === 'dashboard' && <Dashboard onNavigate={setRoute} />}
+          {route.name === 'contratos' && <ContratosList onNavigate={setRoute} />}
+          {route.name === 'contrato' && <ContratoDetail id={route.id} onNavigate={setRoute} />}
+          {route.name === 'clientes' && <ClientesList onNavigate={setRoute} />}
+          {route.name === 'catalogo' && <Catalogo />}
+          {route.name === 'eventos' && <EventosGlobal onNavigate={setRoute} />}
+          {route.name === 'faturas' && <Faturas />}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

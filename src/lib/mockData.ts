@@ -1,0 +1,308 @@
+import type {
+  Cliente,
+  Contrato,
+  EventoDeUso,
+  Metrica,
+  Produto,
+} from './types';
+
+export const produtos: Produto[] = [
+  { id: 'p1', nome: 'Nexti Ponto Cloud', categoria: 'SaaS' },
+  { id: 'p2', nome: 'Nexti Folha', categoria: 'SaaS' },
+  { id: 'p3', nome: 'Terminal Biométrico REP-C', categoria: 'HaaS' },
+  { id: 'p4', nome: 'Terminal Facial Pro', categoria: 'HaaS' },
+  { id: 'p5', nome: 'Instalação on-site', categoria: 'Serviço' },
+  { id: 'p6', nome: 'Cortesia onboarding', categoria: 'Serviço' },
+];
+
+export const metricas: Metrica[] = [
+  { id: 'm1', nome: 'Funcionários únicos no mês', unidade: 'func', apuracaoType: 'DISTINCT_COUNT' },
+  { id: 'm2', nome: 'Terminais ativos', unidade: 'terminal', apuracaoType: 'BALANCE_AVG' },
+  { id: 'm3', nome: 'Transações de ponto', unidade: 'transação', apuracaoType: 'DISTINCT_COUNT' },
+];
+
+export const clientes: Cliente[] = [
+  {
+    id: 'c1',
+    razaoSocial: 'Indústrias Aurora Alimentos S.A.',
+    nomeFantasia: 'Aurora Alimentos',
+    cnpj: '12.345.678/0001-90',
+    estabelecimentos: [
+      { id: 'e1', clienteId: 'c1', nome: 'Matriz Chapecó', cnpj: '12.345.678/0001-90', cidade: 'Chapecó', uf: 'SC' },
+      { id: 'e2', clienteId: 'c1', nome: 'Filial Joaçaba', cnpj: '12.345.678/0002-71', cidade: 'Joaçaba', uf: 'SC' },
+      { id: 'e3', clienteId: 'c1', nome: 'Filial Cuiabá', cnpj: '12.345.678/0003-52', cidade: 'Cuiabá', uf: 'MT' },
+    ],
+  },
+  {
+    id: 'c2',
+    razaoSocial: 'Construtora Brasil Norte Ltda.',
+    nomeFantasia: 'CBN Construções',
+    cnpj: '98.765.432/0001-11',
+    estabelecimentos: [
+      { id: 'e4', clienteId: 'c2', nome: 'Sede São Paulo', cnpj: '98.765.432/0001-11', cidade: 'São Paulo', uf: 'SP' },
+      { id: 'e5', clienteId: 'c2', nome: 'Obra Manaus 01', cnpj: '98.765.432/0002-00', cidade: 'Manaus', uf: 'AM' },
+    ],
+  },
+  {
+    id: 'c3',
+    razaoSocial: 'Rede Vitalle Saúde Ltda.',
+    nomeFantasia: 'Vitalle Saúde',
+    cnpj: '45.678.123/0001-44',
+    estabelecimentos: [
+      { id: 'e6', clienteId: 'c3', nome: 'Hospital Centro', cnpj: '45.678.123/0001-44', cidade: 'Belo Horizonte', uf: 'MG' },
+      { id: 'e7', clienteId: 'c3', nome: 'Clínica Sul', cnpj: '45.678.123/0002-25', cidade: 'Belo Horizonte', uf: 'MG' },
+      { id: 'e8', clienteId: 'c3', nome: 'Pronto-Socorro Norte', cnpj: '45.678.123/0003-06', cidade: 'Contagem', uf: 'MG' },
+    ],
+  },
+  {
+    id: 'c4',
+    razaoSocial: 'Transportadora Caminhos do Sul S.A.',
+    nomeFantasia: 'Caminhos do Sul',
+    cnpj: '33.221.998/0001-77',
+    estabelecimentos: [
+      { id: 'e9', clienteId: 'c4', nome: 'Garagem Porto Alegre', cnpj: '33.221.998/0001-77', cidade: 'Porto Alegre', uf: 'RS' },
+    ],
+  },
+  {
+    id: 'c5',
+    razaoSocial: 'Tecnologia Argos Sistemas Ltda.',
+    nomeFantasia: 'Argos Tech',
+    cnpj: '77.889.001/0001-22',
+    estabelecimentos: [
+      { id: 'e10', clienteId: 'c5', nome: 'HQ Florianópolis', cnpj: '77.889.001/0001-22', cidade: 'Florianópolis', uf: 'SC' },
+    ],
+  },
+];
+
+export const contratos: Contrato[] = [
+  {
+    id: 'ct1',
+    numero: 'CT-2024-0118',
+    clienteId: 'c1',
+    status: 'ACTIVE',
+    startDate: '2024-03-01',
+    endDate: '2027-02-28',
+    readjustmentIndex: 'IPCA',
+    readjustmentPercent: 4.5,
+    lastReadjustedAt: '2025-03-01',
+    mrr: 8420.0,
+    itens: [
+      {
+        id: 'it1',
+        contratoId: 'ct1',
+        produto: produtos[0],
+        metrica: metricas[0],
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 4.9,
+        minimumQuantity: 200,
+        startDate: '2024-03-01',
+        politicas: [],
+        lastReadjustedAt: '2025-03-01',
+      },
+      {
+        id: 'it2',
+        contratoId: 'ct1',
+        produto: produtos[2],
+        metrica: metricas[1],
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 220.0,
+        startDate: '2024-03-01',
+        politicas: [],
+        lastReadjustedAt: '2025-03-01',
+      },
+      {
+        id: 'it3',
+        contratoId: 'ct1',
+        produto: produtos[5],
+        type: 'BONIFICACAO',
+        unitPrice: -180.0,
+        startDate: '2024-03-01',
+        endDate: '2024-06-01',
+        politicas: [],
+      },
+    ],
+    reajustes: [
+      {
+        id: 'r1',
+        contratoId: 'ct1',
+        effectiveDate: '2025-03-01',
+        percent: 4.5,
+        oldUnitPrice: 4.69,
+        newUnitPrice: 4.9,
+        indice: 'IPCA',
+      },
+    ],
+  },
+  {
+    id: 'ct2',
+    numero: 'CT-2024-0231',
+    clienteId: 'c2',
+    status: 'ACTIVE',
+    startDate: '2024-08-15',
+    readjustmentIndex: 'IGPM',
+    readjustmentPercent: 3.2,
+    mrr: 3210.0,
+    itens: [
+      {
+        id: 'it4',
+        contratoId: 'ct2',
+        produto: produtos[0],
+        metrica: metricas[0],
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 5.5,
+        minimumQuantity: 50,
+        startDate: '2024-08-15',
+        politicas: [
+          {
+            id: 'pt1',
+            itemId: 'it4',
+            startDate: '2024-08-15',
+            endDate: '2024-11-15',
+            unitPrice: 2.75,
+            descricao: '50% off — primeiros 3 meses',
+          },
+        ],
+      },
+      {
+        id: 'it5',
+        contratoId: 'ct2',
+        produto: produtos[3],
+        metrica: metricas[1],
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 380.0,
+        startDate: '2024-08-15',
+        politicas: [],
+      },
+    ],
+    reajustes: [],
+  },
+  {
+    id: 'ct3',
+    numero: 'CT-2023-0091',
+    clienteId: 'c3',
+    status: 'ACTIVE',
+    startDate: '2023-06-01',
+    endDate: '2026-06-15',
+    readjustmentIndex: 'IPCA',
+    readjustmentPercent: 4.5,
+    lastReadjustedAt: '2025-06-01',
+    mrr: 14860.0,
+    itens: [
+      {
+        id: 'it6',
+        contratoId: 'ct3',
+        produto: produtos[0],
+        metrica: metricas[0],
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 4.2,
+        minimumQuantity: 800,
+        startDate: '2023-06-01',
+        politicas: [],
+        lastReadjustedAt: '2025-06-01',
+      },
+      {
+        id: 'it7',
+        contratoId: 'ct3',
+        produto: produtos[1],
+        type: 'RECORRENTE_FIXO',
+        unitPrice: 2200.0,
+        startDate: '2023-06-01',
+        politicas: [],
+        lastReadjustedAt: '2025-06-01',
+      },
+      {
+        id: 'it8',
+        contratoId: 'ct3',
+        produto: produtos[3],
+        metrica: metricas[1],
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 420.0,
+        startDate: '2023-06-01',
+        politicas: [],
+        lastReadjustedAt: '2025-06-01',
+      },
+    ],
+    reajustes: [
+      { id: 'r2', contratoId: 'ct3', effectiveDate: '2024-06-01', percent: 3.8, oldUnitPrice: 3.89, newUnitPrice: 4.04, indice: 'IPCA' },
+      { id: 'r3', contratoId: 'ct3', effectiveDate: '2025-06-01', percent: 4.5, oldUnitPrice: 4.04, newUnitPrice: 4.2, indice: 'IPCA' },
+    ],
+  },
+  {
+    id: 'ct4',
+    numero: 'CT-2025-0014',
+    clienteId: 'c4',
+    status: 'DRAFT',
+    startDate: '2026-06-01',
+    readjustmentIndex: 'NONE',
+    mrr: 0,
+    itens: [
+      {
+        id: 'it9',
+        contratoId: 'ct4',
+        produto: produtos[0],
+        metrica: metricas[0],
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 6.0,
+        minimumQuantity: 30,
+        startDate: '2026-06-01',
+        politicas: [],
+      },
+    ],
+    reajustes: [],
+  },
+  {
+    id: 'ct5',
+    numero: 'CT-2024-0177',
+    clienteId: 'c5',
+    status: 'SUSPENDED',
+    startDate: '2024-01-10',
+    readjustmentIndex: 'FIXED_PERCENT',
+    readjustmentPercent: 6.0,
+    mrr: 1490.0,
+    itens: [
+      {
+        id: 'it10',
+        contratoId: 'ct5',
+        produto: produtos[0],
+        metrica: metricas[0],
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 7.2,
+        minimumQuantity: 20,
+        startDate: '2024-01-10',
+        politicas: [],
+      },
+    ],
+    reajustes: [],
+  },
+];
+
+export const eventos: EventoDeUso[] = [
+  { id: 'ev1', contratoId: 'ct1', estabelecimentoId: 'e1', metricaId: 'm2', quantity: 12, occurredAt: '2024-03-05', referencePeriod: '2024-03', source: 'CSV', notes: 'Instalação inicial' },
+  { id: 'ev2', contratoId: 'ct1', estabelecimentoId: 'e2', metricaId: 'm2', quantity: 6, occurredAt: '2024-03-08', referencePeriod: '2024-03', source: 'CSV' },
+  { id: 'ev3', contratoId: 'ct1', estabelecimentoId: 'e3', metricaId: 'm2', quantity: 8, occurredAt: '2024-03-10', referencePeriod: '2024-03', source: 'API' },
+  { id: 'ev4', contratoId: 'ct1', estabelecimentoId: 'e2', metricaId: 'm2', quantity: -1, occurredAt: '2025-09-12', referencePeriod: '2025-09', source: 'MANUAL', notes: 'Devolução por defeito' },
+  { id: 'ev5', contratoId: 'ct1', estabelecimentoId: 'e1', metricaId: 'm2', quantity: 2, occurredAt: '2026-02-04', referencePeriod: '2026-02', source: 'MANUAL', notes: 'Expansão filial' },
+  { id: 'ev6', contratoId: 'ct1', estabelecimentoId: 'e1', metricaId: 'm1', quantity: 412, occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API' },
+  { id: 'ev7', contratoId: 'ct1', estabelecimentoId: 'e2', metricaId: 'm1', quantity: 188, occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API' },
+  { id: 'ev8', contratoId: 'ct1', estabelecimentoId: 'e3', metricaId: 'm1', quantity: 254, occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API' },
+  { id: 'ev9', contratoId: 'ct2', estabelecimentoId: 'e4', metricaId: 'm2', quantity: 4, occurredAt: '2024-08-20', referencePeriod: '2024-08', source: 'CSV' },
+  { id: 'ev10', contratoId: 'ct2', estabelecimentoId: 'e5', metricaId: 'm2', quantity: 3, occurredAt: '2024-09-01', referencePeriod: '2024-09', source: 'CSV' },
+  { id: 'ev11', contratoId: 'ct2', estabelecimentoId: 'e5', metricaId: 'm2', quantity: 2, occurredAt: '2025-12-10', referencePeriod: '2025-12', source: 'MANUAL', notes: 'Reforço obra Manaus' },
+  { id: 'ev12', contratoId: 'ct2', estabelecimentoId: 'e4', metricaId: 'm1', quantity: 72, occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API' },
+  { id: 'ev13', contratoId: 'ct3', estabelecimentoId: 'e6', metricaId: 'm2', quantity: 18, occurredAt: '2023-06-10', referencePeriod: '2023-06', source: 'CSV' },
+  { id: 'ev14', contratoId: 'ct3', estabelecimentoId: 'e7', metricaId: 'm2', quantity: 10, occurredAt: '2023-06-12', referencePeriod: '2023-06', source: 'CSV' },
+  { id: 'ev15', contratoId: 'ct3', estabelecimentoId: 'e8', metricaId: 'm2', quantity: 14, occurredAt: '2023-06-12', referencePeriod: '2023-06', source: 'CSV' },
+  { id: 'ev16', contratoId: 'ct3', estabelecimentoId: 'e6', metricaId: 'm1', quantity: 980, occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API' },
+];
+
+export function getCliente(id: string) {
+  return clientes.find((c) => c.id === id);
+}
+
+export function getContratosByCliente(clienteId: string) {
+  return contratos.filter((c) => c.clienteId === clienteId);
+}
+
+export function getEventosByContrato(contratoId: string) {
+  return eventos.filter((e) => e.contratoId === contratoId);
+}

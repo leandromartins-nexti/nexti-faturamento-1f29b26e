@@ -1,0 +1,145 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600;700;800;900&display=swap');
+@import "tailwindcss";
+@import "./ds/tokens.css";
+
+/*
+ * Mapeamento dos tokens do Nexti DS para o tema do Tailwind 4.
+ * As CSS vars de origem ficam em src/ds/tokens.css (sincronizado pelo Studio).
+ * Não edite aqui — edite no repo do DS e rode `npm run ds:sync` no backend.
+ */
+@theme inline {
+  --color-orange-50: var(--nx-orange-50);
+  --color-orange-100: var(--nx-orange-100);
+  --color-orange-200: var(--nx-orange-200);
+  --color-orange-300: var(--nx-orange-300);
+  --color-orange-400: var(--nx-orange-400);
+  --color-orange-500: var(--nx-orange-500);
+  --color-orange-600: var(--nx-orange-600);
+  --color-orange-700: var(--nx-orange-700);
+  --color-orange-800: var(--nx-orange-800);
+  --color-orange-900: var(--nx-orange-900);
+
+  --color-navy-50: var(--nx-navy-50);
+  --color-navy-100: var(--nx-navy-100);
+  --color-navy-200: var(--nx-navy-200);
+  --color-navy-300: var(--nx-navy-300);
+  --color-navy-400: var(--nx-navy-400);
+  --color-navy-500: var(--nx-navy-500);
+  --color-navy-600: var(--nx-navy-600);
+  --color-navy-700: var(--nx-navy-700);
+  --color-navy-800: var(--nx-navy-800);
+  --color-navy-900: var(--nx-navy-900);
+
+  --color-ink-0: var(--nx-ink-0);
+  --color-ink-50: var(--nx-ink-50);
+  --color-ink-100: var(--nx-ink-100);
+  --color-ink-200: var(--nx-ink-200);
+  --color-ink-300: var(--nx-ink-300);
+  --color-ink-400: var(--nx-ink-400);
+  --color-ink-500: var(--nx-ink-500);
+  --color-ink-600: var(--nx-ink-600);
+  --color-ink-700: var(--nx-ink-700);
+  --color-ink-800: var(--nx-ink-800);
+  --color-ink-900: var(--nx-ink-900);
+
+  --color-success: var(--nx-success);
+  --color-success-bg: var(--nx-success-bg);
+  --color-warning: var(--nx-warning);
+  --color-warning-bg: var(--nx-warning-bg);
+  --color-danger: var(--nx-danger);
+  --color-danger-bg: var(--nx-danger-bg);
+  --color-info: var(--nx-info);
+  --color-info-bg: var(--nx-info-bg);
+
+  --color-bg: var(--nx-bg);
+  --color-bg-subtle: var(--nx-bg-subtle);
+  --color-bg-muted: var(--nx-bg-muted);
+  --color-bg-inverse: var(--nx-bg-inverse);
+  --color-fg: var(--nx-fg);
+  --color-fg-strong: var(--nx-fg-strong);
+  --color-fg-muted: var(--nx-fg-muted);
+  --color-fg-subtle: var(--nx-fg-subtle);
+  --color-fg-onbrand: var(--nx-fg-onbrand);
+  --color-fg-brand: var(--nx-fg-brand);
+  --color-border: var(--nx-border);
+  --color-border-strong: var(--nx-border-strong);
+  --color-border-brand: var(--nx-border-brand);
+
+  --font-sans: var(--nx-font-sans);
+  --font-display: var(--nx-font-display);
+  --font-mono: var(--nx-font-mono);
+
+  --text-xs: var(--nx-fs-xs);
+  --text-sm: var(--nx-fs-sm);
+  --text-base: var(--nx-fs-base);
+  --text-md: var(--nx-fs-md);
+  --text-lg: var(--nx-fs-lg);
+  --text-xl: var(--nx-fs-xl);
+  --text-2xl: var(--nx-fs-2xl);
+  --text-3xl: var(--nx-fs-3xl);
+  --text-4xl: var(--nx-fs-4xl);
+  --text-5xl: var(--nx-fs-5xl);
+  --text-6xl: var(--nx-fs-6xl);
+
+  --font-weight-light: var(--nx-fw-light);
+  --font-weight-regular: var(--nx-fw-regular);
+  --font-weight-semi: var(--nx-fw-semi);
+  --font-weight-bold: var(--nx-fw-bold);
+  --font-weight-xbold: var(--nx-fw-xbold);
+  --font-weight-black: var(--nx-fw-black);
+
+  --radius-sm: var(--nx-r-sm);
+  --radius-md: var(--nx-r-md);
+  --radius-lg: var(--nx-r-lg);
+  --radius-xl: var(--nx-r-xl);
+  --radius-2xl: var(--nx-r-2xl);
+  --radius-pill: var(--nx-r-pill);
+
+  --shadow-xs: var(--nx-shadow-xs);
+  --shadow-sm: var(--nx-shadow-sm);
+  --shadow-md: var(--nx-shadow-md);
+  --shadow-lg: var(--nx-shadow-lg);
+  --shadow-xl: var(--nx-shadow-xl);
+  --shadow-brand: var(--nx-shadow-brand);
+
+  --ease-nx: var(--nx-ease);
+  --ease-nx-out: var(--nx-ease-out);
+  --duration-fast: var(--nx-dur-fast);
+  --duration-default: var(--nx-dur);
+  --duration-slow: var(--nx-dur-slow);
+}
+
+/*
+ * Utilitários tipográficos semânticos (use em vez de combinações arbitrárias).
+ * Espelham os do DS — ver design-system/starter-project/src/styles/globals.css.
+ */
+@layer components {
+  .nx-display { font-family: var(--nx-font-display); font-weight: var(--nx-fw-xbold); font-size: var(--nx-fs-6xl); line-height: var(--nx-lh-tight); letter-spacing: -0.02em; color: var(--nx-fg-strong); }
+  .nx-h1 { font-size: var(--nx-fs-4xl); font-weight: var(--nx-fw-xbold); line-height: var(--nx-lh-tight); letter-spacing: -0.015em; color: var(--nx-fg-strong); }
+  .nx-h2 { font-size: var(--nx-fs-3xl); font-weight: var(--nx-fw-bold); line-height: var(--nx-lh-snug); letter-spacing: -0.01em; color: var(--nx-fg-strong); }
+  .nx-h3 { font-size: var(--nx-fs-2xl); font-weight: var(--nx-fw-bold); line-height: var(--nx-lh-snug); color: var(--nx-fg-strong); }
+  .nx-h4 { font-size: var(--nx-fs-xl); font-weight: var(--nx-fw-semi); line-height: var(--nx-lh-snug); color: var(--nx-fg-strong); }
+  .nx-h5 { font-size: var(--nx-fs-lg); font-weight: var(--nx-fw-semi); line-height: var(--nx-lh-snug); color: var(--nx-fg-strong); }
+  .nx-lead { font-size: var(--nx-fs-md); line-height: var(--nx-lh-relaxed); color: var(--nx-fg); }
+  .nx-body { font-size: var(--nx-fs-base); line-height: var(--nx-lh-normal); color: var(--nx-fg); }
+  .nx-small { font-size: var(--nx-fs-sm); line-height: var(--nx-lh-normal); color: var(--nx-fg-muted); }
+  .nx-eyebrow { font-size: var(--nx-fs-xs); font-weight: var(--nx-fw-xbold); text-transform: uppercase; letter-spacing: 0.14em; color: var(--nx-orange-500); }
+  .nx-brand-emph { color: var(--nx-orange-500); font-weight: var(--nx-fw-xbold); }
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--nx-font-sans);
+  font-size: var(--nx-fs-base);
+  color: var(--nx-fg);
+  background: var(--nx-bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--nx-orange-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

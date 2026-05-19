@@ -1,0 +1,135 @@
+/* ============================================================
+   Nexti Design System — design tokens (CSS variables)
+   Drop this in src/styles/globals.css
+   ============================================================ */
+
+:root {
+  /* Brand — orange */
+  --nx-orange-50:  #FFF2EC;
+  --nx-orange-100: #FFDDCB;
+  --nx-orange-200: #FFBA99;
+  --nx-orange-300: #FF9266;
+  --nx-orange-400: #F87344;
+  --nx-orange-500: #F05B24;
+  --nx-orange-600: #D84B18;
+  --nx-orange-700: #B23A10;
+  --nx-orange-800: #812908;
+  --nx-orange-900: #4D1704;
+
+  /* Navy */
+  --nx-navy-50:    #EEF1F6;
+  --nx-navy-100:   #D3DAE6;
+  --nx-navy-200:   #A5B1C7;
+  --nx-navy-300:   #6E7E9B;
+  --nx-navy-400:   #3F4F6D;
+  --nx-navy-500:   #1F2D47;
+  --nx-navy-600:   #15213A;
+  --nx-navy-700:   #0F1A30;
+  --nx-navy-800:   #0A1124;
+  --nx-navy-900:   #060A17;
+
+  /* Ink (neutrals) */
+  --nx-white:      #FFFFFF;
+  --nx-ink-0:      #FFFFFF;
+  --nx-ink-50:     #F8F9FB;
+  --nx-ink-100:    #F1F3F7;
+  --nx-ink-200:    #E4E7EE;
+  --nx-ink-300:    #CBD1DC;
+  --nx-ink-400:    #9AA2B2;
+  --nx-ink-500:    #6B7284;
+  --nx-ink-600:    #4A5060;
+  --nx-ink-700:    #2F3442;
+  --nx-ink-800:    #1A1D28;
+  --nx-ink-900:    #0F111A;
+
+  /* Semantic */
+  --nx-success:    #2DB47A;
+  --nx-success-bg: #E4F6EE;
+  --nx-warning:    #F5A524;
+  --nx-warning-bg: #FEF4E1;
+  --nx-danger:     #E5484D;
+  --nx-danger-bg:  #FCE8E9;
+  --nx-info:       #3B82C4;
+  --nx-info-bg:    #E4EFF8;
+
+  /* Aliases */
+  --nx-bg:         var(--nx-white);
+  --nx-bg-subtle:  var(--nx-ink-50);
+  --nx-bg-muted:   var(--nx-ink-100);
+  --nx-bg-inverse: var(--nx-navy-700);
+  --nx-fg:         var(--nx-ink-800);
+  --nx-fg-strong:  var(--nx-navy-700);
+  --nx-fg-muted:   var(--nx-ink-500);
+  --nx-fg-subtle:  var(--nx-ink-400);
+  --nx-fg-onbrand: var(--nx-white);
+  --nx-fg-brand:   var(--nx-orange-500);
+  --nx-border:        var(--nx-ink-200);
+  --nx-border-strong: var(--nx-ink-300);
+  --nx-border-brand:  var(--nx-orange-500);
+
+  /* Typography */
+  --nx-font-sans: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --nx-font-display: 'Nunito', system-ui, sans-serif;
+  --nx-font-mono: ui-monospace, 'Menlo', monospace;
+
+  --nx-fs-xs:   12px;
+  --nx-fs-sm:   14px;
+  --nx-fs-base: 16px;
+  --nx-fs-md:   18px;
+  --nx-fs-lg:   20px;
+  --nx-fs-xl:   24px;
+  --nx-fs-2xl:  30px;
+  --nx-fs-3xl:  38px;
+  --nx-fs-4xl:  48px;
+  --nx-fs-5xl:  60px;
+  --nx-fs-6xl:  76px;
+
+  --nx-lh-tight:  1.12;
+  --nx-lh-snug:   1.28;
+  --nx-lh-normal: 1.5;
+  --nx-lh-relaxed:1.65;
+
+  --nx-fw-light:   300;
+  --nx-fw-regular: 400;
+  --nx-fw-semi:    600;
+  --nx-fw-bold:    700;
+  --nx-fw-xbold:   800;
+  --nx-fw-black:   900;
+
+  /* Radii */
+  --nx-r-sm:   6px;
+  --nx-r-md:   10px;
+  --nx-r-lg:   16px;
+  --nx-r-xl:   24px;
+  --nx-r-2xl:  32px;
+  --nx-r-pill: 999px;
+
+  /* Shadows */
+  --nx-shadow-xs: 0 1px 2px rgba(15, 26, 48, 0.06);
+  --nx-shadow-sm: 0 2px 4px rgba(15, 26, 48, 0.06), 0 1px 2px rgba(15, 26, 48, 0.04);
+  --nx-shadow-md: 0 6px 16px rgba(15, 26, 48, 0.08), 0 2px 4px rgba(15, 26, 48, 0.04);
+  --nx-shadow-lg: 0 16px 32px rgba(15, 26, 48, 0.10), 0 4px 8px rgba(15, 26, 48, 0.04);
+  --nx-shadow-xl: 0 28px 56px rgba(15, 26, 48, 0.12);
+  --nx-shadow-brand: 0 12px 28px rgba(240, 91, 36, 0.28);
+
+  /* Spacing */
+  --nx-s-1:  4px;
+  --nx-s-2:  8px;
+  --nx-s-3:  12px;
+  --nx-s-4:  16px;
+  --nx-s-5:  20px;
+  --nx-s-6:  24px;
+  --nx-s-8:  32px;
+  --nx-s-10: 40px;
+  --nx-s-12: 48px;
+  --nx-s-16: 64px;
+  --nx-s-20: 80px;
+  --nx-s-24: 96px;
+
+  /* Motion */
+  --nx-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --nx-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --nx-dur-fast: 120ms;
+  --nx-dur: 200ms;
+  --nx-dur-slow: 360ms;
+}

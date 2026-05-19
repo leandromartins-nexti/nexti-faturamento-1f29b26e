@@ -4,7 +4,7 @@ import { Plus, Activity, Lock, Trash2 } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
-import { clientes, metricas } from '../lib/mockData';
+import { metricas } from '../lib/mockData';
 import { useStore, store } from '../lib/store';
 import { fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
@@ -15,7 +15,7 @@ interface EventosGlobalProps {
 }
 
 export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
-  const { contratos, eventos } = useStore();
+  const { clientes, contratos, eventos } = useStore();
   const [source, setSource] = useState<'ALL' | EventoSource>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
 

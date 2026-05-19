@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { Button } from '@/ds';
 import { Building2, MapPin, Plus, ArrowRight, FileText } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { clientes } from '../lib/mockData';
-import { useStore } from '../lib/store';
+import { ClienteFormModal } from '../components/modals/ClienteFormModal';
+import { useStore, store } from '../lib/store';
 import { fmtBRL } from '../lib/format';
 import type { Route } from '../lib/router';
 
@@ -12,11 +13,16 @@ interface ClientesListProps {
 }
 
 export function ClientesList({ onNavigate }: ClientesListProps) {
-  const { contratos } = useStore();
+  const { clientes, contratos } = useStore();
+  const [modalOpen, setModalOpen] = useState(false);
   return (
     <div className="p-6 space-y-4">
       <div className="flex items-center justify-end">
-        <Button size="sm" leftIcon={<Plus className="size-4" />}>
+        <Button
+          size="sm"
+          leftIcon={<Plus className="size-4" />}
+          onClick={() => setModalOpen(true)}
+        >
           Novo cliente
         </Button>
       </div>
@@ -84,7 +90,28 @@ export function ClientesList({ onNavigate }: ClientesListProps) {
             </Card>
           );
         })}
+        {clientes.length === 0 && (
+          <div className="col-span-2">
+            <Card>
+              <CardBody className="py-12 text-center">
+                <Building2 className="size-10 text-ink-300 mx-auto mb-3" />
+                <div className="font-bold text-navy-700">Nenhum cliente cadastrado</div>
+                <p className="text-sm text-ink-500 mt-1">
+                  Comece adicionando a primeira empresa contratante.
+                </p>
+              </CardBody>
+            </Card>
+          </div>
+        )}
       </div>
+
+      <ClienteFormModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onCreate={(values) => {
+          store.addCliente(values);
+        }}
+      />
     </div>
   );
 }

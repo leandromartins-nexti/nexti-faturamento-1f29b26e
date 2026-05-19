@@ -2,7 +2,6 @@ import { Button } from '@/ds';
 import { AlertTriangle, Clock, FileText, TrendingUp, ArrowRight, Activity, Users, DollarSign } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { clientes } from '../lib/mockData';
 import { useStore } from '../lib/store';
 import { fmtBRL, fmtDate, daysBetween, addMonths } from '../lib/format';
 import type { Route } from '../lib/router';
@@ -14,7 +13,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { contratos, eventos } = useStore();
+  const { clientes, contratos, eventos } = useStore();
   const ativos = contratos.filter((c) => c.status === 'ACTIVE');
   const mrrTotal = ativos.reduce((s, c) => s + c.mrr, 0);
 

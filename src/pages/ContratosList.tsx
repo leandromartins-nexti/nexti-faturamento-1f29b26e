@@ -5,7 +5,6 @@ import { Card, CardBody } from '../components/ui/Card';
 import { StatusPill } from '../components/ui/StatusPill';
 import { Badge } from '../components/ui/Badge';
 import { ContratoFormModal } from '../components/modals/ContratoFormModal';
-import { clientes } from '../lib/mockData';
 import { useStore, store } from '../lib/store';
 import { fmtBRL, fmtDate } from '../lib/format';
 import type { ContratoStatus } from '../lib/types';
@@ -24,7 +23,7 @@ const STATUS_FILTERS: { id: 'ALL' | ContratoStatus; label: string }[] = [
 ];
 
 export function ContratosList({ onNavigate }: ContratosListProps) {
-  const { contratos } = useStore();
+  const { clientes, contratos } = useStore();
   const [status, setStatus] = useState<'ALL' | ContratoStatus>('ALL');
   const [q, setQ] = useState('');
   const [modalOpen, setModalOpen] = useState(false);

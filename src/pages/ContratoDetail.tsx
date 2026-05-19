@@ -20,7 +20,6 @@ import { StatusPill } from '../components/ui/StatusPill';
 import { Tabs } from '../components/ui/Tabs';
 import { ItemFormModal } from '../components/modals/ItemFormModal';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
-import { clientes } from '../lib/mockData';
 import { useStore, store } from '../lib/store';
 import { fmtBRL, fmtDate, addMonths, daysBetween } from '../lib/format';
 import type { Route } from '../lib/router';
@@ -41,7 +40,7 @@ interface ContratoDetailProps {
 }
 
 export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
-  const { contratos, eventos: allEventos } = useStore();
+  const { clientes, contratos, eventos: allEventos } = useStore();
   const contrato = contratos.find((c) => c.id === id);
   const [tab, setTab] = useState('itens');
   const [itemModalOpen, setItemModalOpen] = useState(false);
@@ -365,6 +364,7 @@ function EventosTab({
   eventos: ReturnType<typeof useStore>['eventos'];
   onLancar: () => void;
 }) {
+  const { clientes } = useStore();
   const cliente = clientes.find((c) => c.id === contrato.clienteId)!;
   const ordenados = [...eventos].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 
@@ -604,6 +604,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 function EstabelecimentosTab({ clienteId }: { clienteId: string }) {
+  const { clientes } = useStore();
   const cliente = clientes.find((c) => c.id === clienteId)!;
   return (
     <Card>

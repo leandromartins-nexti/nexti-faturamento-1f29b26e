@@ -1,16 +1,25 @@
 import { useSyncExternalStore } from 'react';
-import { contratos as seedContratos, eventos as seedEventos, produtos, metricas } from './mockData';
-import type { Contrato, EventoDeUso, ItemDeContrato } from './types';
+import {
+  contratos as seedContratos,
+  eventos as seedEventos,
+  clientes as seedClientes,
+  produtos,
+  metricas,
+} from './mockData';
+import type { Cliente, Contrato, Estabelecimento, EventoDeUso, ItemDeContrato } from './types';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
+import type { ClienteFormValues } from '../components/modals/ClienteFormModal';
 
 interface StoreState {
+  clientes: Cliente[];
   contratos: Contrato[];
   eventos: EventoDeUso[];
 }
 
 let state: StoreState = {
+  clientes: seedClientes,
   contratos: seedContratos,
   eventos: seedEventos,
 };
@@ -45,6 +54,28 @@ function nextContratoNumero(): string {
 }
 
 export const store = {
+  addCliente(values: ClienteFormValues): Cliente {
+    const clienteId = nextId('cli_');
+    const estabelecimentos: Estabelecimento[] = values.estabelecimentos.map((e) => ({
+      id: nextId('est_'),
+      clienteId,
+      nome: e.nome,
+      cnpj: e.cnpj,
+      cidade: e.cidade,
+      uf: e.uf,
+    }));
+    const novo: Cliente = {
+      id: clienteId,
+      razaoSocial: values.razaoSocial,
+      nomeFantasia: values.nomeFantasia,
+      cnpj: values.cnpj,
+      estabelecimentos,
+    };
+    state = { ...state, clientes: [novo, ...state.clientes] };
+    emit();
+    return novo;
+  },
+
   addContrato(values: ContratoFormValues): Contrato {
     const novo: Contrato = {
       id: nextId('ct_'),

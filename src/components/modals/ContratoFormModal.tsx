@@ -4,7 +4,7 @@ import { Building2, Calendar, TrendingUp, Info } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Field, TextInput, Select, PrefixInput } from '../ui/Form';
 import { Badge } from '../ui/Badge';
-import { clientes } from '../../lib/mockData';
+import { useStore } from '../../lib/store';
 import type { ContratoStatus, ReadjustmentIndex } from '../../lib/types';
 
 interface ContratoFormModalProps {

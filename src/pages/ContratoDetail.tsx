@@ -18,10 +18,13 @@ import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { StatusPill } from '../components/ui/StatusPill';
 import { Tabs } from '../components/ui/Tabs';
-import { contratos, clientes, getEventosByContrato } from '../lib/mockData';
+import { ItemFormModal } from '../components/modals/ItemFormModal';
+import { EventoFormModal } from '../components/modals/EventoFormModal';
+import { clientes } from '../lib/mockData';
+import { useStore, store } from '../lib/store';
 import { fmtBRL, fmtDate, addMonths, daysBetween } from '../lib/format';
 import type { Route } from '../lib/router';
-import type { ItemType } from '../lib/types';
+import type { Contrato, ItemDeContrato, ItemType } from '../lib/types';
 
 const HOJE = '2026-05-19';
 
@@ -38,8 +41,12 @@ interface ContratoDetailProps {
 }
 
 export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
+  const { contratos, eventos: allEventos } = useStore();
   const contrato = contratos.find((c) => c.id === id);
   const [tab, setTab] = useState('itens');
+  const [itemModalOpen, setItemModalOpen] = useState(false);
+  const [editingItem, setEditingItem] = useState<ItemDeContrato | undefined>(undefined);
+  const [eventoModalOpen, setEventoModalOpen] = useState(false);
 
   if (!contrato) {
     return (
@@ -52,7 +59,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
   }
 
   const cliente = clientes.find((c) => c.id === contrato.clienteId)!;
-  const eventos = getEventosByContrato(contrato.id);
+  const eventos = allEventos.filter((e) => e.contratoId === contrato.id);
   const proximoReajusteData =
     contrato.readjustmentIndex !== 'NONE'
       ? addMonths(contrato.lastReadjustedAt ?? contrato.startDate, 12)
@@ -137,11 +144,55 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
       {/* Tabs */}
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
 
-      {tab === 'itens' && <ItensTab contrato={contrato} />}
-      {tab === 'eventos' && <EventosTab contrato={contrato} />}
+      {tab === 'itens' && (
+        <ItensTab
+          contrato={contrato}
+          onAdd={() => {
+            setEditingItem(undefined);
+            setItemModalOpen(true);
+          }}
+          onEdit={(it) => {
+            setEditingItem(it);
+            setItemModalOpen(true);
+          }}
+          onRemove={(it) => {
+            if (confirm(`Remover o item "${it.produto.nome}" do contrato?`)) {
+              store.removeItem(contrato.id, it.id);
+            }
+          }}
+        />
+      )}
+      {tab === 'eventos' && (
+        <EventosTab
+          contrato={contrato}
+          eventos={eventos}
+          onLancar={() => setEventoModalOpen(true)}
+        />
+      )}
       {tab === 'reajustes' && <ReajustesTab contrato={contrato} />}
       {tab === 'estabelecimentos' && <EstabelecimentosTab clienteId={cliente.id} />}
       {tab === 'faturas' && <FaturasTab />}
+
+      <ItemFormModal
+        open={itemModalOpen}
+        onClose={() => setItemModalOpen(false)}
+        contrato={contrato}
+        item={editingItem}
+        onSave={(values) => {
+          if (editingItem) {
+            store.updateItem(contrato.id, editingItem.id, values);
+          } else {
+            store.addItem(contrato.id, values);
+          }
+        }}
+      />
+
+      <EventoFormModal
+        open={eventoModalOpen}
+        onClose={() => setEventoModalOpen(false)}
+        contrato={contrato}
+        onSave={(values) => store.addEvento(values)}
+      />
     </div>
   );
 }
@@ -184,7 +235,17 @@ function SummaryStat({
   );
 }
 
-function ItensTab({ contrato }: { contrato: (typeof contratos)[number] }) {
+function ItensTab({
+  contrato,
+  onAdd,
+  onEdit,
+  onRemove,
+}: {
+  contrato: Contrato;
+  onAdd: () => void;
+  onEdit: (it: ItemDeContrato) => void;
+  onRemove: (it: ItemDeContrato) => void;
+}) {
   const reajusteLock = contrato.readjustmentIndex !== 'NONE';
   return (
     <div className="space-y-3">
@@ -197,7 +258,7 @@ function ItensTab({ contrato }: { contrato: (typeof contratos)[number] }) {
             </span>
           )}
         </div>
-        <Button size="sm" leftIcon={<Plus className="size-4" />}>
+        <Button size="sm" leftIcon={<Plus className="size-4" />} onClick={onAdd}>
           Adicionar item
         </Button>
       </div>
@@ -269,10 +330,18 @@ function ItensTab({ contrato }: { contrato: (typeof contratos)[number] }) {
                       )}
                     </td>
                     <td className="px-5 py-3 text-right">
-                      <button className="p-1.5 text-ink-400 hover:text-ink-600 hover:bg-ink-100 rounded-sm">
+                      <button
+                        onClick={() => onEdit(it)}
+                        className="p-1.5 text-ink-400 hover:text-ink-600 hover:bg-ink-100 rounded-sm"
+                        aria-label="Editar item"
+                      >
                         <Edit3 className="size-4" />
                       </button>
-                      <button className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm ml-1">
+                      <button
+                        onClick={() => onRemove(it)}
+                        className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm ml-1"
+                        aria-label="Remover item"
+                      >
                         <Trash2 className="size-4" />
                       </button>
                     </td>
@@ -287,9 +356,16 @@ function ItensTab({ contrato }: { contrato: (typeof contratos)[number] }) {
   );
 }
 
-function EventosTab({ contrato }: { contrato: (typeof contratos)[number] }) {
+function EventosTab({
+  contrato,
+  eventos,
+  onLancar,
+}: {
+  contrato: Contrato;
+  eventos: ReturnType<typeof useStore>['eventos'];
+  onLancar: () => void;
+}) {
   const cliente = clientes.find((c) => c.id === contrato.clienteId)!;
-  const eventos = getEventosByContrato(contrato.id);
   const ordenados = [...eventos].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 
   // Saldo BALANCE_AVG por métrica/estabelecimento
@@ -330,7 +406,7 @@ function EventosTab({ contrato }: { contrato: (typeof contratos)[number] }) {
           <Button variant="outline" size="sm">
             Importar CSV
           </Button>
-          <Button size="sm" leftIcon={<Plus className="size-4" />}>
+          <Button size="sm" leftIcon={<Plus className="size-4" />} onClick={onLancar}>
             Lançar evento
           </Button>
         </div>
@@ -387,7 +463,11 @@ function EventosTab({ contrato }: { contrato: (typeof contratos)[number] }) {
                     </td>
                     <td className="px-5 py-3 text-right">
                       {ev.source === 'MANUAL' ? (
-                        <button className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm">
+                        <button
+                          onClick={() => store.removeEvento(ev.id)}
+                          className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
+                          aria-label="Remover evento"
+                        >
                           <Trash2 className="size-4" />
                         </button>
                       ) : (
@@ -412,7 +492,7 @@ function EventosTab({ contrato }: { contrato: (typeof contratos)[number] }) {
   );
 }
 
-function ReajustesTab({ contrato }: { contrato: (typeof contratos)[number] }) {
+function ReajustesTab({ contrato }: { contrato: Contrato }) {
   if (contrato.readjustmentIndex === 'NONE') {
     return (
       <Card>

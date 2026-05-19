@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/ds';
-import { Plus, Activity, Lock } from 'lucide-react';
+import { Plus, Activity, Lock, Trash2 } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { eventos, contratos, clientes, metricas } from '../lib/mockData';
+import { EventoFormModal } from '../components/modals/EventoFormModal';
+import { clientes, metricas } from '../lib/mockData';
+import { useStore, store } from '../lib/store';
 import { fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
 import type { EventoSource } from '../lib/types';
@@ -13,13 +15,15 @@ interface EventosGlobalProps {
 }
 
 export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
+  const { contratos, eventos } = useStore();
   const [source, setSource] = useState<'ALL' | EventoSource>('ALL');
+  const [modalOpen, setModalOpen] = useState(false);
 
   const rows = useMemo(() => {
     return [...eventos]
       .filter((e) => (source === 'ALL' ? true : e.source === source))
       .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
-  }, [source]);
+  }, [source, eventos]);
 
   const sourceTone: Record<EventoSource, 'brand' | 'info' | 'neutral'> = {
     MANUAL: 'brand',
@@ -56,7 +60,7 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
           <Button variant="outline" size="sm">
             Importar CSV
           </Button>
-          <Button size="sm" leftIcon={<Plus className="size-4" />}>
+          <Button size="sm" leftIcon={<Plus className="size-4" />} onClick={() => setModalOpen(true)}>
             Lançar evento
           </Button>
         </div>
@@ -114,7 +118,15 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
                     </td>
                     <td className="px-5 py-3 text-ink-600 text-xs">{ev.referencePeriod}</td>
                     <td className="px-5 py-3 text-right">
-                      {ev.source !== 'MANUAL' && (
+                      {ev.source === 'MANUAL' ? (
+                        <button
+                          onClick={() => store.removeEvento(ev.id)}
+                          className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
+                          aria-label="Remover evento"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
+                      ) : (
                         <Lock className="size-3.5 text-ink-300 inline" />
                       )}
                     </td>
@@ -133,6 +145,12 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
           </table>
         </CardBody>
       </Card>
+
+      <EventoFormModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onSave={(values) => store.addEvento(values)}
+      />
     </div>
   );
 }

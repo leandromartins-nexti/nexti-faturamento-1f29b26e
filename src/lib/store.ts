@@ -1,0 +1,126 @@
+import { useSyncExternalStore } from 'react';
+import { contratos as seedContratos, eventos as seedEventos, produtos, metricas } from './mockData';
+import type { Contrato, EventoDeUso, ItemDeContrato } from './types';
+import type { ItemFormValues } from '../components/modals/ItemFormModal';
+import type { EventoFormValues } from '../components/modals/EventoFormModal';
+
+interface StoreState {
+  contratos: Contrato[];
+  eventos: EventoDeUso[];
+}
+
+let state: StoreState = {
+  contratos: seedContratos,
+  eventos: seedEventos,
+};
+
+const listeners = new Set<() => void>();
+
+function emit() {
+  for (const l of listeners) l();
+}
+
+function subscribe(l: () => void) {
+  listeners.add(l);
+  return () => listeners.delete(l);
+}
+
+function getSnapshot() {
+  return state;
+}
+
+export function useStore() {
+  return useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+}
+
+function nextId(prefix: string) {
+  return `${prefix}${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`;
+}
+
+export const store = {
+  addItem(contratoId: string, values: ItemFormValues) {
+    const produto = produtos.find((p) => p.id === values.produtoId);
+    const metrica = values.metricaId ? metricas.find((m) => m.id === values.metricaId) : undefined;
+    if (!produto) return;
+    const novo: ItemDeContrato = {
+      id: nextId('it_'),
+      contratoId,
+      produto,
+      metrica,
+      type: values.type,
+      unitPrice: values.unitPrice,
+      minimumQuantity: values.minimumQuantity,
+      startDate: values.startDate,
+      endDate: values.endDate,
+      politicas: [],
+    };
+    state = {
+      ...state,
+      contratos: state.contratos.map((c) =>
+        c.id === contratoId ? { ...c, itens: [...c.itens, novo] } : c,
+      ),
+    };
+    emit();
+  },
+
+  updateItem(contratoId: string, itemId: string, values: ItemFormValues) {
+    const produto = produtos.find((p) => p.id === values.produtoId);
+    const metrica = values.metricaId ? metricas.find((m) => m.id === values.metricaId) : undefined;
+    if (!produto) return;
+    state = {
+      ...state,
+      contratos: state.contratos.map((c) => {
+        if (c.id !== contratoId) return c;
+        return {
+          ...c,
+          itens: c.itens.map((it) =>
+            it.id === itemId
+              ? {
+                  ...it,
+                  produto,
+                  metrica,
+                  type: values.type,
+                  unitPrice: values.unitPrice,
+                  minimumQuantity: values.minimumQuantity,
+                  startDate: values.startDate,
+                  endDate: values.endDate,
+                }
+              : it,
+          ),
+        };
+      }),
+    };
+    emit();
+  },
+
+  removeItem(contratoId: string, itemId: string) {
+    state = {
+      ...state,
+      contratos: state.contratos.map((c) =>
+        c.id === contratoId ? { ...c, itens: c.itens.filter((i) => i.id !== itemId) } : c,
+      ),
+    };
+    emit();
+  },
+
+  addEvento(values: EventoFormValues) {
+    const novo: EventoDeUso = {
+      id: nextId('ev_'),
+      contratoId: values.contratoId,
+      estabelecimentoId: values.estabelecimentoId,
+      metricaId: values.metricaId,
+      quantity: values.quantity,
+      occurredAt: values.occurredAt,
+      referencePeriod: values.referencePeriod,
+      source: 'MANUAL',
+      notes: values.notes || undefined,
+    };
+    state = { ...state, eventos: [novo, ...state.eventos] };
+    emit();
+  },
+
+  removeEvento(id: string) {
+    state = { ...state, eventos: state.eventos.filter((e) => e.id !== id) };
+    emit();
+  },
+};

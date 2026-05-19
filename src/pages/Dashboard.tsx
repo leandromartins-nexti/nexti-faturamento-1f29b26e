@@ -2,7 +2,8 @@ import { Button } from '@/ds';
 import { AlertTriangle, Clock, FileText, TrendingUp, ArrowRight, Activity, Users, DollarSign } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { contratos, clientes, eventos } from '../lib/mockData';
+import { clientes } from '../lib/mockData';
+import { useStore } from '../lib/store';
 import { fmtBRL, fmtDate, daysBetween, addMonths } from '../lib/format';
 import type { Route } from '../lib/router';
 
@@ -13,6 +14,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
+  const { contratos, eventos } = useStore();
   const ativos = contratos.filter((c) => c.status === 'ACTIVE');
   const mrrTotal = ativos.reduce((s, c) => s + c.mrr, 0);
 
@@ -185,7 +187,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
             <CardTitle>Contratos por status</CardTitle>
           </CardHeader>
           <CardBody>
-            <StatusBars />
+            <StatusBars contratos={contratos} />
           </CardBody>
         </Card>
 
@@ -282,7 +284,7 @@ function KpiCard({
   );
 }
 
-function StatusBars() {
+function StatusBars({ contratos }: { contratos: ReturnType<typeof useStore>['contratos'] }) {
   const totals = {
     ACTIVE: contratos.filter((c) => c.status === 'ACTIVE').length,
     DRAFT: contratos.filter((c) => c.status === 'DRAFT').length,

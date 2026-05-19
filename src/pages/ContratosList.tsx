@@ -4,7 +4,8 @@ import { Plus, Filter, Search, ArrowRight } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { StatusPill } from '../components/ui/StatusPill';
 import { Badge } from '../components/ui/Badge';
-import { contratos, clientes } from '../lib/mockData';
+import { clientes } from '../lib/mockData';
+import { useStore } from '../lib/store';
 import { fmtBRL, fmtDate } from '../lib/format';
 import type { ContratoStatus } from '../lib/types';
 import type { Route } from '../lib/router';
@@ -22,6 +23,7 @@ const STATUS_FILTERS: { id: 'ALL' | ContratoStatus; label: string }[] = [
 ];
 
 export function ContratosList({ onNavigate }: ContratosListProps) {
+  const { contratos } = useStore();
   const [status, setStatus] = useState<'ALL' | ContratoStatus>('ALL');
   const [q, setQ] = useState('');
 
@@ -33,7 +35,7 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
         const blob = `${c.numero} ${cli?.nomeFantasia} ${cli?.razaoSocial} ${cli?.cnpj}`.toLowerCase();
         return blob.includes(q.toLowerCase());
       });
-  }, [status, q]);
+  }, [status, q, contratos]);
 
   return (
     <div className="p-6 space-y-4">

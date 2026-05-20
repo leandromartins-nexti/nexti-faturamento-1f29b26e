@@ -9,9 +9,9 @@ interface SidebarProps {
 const items: { id: Route['name']; label: string; icon: typeof LayoutDashboard }[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { id: 'filiais', label: 'Filiais', icon: Landmark },
-  { id: 'contratos', label: 'Contratos', icon: FileText },
   { id: 'clientes', label: 'Clientes', icon: Users },
   { id: 'catalogo', label: 'Catálogo', icon: Package },
+  { id: 'contratos', label: 'Contratos', icon: FileText },
   { id: 'eventos', label: 'Eventos de uso', icon: Activity },
   { id: 'faturas', label: 'Faturas', icon: Receipt },
 ];

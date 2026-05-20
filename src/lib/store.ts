@@ -7,7 +7,8 @@ import {
   produtos as seedProdutos,
   metricas as seedMetricas,
 } from './mockData';
-import type { ApuracaoType, Cliente, ClienteStatus, Contrato, DueType, Estabelecimento, Filial, Metrica, PaymentMethod, Produto, ProdutoType, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
+import type { ApuracaoType, Cliente, ClienteStatus, Contrato, DueType, Estabelecimento, Fatura, FaturaStatus, Filial, Metrica, PaymentMethod, Produto, ProdutoType, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
+import { gerarFatura } from './fatura';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
@@ -24,6 +25,7 @@ interface StoreState {
   filiais: Filial[];
   produtos: Produto[];
   metricas: Metrica[];
+  faturas: Fatura[];
 }
 
 let state: StoreState = {
@@ -33,6 +35,7 @@ let state: StoreState = {
   filiais: seedFiliais,
   produtos: seedProdutos,
   metricas: seedMetricas,
+  faturas: [],
 };
 
 const listeners = new Set<() => void>();
@@ -401,6 +404,35 @@ export const store = {
 
   removeMetrica(id: string) {
     state = { ...state, metricas: state.metricas.filter((m) => m.id !== id) };
+    emit();
+  },
+
+  /** Gera (ou regera) um rascunho de fatura para um contrato e período. */
+  gerarFatura(contratoId: string, referencePeriod: string, issueDate: string): Fatura {
+    const contrato = state.contratos.find((c) => c.id === contratoId);
+    if (!contrato) throw new Error(`Contrato ${contratoId} não encontrado`);
+    const fatura = gerarFatura(contrato, referencePeriod, state.eventos, issueDate);
+    // Substitui eventual rascunho anterior do mesmo contrato+período
+    const existente = state.faturas.findIndex((f) => f.id === fatura.id);
+    const novaLista =
+      existente >= 0
+        ? state.faturas.map((f, i) => (i === existente ? fatura : f))
+        : [...state.faturas, fatura];
+    state = { ...state, faturas: novaLista };
+    emit();
+    return fatura;
+  },
+
+  setFaturaStatus(faturaId: string, status: FaturaStatus) {
+    state = {
+      ...state,
+      faturas: state.faturas.map((f) => (f.id !== faturaId ? f : { ...f, status })),
+    };
+    emit();
+  },
+
+  removeFatura(faturaId: string) {
+    state = { ...state, faturas: state.faturas.filter((f) => f.id !== faturaId) };
     emit();
   },
 };

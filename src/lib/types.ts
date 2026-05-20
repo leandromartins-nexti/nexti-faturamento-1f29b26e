@@ -159,3 +159,34 @@ export interface EventoDeUso {
   source: EventoSource;
   notes?: string;
 }
+
+export type FaturaStatus = 'DRAFT' | 'ISSUED' | 'PAID' | 'OVERDUE';
+
+export interface FaturaLinha {
+  itemId: string;
+  produtoName: string;
+  metricaName?: string;
+  metricaUnit?: string;
+  type: ItemType;
+  quantity: number;
+  unitPrice: number;
+  total: number;
+  eventoIds: string[];
+  temMinimo: boolean;
+  minimoAplicado: boolean;
+}
+
+export interface Fatura {
+  id: string;
+  contratoId: string;
+  clienteId: string;
+  filialId: string;
+  referencePeriod: string;
+  issueDate: string;
+  dueDate: string;
+  paymentMethod: PaymentMethod;
+  apresentacao: ApresentacaoFatura;
+  status: FaturaStatus;
+  linhas: FaturaLinha[];
+  total: number;
+}

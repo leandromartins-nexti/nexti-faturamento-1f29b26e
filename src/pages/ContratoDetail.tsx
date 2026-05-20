@@ -57,13 +57,23 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
     );
   }
 
-  const cliente = clientes.find((c) => c.id === contrato.clienteId)!;
+  const cliente = clientes.find((c) => c.id === contrato.clienteId);
   const eventos = allEventos.filter((e) => e.contratoId === contrato.id);
   const proximoReajusteData =
     contrato.readjustmentIndex !== 'NONE'
       ? addMonths(contrato.lastReadjustedAt ?? contrato.startDate, 12)
       : null;
   const diasReajuste = proximoReajusteData ? daysBetween(proximoReajusteData, HOJE) : null;
+
+  if (!cliente) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardBody>Cliente do contrato não encontrado.</CardBody>
+        </Card>
+      </div>
+    );
+  }
 
   const tabs = [
     { id: 'itens', label: 'Itens', count: contrato.itens.length },
@@ -365,7 +375,7 @@ function EventosTab({
   onLancar: () => void;
 }) {
   const { clientes } = useStore();
-  const cliente = clientes.find((c) => c.id === contrato.clienteId)!;
+  const cliente = clientes.find((c) => c.id === contrato.clienteId) ?? { estabelecimentos: [] as typeof clientes[0]['estabelecimentos'] };
   const ordenados = [...eventos].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 
   // Saldo BALANCE_AVG por métrica/estabelecimento
@@ -605,7 +615,8 @@ function Field({ label, value }: { label: string; value: string }) {
 
 function EstabelecimentosTab({ clienteId }: { clienteId: string }) {
   const { clientes } = useStore();
-  const cliente = clientes.find((c) => c.id === clienteId)!;
+  const cliente = clientes.find((c) => c.id === clienteId);
+  if (!cliente) return null;
   return (
     <Card>
       <CardBody className="p-0">

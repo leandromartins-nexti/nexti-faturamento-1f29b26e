@@ -39,9 +39,10 @@ const statuses: { id: ContratoStatus; label: string; tone: 'neutral' | 'success'
 ];
 
 export function ContratoFormModal({ open, onClose, onCreate }: ContratoFormModalProps) {
+  const { clientes } = useStore();
   const [values, setValues] = useState<ContratoFormValues>({
     numero: '',
-    clienteId: clientes[0].id,
+    clienteId: '',
     status: 'DRAFT',
     startDate: HOJE,
     endDate: undefined,
@@ -53,7 +54,7 @@ export function ContratoFormModal({ open, onClose, onCreate }: ContratoFormModal
     if (!open) return;
     setValues({
       numero: '',
-      clienteId: clientes[0].id,
+      clienteId: clientes[0]?.id ?? '',
       status: 'DRAFT',
       startDate: HOJE,
       endDate: undefined,

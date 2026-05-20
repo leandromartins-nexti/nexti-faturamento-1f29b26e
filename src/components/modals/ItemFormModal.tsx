@@ -4,7 +4,8 @@ import { Lock, AlertTriangle } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Field, TextInput, Select, PrefixInput } from '../ui/Form';
 import { Badge } from '../ui/Badge';
-import { produtos, metricas } from '../../lib/mockData';
+import { metricas } from '../../lib/mockData';
+import { useStore } from '../../lib/store';
 import { fmtBRL } from '../../lib/format';
 import type { Contrato, ItemDeContrato, ItemType } from '../../lib/types';
 
@@ -39,23 +40,22 @@ const PRODUTO_TYPE_LABEL: Record<string, string> = {
   AVULSO: 'Avulso',
 };
 
-function defaultState(contrato: Contrato): ItemFormValues {
-  return {
-    produtoId: produtos[0].id,
-    type: produtos[0].type as ItemType,
-    metricaId: produtos[0].metricaId,
-    unitPrice: produtos[0].defaultPrice ?? 0,
-    minimumQuantity: undefined,
-    startDate: contrato.startDate,
-    endDate: undefined,
-  };
-}
-
 export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFormModalProps) {
+  const { produtos } = useStore();
   const isEditing = !!item;
   const priceLocked = contrato.readjustmentIndex !== 'NONE' && isEditing;
 
-  const [values, setValues] = useState<ItemFormValues>(() => defaultState(contrato));
+  const firstProduto = produtos.find((p) => p.active) ?? produtos[0];
+
+  const [values, setValues] = useState<ItemFormValues>(() => ({
+    produtoId: firstProduto?.id ?? '',
+    type: (firstProduto?.type ?? 'RECORRENTE_FIXO') as ItemType,
+    metricaId: firstProduto?.metricaId,
+    unitPrice: firstProduto?.defaultPrice ?? 0,
+    minimumQuantity: undefined,
+    startDate: contrato.startDate,
+    endDate: undefined,
+  }));
 
   useEffect(() => {
     if (!open) return;
@@ -70,7 +70,16 @@ export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFor
         endDate: item.endDate,
       });
     } else {
-      setValues(defaultState(contrato));
+      const fp = produtos.find((p) => p.active) ?? produtos[0];
+      setValues({
+        produtoId: fp?.id ?? '',
+        type: (fp?.type ?? 'RECORRENTE_FIXO') as ItemType,
+        metricaId: fp?.metricaId,
+        unitPrice: fp?.defaultPrice ?? 0,
+        minimumQuantity: undefined,
+        startDate: contrato.startDate,
+        endDate: undefined,
+      });
     }
   }, [open, item, contrato.startDate]);
 

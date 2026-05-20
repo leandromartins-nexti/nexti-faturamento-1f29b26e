@@ -4,21 +4,23 @@ import {
   eventos as seedEventos,
   clientes as seedClientes,
   filiais as seedFiliais,
-  produtos,
-  metricas,
+  produtos as seedProdutos,
+  metricas as seedMetricas,
 } from './mockData';
-import type { Cliente, ClienteStatus, Contrato, DueType, Filial, PaymentMethod, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
+import type { Cliente, ClienteStatus, Contrato, DueType, Filial, PaymentMethod, Produto, ProdutoType, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
 import type { ClienteFormValues } from '../components/modals/ClienteFormModal';
 import type { FilialFormValues } from '../components/modals/FilialFormModal';
+import type { ProdutoFormValues } from '../components/modals/ProdutoFormModal';
 
 interface StoreState {
   clientes: Cliente[];
   contratos: Contrato[];
   eventos: EventoDeUso[];
   filiais: Filial[];
+  produtos: Produto[];
 }
 
 let state: StoreState = {
@@ -26,6 +28,7 @@ let state: StoreState = {
   contratos: seedContratos,
   eventos: seedEventos,
   filiais: seedFiliais,
+  produtos: seedProdutos,
 };
 
 const listeners = new Set<() => void>();
@@ -137,8 +140,8 @@ export const store = {
   },
 
   addItem(contratoId: string, values: ItemFormValues) {
-    const produto = produtos.find((p) => p.id === values.produtoId);
-    const metrica = values.metricaId ? metricas.find((m) => m.id === values.metricaId) : undefined;
+    const produto = state.produtos.find((p) => p.id === values.produtoId);
+    const metrica = values.metricaId ? seedMetricas.find((m) => m.id === values.metricaId) : undefined;
     if (!produto) return;
     const novo: ItemDeContrato = {
       id: nextId('it_'),
@@ -162,8 +165,8 @@ export const store = {
   },
 
   updateItem(contratoId: string, itemId: string, values: ItemFormValues) {
-    const produto = produtos.find((p) => p.id === values.produtoId);
-    const metrica = values.metricaId ? metricas.find((m) => m.id === values.metricaId) : undefined;
+    const produto = state.produtos.find((p) => p.id === values.produtoId);
+    const metrica = values.metricaId ? seedMetricas.find((m) => m.id === values.metricaId) : undefined;
     if (!produto) return;
     state = {
       ...state,
@@ -275,6 +278,44 @@ export const store = {
 
   removeFilial(id: string) {
     state = { ...state, filiais: state.filiais.filter((f) => f.id !== id) };
+    emit();
+  },
+
+  addProduto(values: ProdutoFormValues): Produto {
+    const novo: Produto = {
+      id: nextId('p_'),
+      name: values.name,
+      description: values.description || undefined,
+      type: values.type as ProdutoType,
+      defaultPrice: values.defaultPrice !== '' ? Number(values.defaultPrice) : undefined,
+      metricaId: values.metricaId || undefined,
+      active: values.active,
+    };
+    state = { ...state, produtos: [...state.produtos, novo] };
+    emit();
+    return novo;
+  },
+
+  updateProduto(id: string, values: ProdutoFormValues) {
+    state = {
+      ...state,
+      produtos: state.produtos.map((p) =>
+        p.id !== id ? p : {
+          ...p,
+          name: values.name,
+          description: values.description || undefined,
+          type: values.type as ProdutoType,
+          defaultPrice: values.defaultPrice !== '' ? Number(values.defaultPrice) : undefined,
+          metricaId: values.metricaId || undefined,
+          active: values.active,
+        },
+      ),
+    };
+    emit();
+  },
+
+  removeProduto(id: string) {
+    state = { ...state, produtos: state.produtos.filter((p) => p.id !== id) };
     emit();
   },
 };

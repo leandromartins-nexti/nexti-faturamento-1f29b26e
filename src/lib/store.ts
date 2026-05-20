@@ -7,7 +7,7 @@ import {
   produtos as seedProdutos,
   metricas as seedMetricas,
 } from './mockData';
-import type { ApuracaoType, Cliente, ClienteStatus, Contrato, DueType, Filial, Metrica, PaymentMethod, Produto, ProdutoType, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
+import type { ApuracaoType, Cliente, ClienteStatus, Contrato, DueType, Estabelecimento, Filial, Metrica, PaymentMethod, Produto, ProdutoType, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
@@ -15,6 +15,7 @@ import type { ClienteFormValues } from '../components/modals/ClienteFormModal';
 import type { FilialFormValues } from '../components/modals/FilialFormModal';
 import type { ProdutoFormValues } from '../components/modals/ProdutoFormModal';
 import type { MetricaFormValues } from '../components/modals/MetricaFormModal';
+import type { EstabelecimentoFormValues } from '../components/modals/EstabelecimentoFormModal';
 
 interface StoreState {
   clientes: Cliente[];
@@ -110,6 +111,53 @@ export const store = {
     state = {
       ...state,
       clientes: state.clientes.map((c) => c.id !== id ? c : { ...c, status }),
+    };
+    emit();
+  },
+
+  addEstabelecimento(clienteId: string, values: EstabelecimentoFormValues): Estabelecimento {
+    const novo: Estabelecimento = {
+      id: nextId('est_'),
+      clienteId,
+      nome: values.nome,
+      cnpj: values.cnpj,
+      cidade: values.cidade,
+      uf: values.uf,
+    };
+    state = {
+      ...state,
+      clientes: state.clientes.map((c) =>
+        c.id !== clienteId ? c : { ...c, estabelecimentos: [...c.estabelecimentos, novo] },
+      ),
+    };
+    emit();
+    return novo;
+  },
+
+  updateEstabelecimento(clienteId: string, estId: string, values: EstabelecimentoFormValues) {
+    state = {
+      ...state,
+      clientes: state.clientes.map((c) =>
+        c.id !== clienteId ? c : {
+          ...c,
+          estabelecimentos: c.estabelecimentos.map((e) =>
+            e.id !== estId ? e : { ...e, nome: values.nome, cnpj: values.cnpj, cidade: values.cidade, uf: values.uf },
+          ),
+        },
+      ),
+    };
+    emit();
+  },
+
+  removeEstabelecimento(clienteId: string, estId: string) {
+    state = {
+      ...state,
+      clientes: state.clientes.map((c) =>
+        c.id !== clienteId ? c : {
+          ...c,
+          estabelecimentos: c.estabelecimentos.filter((e) => e.id !== estId),
+        },
+      ),
     };
     emit();
   },

@@ -27,15 +27,8 @@ const STATUS_LABEL: Record<Cliente['status'], string> = {
 export function ClientesList({ onNavigate }: ClientesListProps) {
   const { clientes, contratos } = useStore();
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingCliente, setEditingCliente] = useState<Cliente | undefined>(undefined);
 
   function openCreate() {
-    setEditingCliente(undefined);
-    setModalOpen(true);
-  }
-
-  function openEdit(cli: Cliente) {
-    setEditingCliente(cli);
     setModalOpen(true);
   }
 
@@ -74,10 +67,10 @@ export function ClientesList({ onNavigate }: ClientesListProps) {
                     </div>
                   </div>
                   <button
-                    onClick={() => openEdit(cli)}
+                    onClick={() => onNavigate({ name: 'cliente', id: cli.id })}
                     className="text-xs text-ink-400 hover:text-orange-600 font-semibold px-2 py-1 rounded-sm hover:bg-orange-50"
                   >
-                    Editar
+                    Ver detalhes
                   </button>
                 </div>
 
@@ -162,14 +155,7 @@ export function ClientesList({ onNavigate }: ClientesListProps) {
       <ClienteFormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        cliente={editingCliente}
-        onSave={(values) => {
-          if (editingCliente) {
-            store.updateCliente(editingCliente.id, values);
-          } else {
-            store.addCliente(values);
-          }
-        }}
+        onSave={(values) => store.addCliente(values)}
       />
     </div>
   );

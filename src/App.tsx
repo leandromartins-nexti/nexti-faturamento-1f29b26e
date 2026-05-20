@@ -10,6 +10,7 @@ import { Catalogo } from './pages/Catalogo';
 import { EventosGlobal } from './pages/EventosGlobal';
 import { Faturas } from './pages/Faturas';
 import { FilialsList } from './pages/FilialsList';
+import { Ajuda } from './pages/Ajuda';
 import type { Route } from './lib/router';
 
 const titles: Record<Route['name'], { title: string; subtitle?: string }> = {
@@ -22,6 +23,7 @@ const titles: Record<Route['name'], { title: string; subtitle?: string }> = {
   eventos: { title: 'Eventos de uso', subtitle: 'Histórico consolidado de movimentações' },
   faturas: { title: 'Faturas', subtitle: 'Geração mensal e documentos fiscais' },
   filiais: { title: 'Filiais', subtitle: 'Dados cadastrais, fiscais e de endereço' },
+  ajuda: { title: 'Ajuda & Onboarding', subtitle: 'Guia passo a passo de configuração e operação' },
 };
 
 export default function App() {
@@ -43,6 +45,7 @@ export default function App() {
           {route.name === 'eventos' && <EventosGlobal onNavigate={setRoute} />}
           {route.name === 'faturas' && <Faturas />}
           {route.name === 'filiais' && <FilialsList />}
+          {route.name === 'ajuda' && <Ajuda onNavigate={setRoute} />}
         </div>
       </main>
     </div>

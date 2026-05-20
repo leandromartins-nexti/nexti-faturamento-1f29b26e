@@ -7,4 +7,5 @@ export type Route =
   | { name: 'catalogo' }
   | { name: 'eventos' }
   | { name: 'faturas' }
-  | { name: 'filiais' };
+  | { name: 'filiais' }
+  | { name: 'ajuda' };

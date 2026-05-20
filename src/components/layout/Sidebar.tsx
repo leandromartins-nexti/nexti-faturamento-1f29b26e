@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Users, Package, Activity, Receipt, Settings } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Package, Activity, Receipt, Settings, Landmark } from 'lucide-react';
 import type { Route } from '../../lib/router';
 
 interface SidebarProps {
@@ -13,6 +13,7 @@ const items: { id: Route['name']; label: string; icon: typeof LayoutDashboard }[
   { id: 'catalogo', label: 'Catálogo', icon: Package },
   { id: 'eventos', label: 'Eventos de uso', icon: Activity },
   { id: 'faturas', label: 'Faturas', icon: Receipt },
+  { id: 'filiais', label: 'Filiais', icon: Landmark },
 ];
 
 export function Sidebar({ route, onNavigate }: SidebarProps) {

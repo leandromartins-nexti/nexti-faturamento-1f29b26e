@@ -2,9 +2,31 @@ import type {
   Cliente,
   Contrato,
   EventoDeUso,
+  Filial,
   Metrica,
   Produto,
 } from './types';
+
+export const filiais: Filial[] = [
+  {
+    id: 'fil1',
+    document: '12.345.678/0001-90',
+    nomeFantasia: 'Nexti Sistemas',
+    razaoSocial: 'Nexti Tecnologia e Sistemas Ltda.',
+    email: 'faturamento@nexti.com.br',
+    phone: '(47) 3333-4444',
+    zipCode: '89201-020',
+    street: 'Rua XV de Novembro',
+    number: '2100',
+    complement: 'Sala 501',
+    district: 'Centro',
+    city: 'Joinville',
+    state: 'SC',
+    inscricaoMunicipal: '12345-6',
+    inscricaoEstadual: '123.456.789',
+    regimeTributario: 'LUCRO_PRESUMIDO',
+  },
+];
 
 export const produtos: Produto[] = [
   { id: 'p1', nome: 'Nexti Ponto Cloud', categoria: 'SaaS' },

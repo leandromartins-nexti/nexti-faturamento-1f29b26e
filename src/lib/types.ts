@@ -28,6 +28,27 @@ export type ApresentacaoFatura = 'AGREGADA' | 'DETALHADA';
 
 export type EventoSource = 'MANUAL' | 'API' | 'CSV';
 
+export type RegimeTributario = 'SIMPLES_NACIONAL' | 'LUCRO_PRESUMIDO' | 'LUCRO_REAL';
+
+export interface Filial {
+  id: string;
+  document: string;
+  nomeFantasia: string;
+  razaoSocial: string;
+  email?: string;
+  phone?: string;
+  zipCode?: string;
+  street?: string;
+  number?: string;
+  complement?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  inscricaoMunicipal?: string;
+  inscricaoEstadual?: string;
+  regimeTributario?: RegimeTributario;
+}
+
 export interface Cliente {
   id: string;
   razaoSocial: string;

@@ -3,25 +3,29 @@ import {
   contratos as seedContratos,
   eventos as seedEventos,
   clientes as seedClientes,
+  filiais as seedFiliais,
   produtos,
   metricas,
 } from './mockData';
-import type { Cliente, Contrato, DueType, PaymentMethod, ReadjustmentAnchor, ApresentacaoFatura, Estabelecimento, EventoDeUso, ItemDeContrato } from './types';
+import type { Cliente, Contrato, DueType, Filial, PaymentMethod, ReadjustmentAnchor, ApresentacaoFatura, Estabelecimento, EventoDeUso, ItemDeContrato } from './types';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
 import type { ClienteFormValues } from '../components/modals/ClienteFormModal';
+import type { FilialFormValues } from '../components/modals/FilialFormModal';
 
 interface StoreState {
   clientes: Cliente[];
   contratos: Contrato[];
   eventos: EventoDeUso[];
+  filiais: Filial[];
 }
 
 let state: StoreState = {
   clientes: seedClientes,
   contratos: seedContratos,
   eventos: seedEventos,
+  filiais: seedFiliais,
 };
 
 const listeners = new Set<() => void>();
@@ -187,6 +191,62 @@ export const store = {
 
   removeEvento(id: string) {
     state = { ...state, eventos: state.eventos.filter((e) => e.id !== id) };
+    emit();
+  },
+
+  addFilial(values: FilialFormValues): Filial {
+    const novo: Filial = {
+      id: nextId('fil_'),
+      document: values.document,
+      nomeFantasia: values.nomeFantasia,
+      razaoSocial: values.razaoSocial,
+      email: values.email || undefined,
+      phone: values.phone || undefined,
+      zipCode: values.zipCode || undefined,
+      street: values.street || undefined,
+      number: values.number || undefined,
+      complement: values.complement || undefined,
+      district: values.district || undefined,
+      city: values.city || undefined,
+      state: values.state || undefined,
+      inscricaoMunicipal: values.inscricaoMunicipal || undefined,
+      inscricaoEstadual: values.inscricaoEstadual || undefined,
+      regimeTributario: values.regimeTributario || undefined,
+    };
+    state = { ...state, filiais: [...state.filiais, novo] };
+    emit();
+    return novo;
+  },
+
+  updateFilial(id: string, values: FilialFormValues) {
+    state = {
+      ...state,
+      filiais: state.filiais.map((f) =>
+        f.id !== id ? f : {
+          ...f,
+          document: values.document,
+          nomeFantasia: values.nomeFantasia,
+          razaoSocial: values.razaoSocial,
+          email: values.email || undefined,
+          phone: values.phone || undefined,
+          zipCode: values.zipCode || undefined,
+          street: values.street || undefined,
+          number: values.number || undefined,
+          complement: values.complement || undefined,
+          district: values.district || undefined,
+          city: values.city || undefined,
+          state: values.state || undefined,
+          inscricaoMunicipal: values.inscricaoMunicipal || undefined,
+          inscricaoEstadual: values.inscricaoEstadual || undefined,
+          regimeTributario: values.regimeTributario || undefined,
+        },
+      ),
+    };
+    emit();
+  },
+
+  removeFilial(id: string) {
+    state = { ...state, filiais: state.filiais.filter((f) => f.id !== id) };
     emit();
   },
 };

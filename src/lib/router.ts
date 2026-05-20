@@ -6,4 +6,5 @@ export type Route =
   | { name: 'cliente'; id: string }
   | { name: 'catalogo' }
   | { name: 'eventos' }
-  | { name: 'faturas' };
+  | { name: 'faturas' }
+  | { name: 'filiais' };

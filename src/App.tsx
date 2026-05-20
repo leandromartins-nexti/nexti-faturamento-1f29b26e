@@ -8,6 +8,7 @@ import { ClientesList } from './pages/ClientesList';
 import { Catalogo } from './pages/Catalogo';
 import { EventosGlobal } from './pages/EventosGlobal';
 import { Faturas } from './pages/Faturas';
+import { FilialsList } from './pages/FilialsList';
 import type { Route } from './lib/router';
 
 const titles: Record<Route['name'], { title: string; subtitle?: string }> = {
@@ -19,6 +20,7 @@ const titles: Record<Route['name'], { title: string; subtitle?: string }> = {
   catalogo: { title: 'Catálogo', subtitle: 'Produtos e métricas de apuração' },
   eventos: { title: 'Eventos de uso', subtitle: 'Histórico consolidado de movimentações' },
   faturas: { title: 'Faturas', subtitle: 'Geração mensal e documentos fiscais' },
+  filiais: { title: 'Filiais', subtitle: 'Dados cadastrais, fiscais e de endereço' },
 };
 
 export default function App() {
@@ -38,6 +40,7 @@ export default function App() {
           {route.name === 'catalogo' && <Catalogo />}
           {route.name === 'eventos' && <EventosGlobal onNavigate={setRoute} />}
           {route.name === 'faturas' && <Faturas />}
+          {route.name === 'filiais' && <FilialsList />}
         </div>
       </main>
     </div>

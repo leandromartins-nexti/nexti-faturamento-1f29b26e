@@ -5,7 +5,6 @@ import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ClienteFormModal } from '../components/modals/ClienteFormModal';
 import { useStore, store } from '../lib/store';
-import { fmtBRL } from '../lib/format';
 import type { Route } from '../lib/router';
 
 interface ClientesListProps {
@@ -31,7 +30,6 @@ export function ClientesList({ onNavigate }: ClientesListProps) {
         {clientes.map((cli) => {
           const cts = contratos.filter((c) => c.clienteId === cli.id);
           const ativos = cts.filter((c) => c.status === 'ACTIVE');
-          const mrr = ativos.reduce((s, c) => s + c.mrr, 0);
           return (
             <Card key={cli.id} className="hover:shadow-sm transition-shadow">
               <CardBody>
@@ -51,8 +49,7 @@ export function ClientesList({ onNavigate }: ClientesListProps) {
                   </Badge>
                 </div>
 
-                <div className="mt-4 grid grid-cols-3 gap-3 pt-4 border-t border-ink-100">
-                  <Stat label="MRR" value={fmtBRL(mrr)} />
+                <div className="mt-4 grid grid-cols-2 gap-3 pt-4 border-t border-ink-100">
                   <Stat label="Contratos" value={cts.length.toString()} />
                   <Stat label="Filiais" value={cli.estabelecimentos.length.toString()} />
                 </div>

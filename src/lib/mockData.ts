@@ -78,14 +78,19 @@ export const contratos: Contrato[] = [
   {
     id: 'ct1',
     numero: 'CT-2024-0118',
-    clienteId: 'c1',
     status: 'ACTIVE',
+    filialId: 'fil1',
+    clienteId: 'c1',
     startDate: '2024-03-01',
     endDate: '2027-02-28',
+    dueType: 'FIXED_DAY',
+    dueDay: 10,
+    dueMonthOffset: 1,
+    paymentMethod: 'BOLETO',
     readjustmentIndex: 'IPCA',
     readjustmentPercent: 4.5,
-    lastReadjustedAt: '2025-03-01',
-    mrr: 8420.0,
+    readjustmentAnchor: 'ITEM',
+    apresentacaoFatura: 'DETALHADA',
     itens: [
       {
         id: 'it1',
@@ -97,7 +102,6 @@ export const contratos: Contrato[] = [
         minimumQuantity: 200,
         startDate: '2024-03-01',
         politicas: [],
-        lastReadjustedAt: '2025-03-01',
       },
       {
         id: 'it2',
@@ -108,7 +112,6 @@ export const contratos: Contrato[] = [
         unitPrice: 220.0,
         startDate: '2024-03-01',
         politicas: [],
-        lastReadjustedAt: '2025-03-01',
       },
       {
         id: 'it3',
@@ -136,12 +139,19 @@ export const contratos: Contrato[] = [
   {
     id: 'ct2',
     numero: 'CT-2024-0231',
-    clienteId: 'c2',
     status: 'ACTIVE',
+    filialId: 'fil1',
+    clienteId: 'c2',
     startDate: '2024-08-15',
+    dueType: 'DAYS_AFTER_BILLING',
+    dueDay: 0,
+    dueMonthOffset: 0,
+    dueDays: 15,
+    paymentMethod: 'PIX',
     readjustmentIndex: 'IGPM',
     readjustmentPercent: 3.2,
-    mrr: 3210.0,
+    readjustmentAnchor: 'CONTRACT',
+    apresentacaoFatura: 'AGREGADA',
     itens: [
       {
         id: 'it4',
@@ -179,14 +189,20 @@ export const contratos: Contrato[] = [
   {
     id: 'ct3',
     numero: 'CT-2023-0091',
-    clienteId: 'c3',
     status: 'ACTIVE',
+    filialId: 'fil1',
+    clienteId: 'c3',
     startDate: '2023-06-01',
     endDate: '2026-06-15',
+    dueType: 'FIXED_DAY',
+    dueDay: 5,
+    dueMonthOffset: 1,
+    paymentMethod: 'TRANSFERENCIA',
     readjustmentIndex: 'IPCA',
     readjustmentPercent: 4.5,
-    lastReadjustedAt: '2025-06-01',
-    mrr: 14860.0,
+    readjustmentAnchor: 'ITEM',
+    apresentacaoFatura: 'DETALHADA',
+    notes: 'Negociação especial — volume acima de 800 func.',
     itens: [
       {
         id: 'it6',
@@ -198,7 +214,6 @@ export const contratos: Contrato[] = [
         minimumQuantity: 800,
         startDate: '2023-06-01',
         politicas: [],
-        lastReadjustedAt: '2025-06-01',
       },
       {
         id: 'it7',
@@ -208,7 +223,6 @@ export const contratos: Contrato[] = [
         unitPrice: 2200.0,
         startDate: '2023-06-01',
         politicas: [],
-        lastReadjustedAt: '2025-06-01',
       },
       {
         id: 'it8',
@@ -219,7 +233,6 @@ export const contratos: Contrato[] = [
         unitPrice: 420.0,
         startDate: '2023-06-01',
         politicas: [],
-        lastReadjustedAt: '2025-06-01',
       },
     ],
     reajustes: [
@@ -230,11 +243,17 @@ export const contratos: Contrato[] = [
   {
     id: 'ct4',
     numero: 'CT-2025-0014',
-    clienteId: 'c4',
     status: 'DRAFT',
+    filialId: 'fil1',
+    clienteId: 'c4',
     startDate: '2026-06-01',
+    dueType: 'FIXED_DAY',
+    dueDay: 15,
+    dueMonthOffset: 1,
+    paymentMethod: 'BOLETO',
     readjustmentIndex: 'NONE',
-    mrr: 0,
+    readjustmentAnchor: 'CONTRACT',
+    apresentacaoFatura: 'AGREGADA',
     itens: [
       {
         id: 'it9',
@@ -253,12 +272,20 @@ export const contratos: Contrato[] = [
   {
     id: 'ct5',
     numero: 'CT-2024-0177',
-    clienteId: 'c5',
     status: 'SUSPENDED',
+    filialId: 'fil1',
+    clienteId: 'c5',
     startDate: '2024-01-10',
+    dueType: 'DAYS_AFTER_BILLING',
+    dueDay: 0,
+    dueMonthOffset: 0,
+    dueDays: 30,
+    paymentMethod: 'CARTAO_CREDITO',
     readjustmentIndex: 'FIXED_PERCENT',
     readjustmentPercent: 6.0,
-    mrr: 1490.0,
+    readjustmentAnchor: 'CONTRACT',
+    apresentacaoFatura: 'AGREGADA',
+    notes: 'Contrato suspenso por inadimplência.',
     itens: [
       {
         id: 'it10',

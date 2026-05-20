@@ -6,7 +6,7 @@ import {
   produtos,
   metricas,
 } from './mockData';
-import type { Cliente, Contrato, Estabelecimento, EventoDeUso, ItemDeContrato } from './types';
+import type { Cliente, Contrato, DueType, PaymentMethod, ReadjustmentAnchor, ApresentacaoFatura, Estabelecimento, EventoDeUso, ItemDeContrato } from './types';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
@@ -80,15 +80,24 @@ export const store = {
     const novo: Contrato = {
       id: nextId('ct_'),
       numero: values.numero || nextContratoNumero(),
-      clienteId: values.clienteId,
       status: values.status,
+      filialId: values.filialId,
+      clienteId: values.clienteId,
+      carteiraId: values.carteiraId,
       startDate: values.startDate,
       endDate: values.endDate,
+      dueType: values.dueType,
+      dueDay: values.dueDay,
+      dueMonthOffset: values.dueMonthOffset,
+      dueDays: values.dueDays,
+      paymentMethod: values.paymentMethod,
       readjustmentIndex: values.readjustmentIndex,
       readjustmentPercent: values.readjustmentPercent,
+      readjustmentAnchor: values.readjustmentAnchor,
+      apresentacaoFatura: values.apresentacaoFatura,
+      notes: values.notes,
       itens: [],
       reajustes: [],
-      mrr: 0,
     };
     state = { ...state, contratos: [novo, ...state.contratos] };
     emit();

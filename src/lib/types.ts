@@ -10,6 +10,22 @@ export type ReadjustmentIndex = 'NONE' | 'IPCA' | 'IGPM' | 'INPC' | 'FIXED_PERCE
 
 export type ContratoStatus = 'DRAFT' | 'ACTIVE' | 'SUSPENDED' | 'TERMINATED';
 
+export type DueType = 'FIXED_DAY' | 'DAYS_AFTER_BILLING';
+
+export type PaymentMethod =
+  | 'BOLETO'
+  | 'PIX'
+  | 'TRANSFERENCIA'
+  | 'DEPOSITO'
+  | 'CARTAO_CREDITO'
+  | 'CARTAO_DEBITO'
+  | 'DINHEIRO'
+  | 'OUTRO';
+
+export type ReadjustmentAnchor = 'CONTRACT' | 'ITEM';
+
+export type ApresentacaoFatura = 'AGREGADA' | 'DETALHADA';
+
 export type EventoSource = 'MANUAL' | 'API' | 'CSV';
 
 export interface Cliente {
@@ -79,16 +95,24 @@ export interface ItemDeContrato {
 export interface Contrato {
   id: string;
   numero: string;
-  clienteId: string;
   status: ContratoStatus;
+  filialId: string;
+  clienteId: string;
+  carteiraId?: string;
   startDate: string;
   endDate?: string;
+  dueType: DueType;
+  dueDay: number;
+  dueMonthOffset: number;
+  dueDays?: number;
+  paymentMethod: PaymentMethod;
   readjustmentIndex: ReadjustmentIndex;
   readjustmentPercent?: number;
-  lastReadjustedAt?: string;
+  readjustmentAnchor: ReadjustmentAnchor;
+  apresentacaoFatura: ApresentacaoFatura;
+  notes?: string;
   itens: ItemDeContrato[];
   reajustes: ReajusteHistorico[];
-  mrr: number;
 }
 
 export interface EventoDeUso {

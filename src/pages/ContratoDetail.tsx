@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   Building2,
   Calendar,
+  CreditCard,
   Edit3,
   FileText,
   MapPin,
@@ -21,11 +22,29 @@ import { Tabs } from '../components/ui/Tabs';
 import { ItemFormModal } from '../components/modals/ItemFormModal';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
 import { useStore, store } from '../lib/store';
-import { fmtBRL, fmtDate, addMonths, daysBetween } from '../lib/format';
+import { fmtBRL, fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
-import type { Contrato, ItemDeContrato, ItemType } from '../lib/types';
+import type { Contrato, ItemDeContrato, ItemType, DueType, PaymentMethod } from '../lib/types';
 
-const HOJE = '2026-05-19';
+const PAYMENT_LABEL: Record<PaymentMethod, string> = {
+  BOLETO: 'Boleto',
+  PIX: 'PIX',
+  TRANSFERENCIA: 'Transferência',
+  DEPOSITO: 'Depósito',
+  CARTAO_CREDITO: 'Cartão de crédito',
+  CARTAO_DEBITO: 'Cartão de débito',
+  DINHEIRO: 'Dinheiro',
+  OUTRO: 'Outro',
+};
+
+function paymentMethodLabel(m: PaymentMethod) {
+  return PAYMENT_LABEL[m];
+}
+
+function dueLabelShort(c: Contrato) {
+  if (c.dueType === 'FIXED_DAY') return `Dia ${c.dueDay}${c.dueMonthOffset ? ` (+${c.dueMonthOffset}m)` : ''}`;
+  return `${c.dueDays ?? '?'}d após fat.`;
+}
 
 const itemTypeLabel: Record<ItemType, { label: string; tone: 'info' | 'brand' | 'success' | 'neutral' }> = {
   RECORRENTE_FIXO: { label: 'Recorrente fixo', tone: 'info' },
@@ -59,11 +78,6 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
 
   const cliente = clientes.find((c) => c.id === contrato.clienteId);
   const eventos = allEventos.filter((e) => e.contratoId === contrato.id);
-  const proximoReajusteData =
-    contrato.readjustmentIndex !== 'NONE'
-      ? addMonths(contrato.lastReadjustedAt ?? contrato.startDate, 12)
-      : null;
-  const diasReajuste = proximoReajusteData ? daysBetween(proximoReajusteData, HOJE) : null;
 
   if (!cliente) {
     return (
@@ -111,9 +125,14 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
               {contrato.readjustmentIndex !== 'NONE' && (
                 <span className="flex items-center gap-1.5">
                   <TrendingUp className="size-4 text-ink-400" />
-                  {contrato.readjustmentIndex} · {contrato.readjustmentPercent}%
+                  {contrato.readjustmentIndex}
+                  {contrato.readjustmentPercent ? ` · ${contrato.readjustmentPercent}%` : ''}
                 </span>
               )}
+              <span className="flex items-center gap-1.5">
+                <CreditCard className="size-4 text-ink-400" />
+                {paymentMethodLabel(contrato.paymentMethod)}
+              </span>
             </div>
           </div>
         </div>
@@ -129,26 +148,35 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
 
       {/* Cards de resumo */}
       <div className="grid grid-cols-4 gap-4">
-        <SummaryStat label="MRR" value={fmtBRL(contrato.mrr)} icon={Receipt} tone="brand" />
-        <SummaryStat label="Itens ativos" value={contrato.itens.length.toString()} icon={FileText} tone="info" />
+        <SummaryStat label="Itens" value={contrato.itens.length.toString()} icon={FileText} tone="info" />
         <SummaryStat
           label="Eventos no mês"
           value={eventos.filter((e) => e.referencePeriod === '2026-04').length.toString()}
           icon={Activity}
           tone="success"
         />
-        {proximoReajusteData ? (
-          <SummaryStat
-            label="Próx. reajuste"
-            value={fmtDate(proximoReajusteData)}
-            icon={TrendingUp}
-            tone={diasReajuste !== null && diasReajuste < 30 ? 'warning' : 'neutral'}
-            sub={diasReajuste !== null ? `${diasReajuste > 0 ? 'em' : 'há'} ${Math.abs(diasReajuste)} dias` : ''}
-          />
-        ) : (
-          <SummaryStat label="Reajuste" value="Sem índice" icon={TrendingUp} tone="neutral" />
-        )}
+        <SummaryStat
+          label="Vencimento"
+          value={dueLabelShort(contrato)}
+          icon={Calendar}
+          tone="neutral"
+        />
+        <SummaryStat
+          label="Reajuste"
+          value={contrato.readjustmentIndex === 'NONE' ? 'Sem índice' : contrato.readjustmentIndex}
+          icon={TrendingUp}
+          tone={contrato.readjustmentIndex === 'NONE' ? 'neutral' : 'brand'}
+          sub={contrato.readjustmentPercent ? `${contrato.readjustmentPercent}% · ${contrato.readjustmentAnchor === 'ITEM' ? 'por item' : 'por contrato'}` : undefined}
+        />
       </div>
+
+      {/* Observações (se existir) */}
+      {contrato.notes && (
+        <div className="flex items-start gap-2 p-3 rounded-sm bg-warning-bg border border-warning/20 text-sm text-ink-700">
+          <FileText className="size-4 text-warning mt-0.5 shrink-0" />
+          {contrato.notes}
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs tabs={tabs} active={tab} onChange={setTab} />
@@ -513,27 +541,17 @@ function ReajustesTab({ contrato }: { contrato: Contrato }) {
     );
   }
 
-  const proximaData = addMonths(contrato.lastReadjustedAt ?? contrato.startDate, 12);
-  const dias = daysBetween(proximaData, HOJE);
-
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader className="flex items-center justify-between">
-          <CardTitle>Aplicar próximo reajuste</CardTitle>
-          <Badge tone={dias < 30 ? 'warning' : 'info'}>
-            {dias > 0 ? `em ${dias}d` : `atrasado ${Math.abs(dias)}d`}
-          </Badge>
+        <CardHeader>
+          <CardTitle>Configuração de reajuste</CardTitle>
         </CardHeader>
         <CardBody>
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-3 gap-4">
             <Field label="Índice" value={contrato.readjustmentIndex} />
-            <Field label="Percentual" value={`${contrato.readjustmentPercent}%`} />
-            <Field label="Data efetiva mínima" value={fmtDate(proximaData)} />
-            <Field
-              label="Último reajuste"
-              value={contrato.lastReadjustedAt ? fmtDate(contrato.lastReadjustedAt) : '—'}
-            />
+            <Field label="Percentual" value={contrato.readjustmentPercent ? `${contrato.readjustmentPercent}%` : '—'} />
+            <Field label="Âncora" value={contrato.readjustmentAnchor === 'ITEM' ? 'Por item' : 'Por contrato'} />
           </div>
           <div className="mt-5 flex justify-end gap-2">
             <Button variant="outline" size="sm">

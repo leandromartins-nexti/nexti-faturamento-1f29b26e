@@ -6,13 +6,24 @@ import { StatusPill } from '../components/ui/StatusPill';
 import { Badge } from '../components/ui/Badge';
 import { ContratoFormModal } from '../components/modals/ContratoFormModal';
 import { useStore, store } from '../lib/store';
-import { fmtBRL, fmtDate } from '../lib/format';
-import type { ContratoStatus } from '../lib/types';
+import { fmtDate } from '../lib/format';
+import type { ContratoStatus, PaymentMethod } from '../lib/types';
 import type { Route } from '../lib/router';
 
 interface ContratosListProps {
   onNavigate: (r: Route) => void;
 }
+
+const PAYMENT_SHORT: Record<PaymentMethod, string> = {
+  BOLETO: 'Boleto',
+  PIX: 'PIX',
+  TRANSFERENCIA: 'Transf.',
+  DEPOSITO: 'Depósito',
+  CARTAO_CREDITO: 'Cartão Créd.',
+  CARTAO_DEBITO: 'Cartão Déb.',
+  DINHEIRO: 'Dinheiro',
+  OUTRO: 'Outro',
+};
 
 const STATUS_FILTERS: { id: 'ALL' | ContratoStatus; label: string }[] = [
   { id: 'ALL', label: 'Todos' },
@@ -89,8 +100,8 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
                 <th className="text-left px-5 py-3 font-semibold">Status</th>
                 <th className="text-left px-5 py-3 font-semibold">Itens</th>
                 <th className="text-left px-5 py-3 font-semibold">Reajuste</th>
+                <th className="text-left px-5 py-3 font-semibold">Pagamento</th>
                 <th className="text-left px-5 py-3 font-semibold">Vigência</th>
-                <th className="text-right px-5 py-3 font-semibold">MRR</th>
                 <th className="px-5 py-3"></th>
               </tr>
             </thead>
@@ -135,12 +146,12 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
                         </Badge>
                       )}
                     </td>
+                    <td className="px-5 py-3.5">
+                      <Badge tone="neutral">{PAYMENT_SHORT[c.paymentMethod]}</Badge>
+                    </td>
                     <td className="px-5 py-3.5 text-xs text-ink-600">
                       <div>{fmtDate(c.startDate)}</div>
                       <div className="text-ink-400">→ {c.endDate ? fmtDate(c.endDate) : 'indeterminado'}</div>
-                    </td>
-                    <td className="px-5 py-3.5 text-right font-bold text-navy-700">
-                      {fmtBRL(c.mrr)}
                     </td>
                     <td className="px-5 py-3.5 text-right">
                       <ArrowRight className="size-4 text-ink-400 inline" />
@@ -150,7 +161,7 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-5 py-12 text-center text-ink-500 text-sm">
+                  <td colSpan={7} className="px-5 py-12 text-center text-ink-500 text-sm">
                     Nenhum contrato encontrado com os filtros atuais.
                   </td>
                 </tr>

@@ -3,7 +3,7 @@ import { Button } from '@/ds';
 import { Package } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Field, TextInput, Select, PrefixInput } from '../ui/Form';
-import { metricas } from '../../lib/mockData';
+import { useStore } from '../../lib/store';
 import type { Produto, ProdutoType } from '../../lib/types';
 
 interface ProdutoFormModalProps {
@@ -49,6 +49,7 @@ function produtoToValues(p: Produto): ProdutoFormValues {
 }
 
 export function ProdutoFormModal({ open, onClose, produto, onSave }: ProdutoFormModalProps) {
+  const { metricas } = useStore();
   const isEditing = !!produto;
   const [values, setValues] = useState<ProdutoFormValues>(EMPTY);
 

@@ -16,7 +16,9 @@ import type {
 interface ContratoFormModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (values: ContratoFormValues) => void;
+  contrato?: ContratoFormValues & { id: string };
+  onCreate?: (values: ContratoFormValues) => void;
+  onUpdate?: (id: string, values: ContratoFormValues) => void;
 }
 
 export interface ContratoFormValues {
@@ -85,14 +87,20 @@ const EMPTY: ContratoFormValues = {
   notes: '',
 };
 
-export function ContratoFormModal({ open, onClose, onCreate }: ContratoFormModalProps) {
+export function ContratoFormModal({ open, onClose, contrato, onCreate, onUpdate }: ContratoFormModalProps) {
   const { clientes } = useStore();
+  const isEditing = !!contrato;
   const [values, setValues] = useState<ContratoFormValues>({ ...EMPTY, clienteId: clientes[0]?.id ?? '' });
 
   useEffect(() => {
     if (!open) return;
-    setValues({ ...EMPTY, clienteId: clientes[0]?.id ?? '' });
-  }, [open]);
+    if (isEditing && contrato) {
+      const { id, ...rest } = contrato;
+      setValues(rest);
+    } else {
+      setValues({ ...EMPTY, clienteId: clientes[0]?.id ?? '' });
+    }
+  }, [open, isEditing, contrato]);
 
   function update<K extends keyof ContratoFormValues>(key: K, val: ContratoFormValues[K]) {
     setValues((v) => ({ ...v, [key]: val }));
@@ -119,12 +127,16 @@ export function ContratoFormModal({ open, onClose, onCreate }: ContratoFormModal
 
   function handleSubmit() {
     if (!canSubmit) return;
-    onCreate(values);
+    if (isEditing && contrato && onUpdate) {
+      onUpdate(contrato.id, values);
+    } else if (!isEditing && onCreate) {
+      onCreate(values);
+    }
     onClose();
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Novo contrato" size="lg">
+    <Modal open={open} onClose={onClose} title={isEditing ? 'Editar contrato' : 'Novo contrato'} size="lg">
       <div className="space-y-6">
 
         {/* Identificação */}
@@ -355,7 +367,9 @@ export function ContratoFormModal({ open, onClose, onCreate }: ContratoFormModal
 
       <div className="flex justify-end gap-2 mt-6 pt-4 border-t border-ink-100">
         <Button variant="outline" size="sm" onClick={onClose}>Cancelar</Button>
-        <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>Criar contrato</Button>
+        <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
+          {isEditing ? 'Salvar alterações' : 'Criar contrato'}
+        </Button>
       </div>
     </Modal>
   );

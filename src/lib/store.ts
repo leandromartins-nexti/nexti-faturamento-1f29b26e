@@ -193,6 +193,37 @@ export const store = {
     return novo;
   },
 
+  updateContrato(id: string, values: ContratoFormValues) {
+    state = {
+      ...state,
+      contratos: state.contratos.map((c) =>
+        c.id !== id
+          ? c
+          : {
+              ...c,
+              numero: values.numero || c.numero,
+              status: values.status,
+              filialId: values.filialId,
+              clienteId: values.clienteId,
+              carteiraId: values.carteiraId,
+              startDate: values.startDate,
+              endDate: values.endDate,
+              dueType: values.dueType,
+              dueDay: values.dueDay,
+              dueMonthOffset: values.dueMonthOffset,
+              dueDays: values.dueDays,
+              paymentMethod: values.paymentMethod,
+              readjustmentIndex: values.readjustmentIndex,
+              readjustmentPercent: values.readjustmentPercent,
+              readjustmentAnchor: values.readjustmentAnchor,
+              apresentacaoFatura: values.apresentacaoFatura,
+              notes: values.notes,
+            }
+      ),
+    };
+    emit();
+  },
+
   addItem(contratoId: string, values: ItemFormValues) {
     const produto = state.produtos.find((p) => p.id === values.produtoId);
     const metrica = values.metricaId ? state.metricas.find((m) => m.id === values.metricaId) : undefined;

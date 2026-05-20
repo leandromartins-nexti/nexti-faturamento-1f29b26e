@@ -21,6 +21,8 @@ import { StatusPill } from '../components/ui/StatusPill';
 import { Tabs } from '../components/ui/Tabs';
 import { ItemFormModal } from '../components/modals/ItemFormModal';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
+import { ContratoFormModal } from '../components/modals/ContratoFormModal';
+import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
 import { useStore, store } from '../lib/store';
 import { fmtBRL, fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
@@ -65,6 +67,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
   const [itemModalOpen, setItemModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ItemDeContrato | undefined>(undefined);
   const [eventoModalOpen, setEventoModalOpen] = useState(false);
+  const [contratoModalOpen, setContratoModalOpen] = useState(false);
 
   if (!contrato) {
     return (
@@ -137,7 +140,12 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" leftIcon={<Edit3 className="size-4" />}>
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Edit3 className="size-4" />}
+            onClick={() => setContratoModalOpen(true)}
+          >
             Editar contrato
           </Button>
           <Button size="sm" leftIcon={<Receipt className="size-4" />}>
@@ -230,6 +238,36 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
         contrato={contrato}
         onSave={(values) => store.addEvento(values)}
       />
+
+      {contrato && (
+        <ContratoFormModal
+          open={contratoModalOpen}
+          onClose={() => setContratoModalOpen(false)}
+          contrato={{
+            id: contrato.id,
+            numero: contrato.numero,
+            status: contrato.status,
+            filialId: contrato.filialId,
+            clienteId: contrato.clienteId,
+            carteiraId: contrato.carteiraId,
+            startDate: contrato.startDate,
+            endDate: contrato.endDate,
+            dueType: contrato.dueType,
+            dueDay: contrato.dueDay,
+            dueMonthOffset: contrato.dueMonthOffset,
+            dueDays: contrato.dueDays,
+            paymentMethod: contrato.paymentMethod,
+            readjustmentIndex: contrato.readjustmentIndex,
+            readjustmentPercent: contrato.readjustmentPercent,
+            readjustmentAnchor: contrato.readjustmentAnchor,
+            apresentacaoFatura: contrato.apresentacaoFatura,
+            notes: contrato.notes,
+          }}
+          onUpdate={(contratoId, values) => {
+            store.updateContrato(contratoId, values);
+          }}
+        />
+      )}
     </div>
   );
 }

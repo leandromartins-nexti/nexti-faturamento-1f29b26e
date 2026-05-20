@@ -46,9 +46,11 @@ export const metricas: Metrica[] = [
 export const clientes: Cliente[] = [
   {
     id: 'c1',
-    razaoSocial: 'Indústrias Aurora Alimentos S.A.',
-    nomeFantasia: 'Aurora Alimentos',
-    cnpj: '12.345.678/0001-90',
+    code: 'GR001',
+    name: 'Aurora Alimentos',
+    status: 'ACTIVE',
+    email: 'contato@aurora.com.br',
+    phone: '(49) 3321-5500',
     estabelecimentos: [
       { id: 'e1', clienteId: 'c1', nome: 'Matriz Chapecó', cnpj: '12.345.678/0001-90', cidade: 'Chapecó', uf: 'SC' },
       { id: 'e2', clienteId: 'c1', nome: 'Filial Joaçaba', cnpj: '12.345.678/0002-71', cidade: 'Joaçaba', uf: 'SC' },
@@ -57,9 +59,10 @@ export const clientes: Cliente[] = [
   },
   {
     id: 'c2',
-    razaoSocial: 'Construtora Brasil Norte Ltda.',
-    nomeFantasia: 'CBN Construções',
-    cnpj: '98.765.432/0001-11',
+    code: 'GR002',
+    name: 'CBN Construções',
+    status: 'ACTIVE',
+    email: 'faturamento@cbn.com.br',
     estabelecimentos: [
       { id: 'e4', clienteId: 'c2', nome: 'Sede São Paulo', cnpj: '98.765.432/0001-11', cidade: 'São Paulo', uf: 'SP' },
       { id: 'e5', clienteId: 'c2', nome: 'Obra Manaus 01', cnpj: '98.765.432/0002-00', cidade: 'Manaus', uf: 'AM' },
@@ -67,9 +70,12 @@ export const clientes: Cliente[] = [
   },
   {
     id: 'c3',
-    razaoSocial: 'Rede Vitalle Saúde Ltda.',
-    nomeFantasia: 'Vitalle Saúde',
-    cnpj: '45.678.123/0001-44',
+    code: 'GR003',
+    name: 'Vitalle Saúde',
+    status: 'ACTIVE',
+    email: 'ti@vitalle.com.br',
+    phone: '(31) 3200-1100',
+    notes: 'Negociação especial — volume acima de 800 func.',
     estabelecimentos: [
       { id: 'e6', clienteId: 'c3', nome: 'Hospital Centro', cnpj: '45.678.123/0001-44', cidade: 'Belo Horizonte', uf: 'MG' },
       { id: 'e7', clienteId: 'c3', nome: 'Clínica Sul', cnpj: '45.678.123/0002-25', cidade: 'Belo Horizonte', uf: 'MG' },
@@ -78,18 +84,19 @@ export const clientes: Cliente[] = [
   },
   {
     id: 'c4',
-    razaoSocial: 'Transportadora Caminhos do Sul S.A.',
-    nomeFantasia: 'Caminhos do Sul',
-    cnpj: '33.221.998/0001-77',
+    code: 'GR004',
+    name: 'Caminhos do Sul',
+    status: 'INACTIVE',
     estabelecimentos: [
       { id: 'e9', clienteId: 'c4', nome: 'Garagem Porto Alegre', cnpj: '33.221.998/0001-77', cidade: 'Porto Alegre', uf: 'RS' },
     ],
   },
   {
     id: 'c5',
-    razaoSocial: 'Tecnologia Argos Sistemas Ltda.',
-    nomeFantasia: 'Argos Tech',
-    cnpj: '77.889.001/0001-22',
+    code: 'GR005',
+    name: 'Argos Tech',
+    status: 'SUSPENDED',
+    notes: 'Contrato suspenso por inadimplência.',
     estabelecimentos: [
       { id: 'e10', clienteId: 'c5', nome: 'HQ Florianópolis', cnpj: '77.889.001/0001-22', cidade: 'Florianópolis', uf: 'SC' },
     ],

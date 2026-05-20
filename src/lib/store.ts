@@ -7,7 +7,7 @@ import {
   produtos,
   metricas,
 } from './mockData';
-import type { Cliente, Contrato, DueType, Filial, PaymentMethod, ReadjustmentAnchor, ApresentacaoFatura, Estabelecimento, EventoDeUso, ItemDeContrato } from './types';
+import type { Cliente, ClienteStatus, Contrato, DueType, Filial, PaymentMethod, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
@@ -57,27 +57,55 @@ function nextContratoNumero(): string {
   return `CT-${year}-${seq}`;
 }
 
+function nextClientCode(): string {
+  const max = state.clientes.reduce((n, c) => {
+    const m = c.code.match(/^GR(\d+)$/);
+    return m ? Math.max(n, parseInt(m[1], 10)) : n;
+  }, 0);
+  return `GR${String(max + 1).padStart(3, '0')}`;
+}
+
 export const store = {
   addCliente(values: ClienteFormValues): Cliente {
     const clienteId = nextId('cli_');
-    const estabelecimentos: Estabelecimento[] = values.estabelecimentos.map((e) => ({
-      id: nextId('est_'),
-      clienteId,
-      nome: e.nome,
-      cnpj: e.cnpj,
-      cidade: e.cidade,
-      uf: e.uf,
-    }));
     const novo: Cliente = {
       id: clienteId,
-      razaoSocial: values.razaoSocial,
-      nomeFantasia: values.nomeFantasia,
-      cnpj: values.cnpj,
-      estabelecimentos,
+      code: values.code || nextClientCode(),
+      name: values.name,
+      status: 'ACTIVE',
+      email: values.email || undefined,
+      phone: values.phone || undefined,
+      notes: values.notes || undefined,
+      estabelecimentos: [],
     };
     state = { ...state, clientes: [novo, ...state.clientes] };
     emit();
     return novo;
+  },
+
+  updateCliente(id: string, values: ClienteFormValues) {
+    state = {
+      ...state,
+      clientes: state.clientes.map((c) =>
+        c.id !== id ? c : {
+          ...c,
+          code: values.code,
+          name: values.name,
+          email: values.email || undefined,
+          phone: values.phone || undefined,
+          notes: values.notes || undefined,
+        },
+      ),
+    };
+    emit();
+  },
+
+  setClienteStatus(id: string, status: ClienteStatus) {
+    state = {
+      ...state,
+      clientes: state.clientes.map((c) => c.id !== id ? c : { ...c, status }),
+    };
+    emit();
   },
 
   addContrato(values: ContratoFormValues): Contrato {

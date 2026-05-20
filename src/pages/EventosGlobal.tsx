@@ -100,7 +100,7 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
                         <div className="font-semibold text-navy-700 hover:text-orange-600">
                           {contrato.numero}
                         </div>
-                        <div className="text-xs text-ink-500">{cliente.nomeFantasia}</div>
+                        <div className="text-xs text-ink-500">{cliente.name}</div>
                       </button>
                     </td>
                     <td className="px-5 py-3 text-ink-700">{est?.nome}</td>

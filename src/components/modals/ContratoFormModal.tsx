@@ -152,13 +152,13 @@ export function ContratoFormModal({ open, onClose, onCreate }: ContratoFormModal
             <Field label="Cliente" required error={errors.clienteId}>
               <Select value={values.clienteId} onChange={(e) => update('clienteId', e.target.value)}>
                 {clientes.map((c) => (
-                  <option key={c.id} value={c.id}>{c.nomeFantasia} · {c.cnpj}</option>
+                  <option key={c.id} value={c.id}>{c.name} · {c.code}</option>
                 ))}
               </Select>
               {cliente && (
                 <div className="mt-1.5 flex items-center gap-2 text-xs text-ink-500">
                   <Building2 className="size-3.5" />
-                  {cliente.razaoSocial} · {cliente.estabelecimentos.length} estab.
+                  {cliente.name} · {cliente.estabelecimentos.length} estab.
                 </div>
               )}
             </Field>

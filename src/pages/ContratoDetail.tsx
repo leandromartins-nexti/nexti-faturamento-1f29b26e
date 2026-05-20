@@ -116,7 +116,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
             <div className="flex items-center gap-4 text-sm text-ink-600">
               <span className="flex items-center gap-1.5">
                 <Building2 className="size-4 text-ink-400" />
-                {cliente.nomeFantasia}
+                {cliente.name}
               </span>
               <span className="flex items-center gap-1.5">
                 <Calendar className="size-4 text-ink-400" />

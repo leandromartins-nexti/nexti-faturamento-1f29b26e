@@ -103,7 +103,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                   {vencendo.map((c) => (
                     <tr key={c.id} className="border-t border-ink-100 hover:bg-bg-subtle">
                       <td className="px-5 py-3 font-semibold text-navy-700">{c.numero}</td>
-                      <td className="px-5 py-3 text-ink-700">{c.cliente.nomeFantasia}</td>
+                      <td className="px-5 py-3 text-ink-700">{c.cliente.name}</td>
                       <td className="px-5 py-3 text-ink-700">{c.itens.length}</td>
                       <td className="px-5 py-3">
                         <Badge tone={c.diasRestantes <= 30 ? 'danger' : 'warning'}>
@@ -195,7 +195,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-navy-700 text-sm truncate">
                           {ev.quantity > 0 ? '+' : ''}
-                          {ev.quantity} · {cliente.nomeFantasia}
+                          {ev.quantity} · {cliente.name}
                         </span>
                         <Badge tone={sourceColors[ev.source]}>{ev.source}</Badge>
                       </div>

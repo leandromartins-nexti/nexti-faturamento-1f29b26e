@@ -44,7 +44,7 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
       .filter((c) => (status === 'ALL' ? true : c.status === status))
       .filter((c) => {
         const cli = clientes.find((cl) => cl.id === c.clienteId);
-        const blob = `${c.numero} ${cli?.nomeFantasia} ${cli?.razaoSocial} ${cli?.cnpj}`.toLowerCase();
+        const blob = `${c.numero} ${cli?.name} ${cli?.code}`.toLowerCase();
         return blob.includes(q.toLowerCase());
       });
   }, [status, q, contratos]);
@@ -121,8 +121,8 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
                       <div className="text-xs text-ink-500">ID {c.id}</div>
                     </td>
                     <td className="px-5 py-3.5">
-                      <div className="font-semibold text-ink-800">{cli.nomeFantasia}</div>
-                      <div className="text-xs text-ink-500">{cli.cnpj}</div>
+                      <div className="font-semibold text-ink-800">{cli.name}</div>
+                      <div className="text-xs text-ink-500">{cli.code}</div>
                     </td>
                     <td className="px-5 py-3.5">
                       <StatusPill status={c.status} />

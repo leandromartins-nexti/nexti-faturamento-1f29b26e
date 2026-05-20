@@ -155,7 +155,7 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
                   const cli = clientes.find((cl) => cl.id === c.clienteId);
                   return (
                     <option key={c.id} value={c.id}>
-                      {c.numero} · {cli?.nomeFantasia}
+                      {c.numero} · {cli?.name}
                     </option>
                   );
                 })}

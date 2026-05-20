@@ -49,11 +49,16 @@ export interface Filial {
   regimeTributario?: RegimeTributario;
 }
 
+export type ClienteStatus = 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
+
 export interface Cliente {
   id: string;
-  razaoSocial: string;
-  nomeFantasia: string;
-  cnpj: string;
+  code: string;
+  name: string;
+  status: ClienteStatus;
+  email?: string;
+  phone?: string;
+  notes?: string;
   estabelecimentos: Estabelecimento[];
 }
 

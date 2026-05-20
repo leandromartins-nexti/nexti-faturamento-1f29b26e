@@ -71,17 +71,24 @@ export interface Estabelecimento {
   uf: string;
 }
 
+export type ProdutoType = 'RECORRENTE_FIXO' | 'RECORRENTE_MEDIDO' | 'AVULSO';
+
 export interface Produto {
   id: string;
-  nome: string;
-  categoria: 'SaaS' | 'HaaS' | 'Serviço';
+  name: string;
+  description?: string;
+  type: ProdutoType;
+  defaultPrice?: number;
+  metricaId?: string;
+  active: boolean;
 }
 
 export interface Metrica {
   id: string;
-  nome: string;
-  unidade: string;
+  name: string;
+  unit: string;
   apuracaoType: ApuracaoType;
+  description?: string;
 }
 
 export interface PoliticaTemporaria {

@@ -104,7 +104,7 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
                       </button>
                     </td>
                     <td className="px-5 py-3 text-ink-700">{est?.nome}</td>
-                    <td className="px-5 py-3 text-ink-700">{metrica?.nome}</td>
+                    <td className="px-5 py-3 text-ink-700">{metrica?.name}</td>
                     <td
                       className={`px-5 py-3 text-right font-bold ${
                         ev.quantity >= 0 ? 'text-success' : 'text-danger'

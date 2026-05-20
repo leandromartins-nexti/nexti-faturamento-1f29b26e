@@ -196,8 +196,8 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
                   }`}
                 >
                   <div>
-                    <div className="text-sm font-bold text-navy-700">{m.nome}</div>
-                    <div className="text-xs text-ink-500">unidade: {m.unidade}</div>
+                    <div className="text-sm font-bold text-navy-700">{m.name}</div>
+                    <div className="text-xs text-ink-500">unidade: {m.unit}</div>
                   </div>
                   <Badge tone={m.apuracaoType === 'BALANCE_AVG' ? 'brand' : 'info'}>
                     {m.apuracaoType}
@@ -260,7 +260,7 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
               <div>
                 <div className="text-xs text-ink-500">
                   {values.quantity >= 0 ? '+' : ''}
-                  {values.quantity} {metricaAtual?.unidade}
+                  {values.quantity} {metricaAtual?.unit}
                 </div>
                 <div
                   className={`text-xl font-black ${

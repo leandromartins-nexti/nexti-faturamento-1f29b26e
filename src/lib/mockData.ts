@@ -28,19 +28,19 @@ export const filiais: Filial[] = [
   },
 ];
 
-export const produtos: Produto[] = [
-  { id: 'p1', nome: 'Nexti Ponto Cloud', categoria: 'SaaS' },
-  { id: 'p2', nome: 'Nexti Folha', categoria: 'SaaS' },
-  { id: 'p3', nome: 'Terminal Biométrico REP-C', categoria: 'HaaS' },
-  { id: 'p4', nome: 'Terminal Facial Pro', categoria: 'HaaS' },
-  { id: 'p5', nome: 'Instalação on-site', categoria: 'Serviço' },
-  { id: 'p6', nome: 'Cortesia onboarding', categoria: 'Serviço' },
+export const metricas: Metrica[] = [
+  { id: 'm1', name: 'Funcionários únicos no mês', unit: 'func', apuracaoType: 'DISTINCT_COUNT' },
+  { id: 'm2', name: 'Terminais ativos', unit: 'terminal', apuracaoType: 'BALANCE_AVG' },
+  { id: 'm3', name: 'Transações de ponto', unit: 'transação', apuracaoType: 'DISTINCT_COUNT' },
 ];
 
-export const metricas: Metrica[] = [
-  { id: 'm1', nome: 'Funcionários únicos no mês', unidade: 'func', apuracaoType: 'DISTINCT_COUNT' },
-  { id: 'm2', nome: 'Terminais ativos', unidade: 'terminal', apuracaoType: 'BALANCE_AVG' },
-  { id: 'm3', nome: 'Transações de ponto', unidade: 'transação', apuracaoType: 'DISTINCT_COUNT' },
+export const produtos: Produto[] = [
+  { id: 'p1', name: 'Nexti Ponto Cloud', type: 'RECORRENTE_MEDIDO', metricaId: 'm1', defaultPrice: 4.9, active: true },
+  { id: 'p2', name: 'Nexti Folha', type: 'RECORRENTE_FIXO', defaultPrice: 2200.0, active: true },
+  { id: 'p3', name: 'Terminal Biométrico REP-C', type: 'RECORRENTE_MEDIDO', metricaId: 'm2', defaultPrice: 220.0, active: true },
+  { id: 'p4', name: 'Terminal Facial Pro', type: 'RECORRENTE_MEDIDO', metricaId: 'm2', defaultPrice: 380.0, active: true },
+  { id: 'p5', name: 'Instalação on-site', type: 'AVULSO', active: true },
+  { id: 'p6', name: 'Cortesia onboarding', type: 'AVULSO', active: true },
 ];
 
 export const clientes: Cliente[] = [

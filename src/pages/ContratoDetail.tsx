@@ -193,7 +193,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
             setItemModalOpen(true);
           }}
           onRemove={(it) => {
-            if (confirm(`Remover o item "${it.produto.nome}" do contrato?`)) {
+            if (confirm(`Remover o item "${it.produto.name}" do contrato?`)) {
               store.removeItem(contrato.id, it.id);
             }
           }}
@@ -321,8 +321,8 @@ function ItensTab({
                 return (
                   <tr key={it.id} className="border-t border-ink-100 hover:bg-bg-subtle">
                     <td className="px-5 py-3">
-                      <div className="font-semibold text-navy-700">{it.produto.nome}</div>
-                      <div className="text-xs text-ink-500">{it.produto.categoria}</div>
+                      <div className="font-semibold text-navy-700">{it.produto.name}</div>
+                      <div className="text-xs text-ink-500">{it.produto.type}</div>
                     </td>
                     <td className="px-5 py-3">
                       <Badge tone={t.tone}>{t.label}</Badge>
@@ -330,7 +330,7 @@ function ItensTab({
                     <td className="px-5 py-3 text-ink-700">
                       {it.metrica ? (
                         <div>
-                          <div className="text-sm">{it.metrica.nome}</div>
+                          <div className="text-sm">{it.metrica.name}</div>
                           <div className="text-xs text-ink-500">{it.metrica.apuracaoType}</div>
                         </div>
                       ) : (
@@ -426,11 +426,11 @@ function EventosTab({
             <Card key={metrica.id}>
               <CardBody>
                 <div className="text-xs text-ink-500 font-semibold uppercase tracking-wide">
-                  Saldo atual · {metrica.nome}
+                  Saldo atual · {metrica.name}
                 </div>
                 <div className="mt-2 flex items-baseline gap-2">
                   <div className="text-3xl font-black text-navy-700">{saldo}</div>
-                  <div className="text-sm text-ink-500">{metrica.unidade}s</div>
+                  <div className="text-sm text-ink-500">{metrica.unit}s</div>
                 </div>
               </CardBody>
             </Card>
@@ -483,7 +483,7 @@ function EventosTab({
                         {est?.cidade}/{est?.uf}
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-ink-700">{item?.metrica?.nome ?? '—'}</td>
+                    <td className="px-5 py-3 text-ink-700">{item?.metrica?.name ?? '—'}</td>
                     <td
                       className={`px-5 py-3 text-right font-bold ${
                         ev.quantity >= 0 ? 'text-success' : 'text-danger'

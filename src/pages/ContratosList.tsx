@@ -108,8 +108,8 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
             <tbody>
               {rows.map((c) => {
                 const cli = clientes.find((cl) => cl.id === c.clienteId)!;
-                const haaS = c.itens.filter((i) => i.produto.categoria === 'HaaS').length;
-                const saaS = c.itens.filter((i) => i.produto.categoria === 'SaaS').length;
+                const medidos = c.itens.filter((i) => i.produto.type === 'RECORRENTE_MEDIDO').length;
+                const fixos = c.itens.filter((i) => i.produto.type === 'RECORRENTE_FIXO').length;
                 return (
                   <tr
                     key={c.id}
@@ -129,8 +129,8 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
                     </td>
                     <td className="px-5 py-3.5">
                       <div className="flex flex-wrap gap-1">
-                        {saaS > 0 && <Badge tone="info">{saaS} SaaS</Badge>}
-                        {haaS > 0 && <Badge tone="brand">{haaS} HaaS</Badge>}
+                        {medidos > 0 && <Badge tone="brand">{medidos} Medido{medidos > 1 ? 's' : ''}</Badge>}
+                        {fixos > 0 && <Badge tone="info">{fixos} Fixo{fixos > 1 ? 's' : ''}</Badge>}
                         {c.itens.some((i) => i.type === 'BONIFICACAO') && (
                           <Badge tone="success">Bonif.</Badge>
                         )}

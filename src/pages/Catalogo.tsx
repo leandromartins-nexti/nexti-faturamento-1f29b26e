@@ -23,7 +23,7 @@ export function Catalogo() {
               <thead className="bg-bg-subtle text-xs text-ink-500">
                 <tr>
                   <th className="text-left px-5 py-2.5 font-semibold">Nome</th>
-                  <th className="text-left px-5 py-2.5 font-semibold">Categoria</th>
+                  <th className="text-left px-5 py-2.5 font-semibold">Tipo</th>
                   <th className="text-right px-5 py-2.5 font-semibold">Em uso</th>
                 </tr>
               </thead>
@@ -34,15 +34,20 @@ export function Catalogo() {
                     0,
                   );
                   const tones: Record<string, 'info' | 'brand' | 'neutral'> = {
-                    SaaS: 'info',
-                    HaaS: 'brand',
-                    Serviço: 'neutral',
+                    RECORRENTE_FIXO: 'info',
+                    RECORRENTE_MEDIDO: 'brand',
+                    AVULSO: 'neutral',
+                  };
+                  const typeLabel: Record<string, string> = {
+                    RECORRENTE_FIXO: 'Recorrente Fixo',
+                    RECORRENTE_MEDIDO: 'Recorrente Medido',
+                    AVULSO: 'Avulso',
                   };
                   return (
                     <tr key={p.id} className="border-t border-ink-100">
-                      <td className="px-5 py-3 font-semibold text-navy-700">{p.nome}</td>
+                      <td className="px-5 py-3 font-semibold text-navy-700">{p.name}</td>
                       <td className="px-5 py-3">
-                        <Badge tone={tones[p.categoria]}>{p.categoria}</Badge>
+                        <Badge tone={tones[p.type]}>{typeLabel[p.type]}</Badge>
                       </td>
                       <td className="px-5 py-3 text-right text-ink-700">{usos}</td>
                     </tr>
@@ -75,8 +80,8 @@ export function Catalogo() {
               <tbody>
                 {metricas.map((m) => (
                   <tr key={m.id} className="border-t border-ink-100">
-                    <td className="px-5 py-3 font-semibold text-navy-700">{m.nome}</td>
-                    <td className="px-5 py-3 text-ink-700">{m.unidade}</td>
+                    <td className="px-5 py-3 font-semibold text-navy-700">{m.name}</td>
+                    <td className="px-5 py-3 text-ink-700">{m.unit}</td>
                     <td className="px-5 py-3">
                       <Badge tone={m.apuracaoType === 'BALANCE_AVG' ? 'brand' : 'info'}>
                         {m.apuracaoType}

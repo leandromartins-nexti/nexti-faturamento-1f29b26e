@@ -33,19 +33,29 @@ const itemTypes: { id: ItemType; label: string; desc: string }[] = [
   { id: 'BONIFICACAO', label: 'Bonificação', desc: 'Crédito/desconto temporário' },
 ];
 
+const PRODUTO_TYPE_LABEL: Record<string, string> = {
+  RECORRENTE_FIXO: 'Fixo',
+  RECORRENTE_MEDIDO: 'Medido',
+  AVULSO: 'Avulso',
+};
+
+function defaultState(contrato: Contrato): ItemFormValues {
+  return {
+    produtoId: produtos[0].id,
+    type: produtos[0].type as ItemType,
+    metricaId: produtos[0].metricaId,
+    unitPrice: produtos[0].defaultPrice ?? 0,
+    minimumQuantity: undefined,
+    startDate: contrato.startDate,
+    endDate: undefined,
+  };
+}
+
 export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFormModalProps) {
   const isEditing = !!item;
   const priceLocked = contrato.readjustmentIndex !== 'NONE' && isEditing;
 
-  const [values, setValues] = useState<ItemFormValues>({
-    produtoId: produtos[0].id,
-    type: 'RECORRENTE_MEDIDO',
-    metricaId: metricas[0].id,
-    unitPrice: 0,
-    minimumQuantity: undefined,
-    startDate: contrato.startDate,
-    endDate: undefined,
-  });
+  const [values, setValues] = useState<ItemFormValues>(() => defaultState(contrato));
 
   useEffect(() => {
     if (!open) return;
@@ -60,15 +70,7 @@ export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFor
         endDate: item.endDate,
       });
     } else {
-      setValues({
-        produtoId: produtos[0].id,
-        type: 'RECORRENTE_MEDIDO',
-        metricaId: metricas[0].id,
-        unitPrice: 0,
-        minimumQuantity: undefined,
-        startDate: contrato.startDate,
-        endDate: undefined,
-      });
+      setValues(defaultState(contrato));
     }
   }, [open, item, contrato.startDate]);
 
@@ -91,6 +93,18 @@ export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFor
 
   function update<K extends keyof ItemFormValues>(key: K, val: ItemFormValues[K]) {
     setValues((v) => ({ ...v, [key]: val }));
+  }
+
+  function handleProdutoChange(produtoId: string) {
+    const p = produtos.find((x) => x.id === produtoId);
+    if (!p) return;
+    setValues((v) => ({
+      ...v,
+      produtoId,
+      type: p.type as ItemType,
+      metricaId: p.metricaId ?? (v.type === 'RECORRENTE_MEDIDO' ? v.metricaId : undefined),
+      unitPrice: p.defaultPrice ?? 0,
+    }));
   }
 
   function handleSubmit() {
@@ -123,7 +137,7 @@ export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFor
           <div className="text-xs text-ink-700">
             Este contrato tem reajuste <strong>{contrato.readjustmentIndex}</strong> configurado.
             O preço unitário fica bloqueado fora do fluxo de reajuste — para alterar, use a aba
-            “Reajustes”.
+            "Reajustes".
           </div>
         </div>
       )}
@@ -153,11 +167,11 @@ export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFor
           <Field label="Produto" required error={errors.produtoId}>
             <Select
               value={values.produtoId}
-              onChange={(e) => update('produtoId', e.target.value)}
+              onChange={(e) => handleProdutoChange(e.target.value)}
             >
-              {produtos.map((p) => (
+              {produtos.filter((p) => p.active).map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.nome} · {p.categoria}
+                  {p.name} · {PRODUTO_TYPE_LABEL[p.type] ?? p.type}
                 </option>
               ))}
             </Select>
@@ -177,7 +191,7 @@ export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFor
               <option value="">— sem métrica —</option>
               {metricas.map((m) => (
                 <option key={m.id} value={m.id}>
-                  {m.nome} · {m.apuracaoType}
+                  {m.name} · {m.apuracaoType}
                 </option>
               ))}
             </Select>

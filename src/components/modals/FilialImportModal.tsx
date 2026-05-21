@@ -82,12 +82,15 @@ export function FilialImportModal({ open, onClose, onImport }: FilialImportModal
   const [error, setError] = useState('');
 
   function handleDownloadTemplate() {
-    const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8;' });
+    const blob = new Blob([CSV_TEMPLATE], { type: 'text/csv;charset=utf-8' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'filiais-template.csv');
+    link.href = url;
+    link.download = 'filiais-template.csv';
+    document.body.appendChild(link);
     link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {

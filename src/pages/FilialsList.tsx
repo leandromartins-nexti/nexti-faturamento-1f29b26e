@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/ds';
 import {
   Building2,
+  Download,
   Edit3,
   FileText,
   Mail,
@@ -14,6 +15,7 @@ import {
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { FilialFormModal } from '../components/modals/FilialFormModal';
+import { FilialImportModal } from '../components/modals/FilialImportModal';
 import { useStore, store } from '../lib/store';
 import type { Filial, RegimeTributario } from '../lib/types';
 
@@ -32,6 +34,7 @@ const REGIME_TONE: Record<RegimeTributario, 'success' | 'info' | 'brand'> = {
 export function FilialsList() {
   const { filiais, contratos } = useStore();
   const [modalOpen, setModalOpen] = useState(false);
+  const [importModalOpen, setImportModalOpen] = useState(false);
   const [editing, setEditing] = useState<Filial | undefined>(undefined);
 
   function handleEdit(f: Filial) {
@@ -61,9 +64,14 @@ export function FilialsList() {
         <div className="text-sm text-ink-500">
           {filiais.length} filial{filiais.length !== 1 ? 'is' : ''} cadastrada{filiais.length !== 1 ? 's' : ''}
         </div>
-        <Button size="sm" leftIcon={<Plus className="size-4" />} onClick={handleNew}>
-          Nova filial
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" leftIcon={<Download className="size-4" />} onClick={() => setImportModalOpen(true)}>
+            Importar
+          </Button>
+          <Button size="sm" leftIcon={<Plus className="size-4" />} onClick={handleNew}>
+            Nova filial
+          </Button>
+        </div>
       </div>
 
       {filiais.length === 0 ? (
@@ -183,6 +191,14 @@ export function FilialsList() {
           } else {
             store.addFilial(values);
           }
+        }}
+      />
+
+      <FilialImportModal
+        open={importModalOpen}
+        onClose={() => setImportModalOpen(false)}
+        onImport={(filiais) => {
+          filiais.forEach((f) => store.addFilial(f));
         }}
       />
     </div>

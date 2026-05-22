@@ -402,15 +402,17 @@ function FaturaPreview({
           </div>
 
           {/* Exportar CSV */}
-          <Button
-            variant="outline"
-            size="sm"
-            leftIcon={<Download className="size-3.5" />}
-            onClick={() => exportFaturaCSV(fatura, clienteNome, contratoNumero)}
-            className="w-full"
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              exportFaturaCSV(fatura, clienteNome, contratoNumero);
+            }}
+            className="w-full flex items-center justify-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-medium text-fg hover:bg-bg-subtle transition-colors"
           >
+            <Download className="size-3.5" />
             Exportar cálculos (CSV)
-          </Button>
+          </button>
 
           {/* Avisos */}
           {fatura.linhas.some((l) => l.minimoAplicado) && (

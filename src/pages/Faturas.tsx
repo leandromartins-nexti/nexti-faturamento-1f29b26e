@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ChevronDown,
   ChevronUp,
+  Download,
   FileText,
   Info,
   RefreshCw,
@@ -274,6 +275,63 @@ export function Faturas() {
 
 // ─── Preview lateral ──────────────────────────────────────────────────────────
 
+function exportFaturaCSV(fatura: Fatura, clienteNome: string, contratoNumero: string) {
+  const escape = (v: string | number) => {
+    const s = String(v);
+    return s.includes(',') || s.includes('"') || s.includes('\n')
+      ? `"${s.replace(/"/g, '""')}"`
+      : s;
+  };
+
+  const metaRows = [
+    ['# METADADOS', ''],
+    ['Fatura ID', fatura.id],
+    ['Contrato', contratoNumero],
+    ['Cliente', clienteNome],
+    ['Período referência', fatura.referencePeriod],
+    ['Data emissão', fatura.issueDate],
+    ['Data vencimento', fatura.dueDate],
+    ['Forma pagamento', fatura.paymentMethod],
+    ['Apresentação', fatura.apresentacao],
+    ['Status', fatura.status],
+    [''],
+    ['# LINHAS DE COBRANÇA', ''],
+    ['Produto', 'Tipo', 'Métrica', 'Unidade', 'Quantidade apurada', 'Preço unitário (R$)', 'Total (R$)', 'Mínimo contratual', 'Mínimo aplicado?', 'Qtd eventos', 'IDs eventos'],
+  ];
+
+  const linhaRows = fatura.linhas.map((l) => [
+    escape(l.produtoName),
+    escape(TYPE_LABEL[l.type] ?? l.type),
+    escape(l.metricaName ?? ''),
+    escape(l.metricaUnit ?? ''),
+    escape(l.quantity),
+    escape(l.unitPrice),
+    escape(l.total),
+    escape(l.temMinimo ? (l.minimoAplicado ? String(l.quantity) : 'sim') : 'não'),
+    escape(l.minimoAplicado ? 'sim' : 'não'),
+    escape(l.eventoIds.length),
+    escape(l.eventoIds.join(' | ')),
+  ]);
+
+  const totaRow = ['', '', '', '', '', 'TOTAL', escape(fatura.total), '', '', '', ''];
+
+  const allRows = [
+    ...metaRows.map((r) => r.join(',')),
+    ...linhaRows.map((r) => r.join(',')),
+    totaRow.join(','),
+  ];
+
+  const blob = new Blob(['\uFEFF' + allRows.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `fatura_${contratoNumero}_${fatura.referencePeriod}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
 function FaturaPreview({
   fatura,
   clienteNome,
@@ -342,6 +400,17 @@ function FaturaPreview({
               {fmtBRL(fatura.total)}
             </span>
           </div>
+
+          {/* Exportar CSV */}
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Download className="size-3.5" />}
+            onClick={() => exportFaturaCSV(fatura, clienteNome, contratoNumero)}
+            className="w-full"
+          >
+            Exportar cálculos (CSV)
+          </Button>
 
           {/* Avisos */}
           {fatura.linhas.some((l) => l.minimoAplicado) && (

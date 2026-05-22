@@ -8,4 +8,5 @@ export type Route =
   | { name: 'eventos' }
   | { name: 'faturas' }
   | { name: 'filiais' }
-  | { name: 'ajuda' };
+  | { name: 'ajuda' }
+  | { name: 'dados-mock' };

@@ -11,6 +11,7 @@ import { EventosGlobal } from './pages/EventosGlobal';
 import { Faturas } from './pages/Faturas';
 import { FilialsList } from './pages/FilialsList';
 import { Ajuda } from './pages/Ajuda';
+import { DadosMock } from './pages/DadosMock';
 import type { Route } from './lib/router';
 
 const titles: Record<Route['name'], { title: string; subtitle?: string }> = {
@@ -24,6 +25,7 @@ const titles: Record<Route['name'], { title: string; subtitle?: string }> = {
   faturas: { title: 'Faturas', subtitle: 'Geração mensal e documentos fiscais' },
   filiais: { title: 'Filiais', subtitle: 'Dados cadastrais, fiscais e de endereço' },
   ajuda: { title: 'Ajuda & Onboarding', subtitle: 'Guia passo a passo de configuração e operação' },
+  'dados-mock': { title: 'Dados Mock', subtitle: 'Gerencie os registros em memória — importe via CSV/JSON ou remova itens' },
 };
 
 export default function App() {
@@ -46,6 +48,7 @@ export default function App() {
           {route.name === 'faturas' && <Faturas />}
           {route.name === 'filiais' && <FilialsList />}
           {route.name === 'ajuda' && <Ajuda onNavigate={setRoute} />}
+          {route.name === 'dados-mock' && <DadosMock />}
         </div>
       </main>
     </div>

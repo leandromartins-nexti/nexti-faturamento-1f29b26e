@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Users, Package, Activity, Receipt, Settings, Landmark, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Package, Activity, Receipt, Settings, Landmark, HelpCircle, DatabaseZap } from 'lucide-react';
 import type { Route } from '../../lib/router';
 
 interface SidebarProps {
@@ -15,6 +15,7 @@ const items: { id: Route['name']; label: string; icon: typeof LayoutDashboard }[
   { id: 'eventos', label: 'Eventos de uso', icon: Activity },
   { id: 'faturas', label: 'Faturas', icon: Receipt },
   { id: 'ajuda', label: 'Ajuda', icon: HelpCircle },
+  { id: 'dados-mock', label: 'Dados Mock', icon: DatabaseZap },
 ];
 
 export function Sidebar({ route, onNavigate }: SidebarProps) {

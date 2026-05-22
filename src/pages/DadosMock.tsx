@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react';
 import { useStore, store } from '../lib/store';
 import { Button } from '@/ds';
-import { Upload, Trash2, Plus, ChevronDown, ChevronUp, Database, AlertCircle, CheckCircle2, FileJson } from 'lucide-react';
+import { Upload, Trash2, Plus, ChevronDown, ChevronUp, Database, AlertCircle, CheckCircle2, FileJson, Download } from 'lucide-react';
 
 type Section = 'filiais' | 'clientes' | 'produtos' | 'metricas' | 'contratos' | 'eventos';
 
@@ -109,6 +109,61 @@ const adders: Partial<Record<Section, AddAction>> = {
     });
   },
 };
+
+const CSV_TEMPLATES: Record<Section, string> = {
+  filiais: [
+    'document,nomeFantasia,razaoSocial,email,phone,zipCode,street,number,complement,district,city,state,inscricaoMunicipal,inscricaoEstadual,regimeTributario',
+    '"12.345.678/0001-90","Nexti Sistemas","Nexti Tecnologia e Sistemas Ltda.","faturamento@nexti.com.br","(47) 3333-4444","89201-020","Rua XV de Novembro","2100","Sala 501","Centro","Joinville","SC","12345-6","123.456.789","LUCRO_PRESUMIDO"',
+    '"98.765.432/0001-11","Demo Ltda","Demo Serviços Ltda.","contato@demo.com.br","(11) 4000-1234","01310-100","Av. Paulista","1000","","Bela Vista","São Paulo","SP","","","SIMPLES_NACIONAL"',
+  ].join('\n'),
+
+  clientes: [
+    'code,name,email,phone,notes',
+    '"GR006","Empresa Exemplo","contato@empresa.com.br","(11) 98765-4321","Cliente importado via CSV"',
+    '"GR007","Outra Empresa","adm@outra.com.br","(21) 3000-9999",""',
+  ].join('\n'),
+
+  produtos: [
+    'name,description,type,defaultPrice,metricaId,active',
+    '"Nexti Ponto Cloud","Controle de ponto em nuvem","RECORRENTE_MEDIDO","4.90","m1","true"',
+    '"Nexti Folha","Processamento de folha de pagamento","RECORRENTE_FIXO","2200.00","","true"',
+    '"Terminal Biométrico REP-C","Terminal homologado pelo MTE","RECORRENTE_MEDIDO","220.00","m2","true"',
+    '"Instalação on-site","Visita técnica de instalação","AVULSO","","","true"',
+  ].join('\n'),
+
+  metricas: [
+    'name,unit,apuracaoType,description',
+    '"Funcionários únicos no mês","func","DISTINCT_COUNT","Contagem distinta de funcionários com registros no período"',
+    '"Terminais ativos","terminal","BALANCE_AVG","Média de terminais ativos ao longo do mês"',
+    '"Transações de ponto","transação","DISTINCT_COUNT","Total de batidas de ponto no período"',
+  ].join('\n'),
+
+  contratos: [
+    'numero,status,filialId,clienteId,startDate,endDate,dueType,dueDay,dueMonthOffset,dueDays,paymentMethod,readjustmentIndex,readjustmentPercent,readjustmentAnchor,apresentacaoFatura,notes',
+    '"CT-2026-0001","DRAFT","fil1","c1","2026-01-01","2029-01-01","FIXED_DAY","10","1","","BOLETO","IPCA","4.5","ITEM","DETALHADA",""',
+    '"CT-2026-0002","ACTIVE","fil1","c2","2026-06-01","","DAYS_AFTER_BILLING","0","0","15","PIX","IGPM","3.2","CONTRACT","AGREGADA","Observações"',
+  ].join('\n'),
+
+  eventos: [
+    'contratoId,estabelecimentoId,metricaId,quantity,occurredAt,referencePeriod,notes',
+    '"ct1","e1","m1","412","2026-04-30","2026-04","Apuração automática via API"',
+    '"ct1","e2","m1","188","2026-04-30","2026-04",""',
+    '"ct2","e4","m2","4","2026-05-31","2026-05","Novos terminais"',
+  ].join('\n'),
+};
+
+function downloadCSV(section: Section) {
+  const content = CSV_TEMPLATES[section];
+  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `template-${section}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 interface SectionPanelProps {
   section: Section;
@@ -279,6 +334,20 @@ function ImportPanel({ onImport }: ImportPanelProps) {
             ))}
           </div>
         </div>
+      </div>
+
+      {/* Template download — always visible, contextual to selected section */}
+      <div className="flex items-center justify-between bg-bg-subtle border border-border rounded-sm px-3 py-2">
+        <div className="text-xs text-fg-muted">
+          Baixe o template CSV de <span className="font-semibold text-fg">{SECTION_LABELS[targetSection]}</span> com os campos esperados e exemplos.
+        </div>
+        <button
+          onClick={() => downloadCSV(targetSection)}
+          className="flex items-center gap-1.5 text-xs font-medium text-orange-600 hover:text-orange-700 hover:underline shrink-0 ml-3"
+        >
+          <Download className="size-3.5" />
+          Baixar template CSV
+        </button>
       </div>
 
       <div>

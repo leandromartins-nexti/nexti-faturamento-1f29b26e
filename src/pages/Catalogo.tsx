@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/ds';
-import { Activity, Edit3, Package, Plus, Ruler, Trash2 } from 'lucide-react';
+import { Edit3, Package, Plus, Ruler, Trash2 } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ProdutoFormModal } from '../components/modals/ProdutoFormModal';
@@ -246,23 +246,6 @@ export function Catalogo() {
           </CardBody>
         </Card>
       </div>
-
-      <Card>
-        <CardBody className="bg-orange-50 border-l-4 border-l-orange-500">
-          <div className="flex items-start gap-3">
-            <Activity className="size-5 text-orange-600 mt-0.5" />
-            <div>
-              <div className="font-bold text-navy-700">Roadmap — Sprint 5</div>
-              <p className="text-sm text-ink-700 mt-1">
-                Adicionar tipo <code className="bg-white px-1.5 rounded">RECORRENTE_LOCACAO</code> com
-                apuração <code className="bg-white px-1.5 rounded">CARRYOVER_BALANCE</code> para HaaS
-                (carry-over de saldo mês a mês). Suportar lançamento por delta (operacional) e por
-                snapshot (inventário). Ver briefing 5B.
-              </p>
-            </div>
-          </div>
-        </CardBody>
-      </Card>
 
       <ProdutoFormModal
         open={produtoModalOpen}

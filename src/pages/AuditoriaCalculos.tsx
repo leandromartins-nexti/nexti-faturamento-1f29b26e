@@ -127,8 +127,91 @@ function auditarCdProduto(
   return resultado;
 }
 
+// Gabarito de cenários esperados por contrato+período
+const GABARITO: Record<string, { titulo: string; cenarios: string[] }> = {
+  'ct1_2026-04': {
+    titulo: 'Acima do mínimo (DISTINCT_COUNT)',
+    cenarios: [
+      'Nexti Ponto Cloud: 412+188+254 = 854 func (mín 200) → 854 × R$4,90 = R$4.184,60',
+      'Terminal Biométrico: saldo acumulado de terminais (BALANCE_AVG sem mvto em abr) × R$220',
+    ],
+  },
+  'ct1_2026-05': {
+    titulo: 'Abaixo do mínimo → mínimo aplicado',
+    cenarios: [
+      'Nexti Ponto Cloud: 90+60 = 150 func (mín 200) → MÍNIMO 200 × R$4,90 = R$980,00',
+      'Terminal Biométrico: saldo acumulado (sem eventos em mai) × R$220',
+    ],
+  },
+  'ct2_2026-04': {
+    titulo: 'DISTINCT_COUNT com mínimo (50)',
+    cenarios: [
+      'Nexti Ponto Cloud: 72 func (mín 50) → 72 × R$5,50 = R$396,00',
+      'Terminal Facial Pro: saldo acumulado terminais × R$380',
+    ],
+  },
+  'ct2_2026-05': {
+    titulo: 'Sem eventos → mínimo aplicado',
+    cenarios: [
+      'Nexti Ponto Cloud: 0 eventos (mín 50) → MÍNIMO 50 × R$5,50 = R$275,00',
+      'Terminal Facial Pro: saldo acumulado terminais × R$380',
+    ],
+  },
+  'ct3_2026-04': {
+    titulo: 'Volume alto — DISTINCT_COUNT acima do mínimo (800)',
+    cenarios: [
+      'Nexti Ponto Cloud: 980 func (mín 800) → 980 × R$4,20 = R$4.116,00',
+      'Nexti Folha: RECORRENTE_FIXO → 1 × R$2.200,00',
+      'Terminal Facial Pro: saldo acumulado (42 terminais) × R$420',
+    ],
+  },
+  'ct6_2026-04': {
+    titulo: 'Todos os cenários especiais',
+    cenarios: [
+      'Nexti RH SaaS: 120+130+90 = 340 usuários (mín 100) → 340 × R$8,50 = R$2.890,00',
+      'Licença ERP: BALANCE_AVG (10 lic×9d + 15 lic×21d)/30 = 13,5 × R$90 = R$1.215,00',
+      'Suporte Premium: FIXO → 1 × R$1.500,00',
+      'Bonificação Cortesia: BONIFICAÇÃO → 1 × −R$200,00',
+      'Treinamento EAD: expirou 2026-02-28 → NÃO aparece',
+      'Nexti Folha: começa 2026-08-01 → NÃO aparece',
+      'Total esperado: R$2.890 + R$1.215 + R$1.500 − R$200 = R$5.405,00',
+    ],
+  },
+  'ct6_2026-05': {
+    titulo: 'DISTINCT_COUNT sem eventos → mínimo | BALANCE_AVG estável',
+    cenarios: [
+      'Nexti RH SaaS: 0 eventos (mín 100) → MÍNIMO 100 × R$8,50 = R$850,00',
+      'Licença ERP: saldo estável (15 lic, sem mvto em mai) → 15 × R$90 = R$1.350,00',
+      'Suporte Premium: FIXO → R$1.500,00',
+      'Bonificação Cortesia: ainda vigente → −R$200,00',
+      'Total esperado: R$850 + R$1.350 + R$1.500 − R$200 = R$3.500,00',
+    ],
+  },
+  'ct7_2026-04': {
+    titulo: 'Política temporária de desconto ATIVA (50% off até 2026-05-31)',
+    cenarios: [
+      'Nexti Ponto Cloud: 200 func (mín 50) → política ativa: 200 × R$2,45 = R$490,00',
+      'Sem política, seria: 200 × R$4,90 = R$980,00',
+    ],
+  },
+  'ct7_2026-05': {
+    titulo: 'Política temporária de desconto ainda ATIVA',
+    cenarios: [
+      'Nexti Ponto Cloud: 200 func → política ativa até 31/mai: 200 × R$2,45 = R$490,00',
+      'OBS: emissão em 2026-05-25 ainda está dentro da janela da política',
+    ],
+  },
+  'ct7_2026-06': {
+    titulo: 'Fora da janela da política → preço cheio',
+    cenarios: [
+      'Nexti Ponto Cloud: sem eventos em jun → mínimo 50 × R$4,90 = R$245,00',
+      'Política expirou em 2026-05-31 → preço normal R$4,90',
+    ],
+  },
+};
+
 export function AuditoriaCalculos() {
-  const [contratoSelecionado, setContratoSelecionado] = useState<string>('ct1');
+  const [contratoSelecionado, setContratoSelecionado] = useState<string>('ct6');
   const [periodoSelecionado, setPeriodoSelecionado] = useState<string>('2026-04');
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
 
@@ -218,6 +301,27 @@ export function AuditoriaCalculos() {
               </div>
             </CardBody>
           </Card>
+
+          {/* Gabarito do cenário */}
+          {(() => {
+            const key = `${contratoSelecionado}_${periodoSelecionado}`;
+            const g = GABARITO[key];
+            if (!g) return null;
+            return (
+              <div className="rounded-md border border-border bg-bg-subtle p-4 space-y-2">
+                <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide">Gabarito esperado</div>
+                <div className="font-semibold text-navy-700 text-sm">{g.titulo}</div>
+                <ul className="space-y-1">
+                  {g.cenarios.map((c, i) => (
+                    <li key={i} className="text-xs text-ink-700 flex gap-2">
+                      <span className="text-ink-400 flex-shrink-0">•</span>
+                      <span>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })()}
 
           {/* Linhas de cobrança */}
           <Card>

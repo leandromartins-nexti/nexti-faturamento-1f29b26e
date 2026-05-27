@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/ds';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Pencil, RotateCcw, Save } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { Tabs } from '../components/ui/Tabs';
+import { Modal } from '../components/ui/Modal';
 import { contratos, eventos, clientes } from '../lib/mockData';
 import { gerarFatura } from '../lib/fatura';
 import type { Contrato, ItemType } from '../lib/types';
@@ -22,6 +24,165 @@ interface AuditariaLinha {
   eventoIds: string[];
   auditoria: AuditoriaItem[];
 }
+
+// ── Definição das regras de cálculo (editáveis em runtime) ──────────────────
+
+export interface RegraCalculo {
+  id: string;
+  servico: string;        // nome do produto/serviço
+  tipoMetrica: string;    // descrição do tipo de métrica
+  formula: string;        // fórmula em texto
+  observacoes: string;    // exceções/regras especiais
+  exemploValorUnit: string;
+  itemType: ItemType;
+}
+
+const REGRAS_DEFAULT: RegraCalculo[] = [
+  {
+    id: 'saas',
+    servico: 'SAAS (Prime, Time, Plus, RH Digital, Control, Security, Hora Extra, Integração)',
+    tipoMetrica: 'Qtd. Colaboradores × Valor Unitário',
+    formula: 'SE utilizado > contratado → cobrar pelo utilizado\nSE utilizado ≤ contratado → cobrar pelo contratado\nExceção bilhetagem: sempre cobra pelo utilizado',
+    observacoes: 'Valor unitário = soma dos módulos ativos. Possibilidade de alternar entre modo contratado e bilhetagem.',
+    exemploValorUnit: 'R$ 15,00',
+    itemType: 'RECORRENTE_MEDIDO',
+  },
+  {
+    id: 'haas_bio',
+    servico: 'HAAS (Terminais Biométricos)',
+    tipoMetrica: 'Qtd. × Valor Unit. + Pró-rata',
+    formula: 'Total = Qtd × (Valor Unit. × Dias ativos / Dias do mês)',
+    observacoes: 'Pró-rata calculado na entrega e na devolução do equipamento.',
+    exemploValorUnit: 'R$ 90,00',
+    itemType: 'HAAS_PRORATA',
+  },
+  {
+    id: 'haas_tablet',
+    servico: 'HAAS — Tablets',
+    tipoMetrica: 'Qtd. × Valor Unit. + Pró-rata',
+    formula: 'Total = Qtd × (Valor Unit. × Dias ativos / Dias do mês)',
+    observacoes: 'Mesma lógica do HAAS padrão.',
+    exemploValorUnit: 'R$ 70,00',
+    itemType: 'HAAS_PRORATA',
+  },
+  {
+    id: 'haas_facial',
+    servico: 'HAAS — Facial',
+    tipoMetrica: 'Qtd. × Valor Unit. + Pró-rata',
+    formula: 'Total = Qtd × (Valor Unit. × Dias ativos / Dias do mês)',
+    observacoes: 'Mesma lógica do HAAS padrão.',
+    exemploValorUnit: 'R$ 110,00',
+    itemType: 'HAAS_PRORATA',
+  },
+  {
+    id: 'saas_facial',
+    servico: 'SAAS — Facial',
+    tipoMetrica: 'Qtd. Colaboradores × Valor Unitário',
+    formula: 'SE utilizado > contratado → cobrar pelo utilizado\nSE utilizado ≤ contratado → cobrar pelo contratado',
+    observacoes: 'Módulo de reconhecimento facial. Mesmas exceções do SAAS.',
+    exemploValorUnit: 'R$ 18,00',
+    itemType: 'RECORRENTE_MEDIDO',
+  },
+  {
+    id: 'manutencao',
+    servico: 'Manutenção',
+    tipoMetrica: 'Valor Único',
+    formula: 'Total = Valor fixo por ocorrência',
+    observacoes: 'Cobrado por chamado/OS encerrada.',
+    exemploValorUnit: 'R$ 350,00',
+    itemType: 'AVULSO',
+  },
+  {
+    id: 'ait',
+    servico: 'AIT',
+    tipoMetrica: 'Valor Único',
+    formula: 'Total = Valor fixo',
+    observacoes: 'Cobrado conforme contrato.',
+    exemploValorUnit: 'Conforme contrato',
+    itemType: 'AVULSO',
+  },
+  {
+    id: 'consultoria',
+    servico: 'Consultoria',
+    tipoMetrica: 'Valor Único',
+    formula: 'Total = Valor fixo',
+    observacoes: 'Cobrado por projeto ou hora conforme contrato.',
+    exemploValorUnit: 'Conforme contrato',
+    itemType: 'AVULSO',
+  },
+  {
+    id: 'outros',
+    servico: 'Outros',
+    tipoMetrica: 'Valor Único',
+    formula: 'Total = Valor fixo',
+    observacoes: 'Uso genérico para serviços avulsos.',
+    exemploValorUnit: 'Conforme contrato',
+    itemType: 'AVULSO',
+  },
+  {
+    id: 'customizacao',
+    servico: 'Customização',
+    tipoMetrica: 'Valor Único',
+    formula: 'Total = Valor fixo',
+    observacoes: 'Cobrado por demanda de desenvolvimento.',
+    exemploValorUnit: 'Conforme contrato',
+    itemType: 'AVULSO',
+  },
+  {
+    id: 'talent_fixo',
+    servico: 'Talent (Admissão, Recrutamento e Seleção)',
+    tipoMetrica: 'Valor Único',
+    formula: 'Total = Valor fixo por contrato/evento',
+    observacoes: 'Módulos Admissão e Recrutamento cobrados como valor fixo.',
+    exemploValorUnit: 'R$ 500,00',
+    itemType: 'RECORRENTE_FIXO',
+  },
+  {
+    id: 'talent_checagem',
+    servico: 'Talent — Checagem (Exceção)',
+    tipoMetrica: 'Qtd. Utilizações × Valor Unitário',
+    formula: 'Total = Qtd. Checagens × Valor Unit.',
+    observacoes: 'Exceção do módulo Checagem: cobrado por utilização.',
+    exemploValorUnit: 'R$ 12,00',
+    itemType: 'RECORRENTE_MEDIDO',
+  },
+  {
+    id: 'beneficios',
+    servico: 'Benefícios',
+    tipoMetrica: 'Qtd. Utilizações × Valor Unitário',
+    formula: 'Total = Qtd. Utilizações × Valor Unit.',
+    observacoes: 'Cobrado por uso efetivo do benefício.',
+    exemploValorUnit: 'R$ 5,00',
+    itemType: 'RECORRENTE_MEDIDO',
+  },
+  {
+    id: 'atestai',
+    servico: 'Atestai',
+    tipoMetrica: 'Valor Fixo + Success Fee',
+    formula: 'Total = Valor Fixo + (Qtd dias atestados × R$107,00 × 20%)',
+    observacoes: 'Success fee de 20% sobre R$107,00 por dia de atestado inválido registrado.',
+    exemploValorUnit: 'R$ 107,00/dia',
+    itemType: 'ATESTAI',
+  },
+  {
+    id: 'mdm',
+    servico: 'MDM',
+    tipoMetrica: 'Qtd. Utilizações × Valor Unitário',
+    formula: 'Total = Qtd. Dispositivos × Valor Unit.',
+    observacoes: 'Cobrado por dispositivo gerenciado no mês.',
+    exemploValorUnit: 'R$ 8,00',
+    itemType: 'RECORRENTE_MEDIDO',
+  },
+];
+
+const ITEM_TYPE_COLOR: Record<ItemType, string> = {
+  RECORRENTE_FIXO:  'bg-blue-50 text-blue-700 border-blue-200',
+  RECORRENTE_MEDIDO:'bg-orange-50 text-orange-700 border-orange-200',
+  AVULSO:           'bg-ink-50 text-ink-600 border-ink-200',
+  BONIFICACAO:      'bg-green-50 text-green-700 border-green-200',
+  HAAS_PRORATA:     'bg-purple-50 text-purple-700 border-purple-200',
+  ATESTAI:          'bg-teal-50 text-teal-700 border-teal-200',
+};
 
 const TYPE_LABELS: Record<ItemType, string> = {
   RECORRENTE_FIXO: 'Recorrente fixo',
@@ -370,9 +531,15 @@ const GABARITO: Record<string, { titulo: string; cenarios: string[] }> = {
 };
 
 export function AuditoriaCalculos() {
+  const [abaAtiva, setAbaAtiva] = useState<'auditoria' | 'formulas'>('auditoria');
   const [contratoSelecionado, setContratoSelecionado] = useState<string>('ct8');
   const [periodoSelecionado, setPeriodoSelecionado] = useState<string>('2026-04');
   const [expandidos, setExpandidos] = useState<Set<string>>(new Set());
+
+  // Estado das regras — começa com os defaults, pode ser editado em runtime
+  const [regras, setRegras] = useState<RegraCalculo[]>(REGRAS_DEFAULT);
+  const [editando, setEditando] = useState<RegraCalculo | null>(null);
+  const [rascunho, setRascunho] = useState<RegraCalculo | null>(null);
 
   const contrato = useMemo(() => contratos.find((c) => c.id === contratoSelecionado), [contratoSelecionado]);
   const cliente = useMemo(() => clientes.find((c) => c.id === contrato?.clienteId), [contrato]);
@@ -394,164 +561,378 @@ export function AuditoriaCalculos() {
     setExpandidos(novo);
   }
 
+  function abrirEditor(regra: RegraCalculo) {
+    setEditando(regra);
+    setRascunho({ ...regra });
+  }
+
+  function salvarEdicao() {
+    if (!rascunho) return;
+    setRegras((prev) => prev.map((r) => (r.id === rascunho.id ? rascunho : r)));
+    setEditando(null);
+    setRascunho(null);
+  }
+
+  function resetarRegra(id: string) {
+    const original = REGRAS_DEFAULT.find((r) => r.id === id);
+    if (original) setRegras((prev) => prev.map((r) => (r.id === id ? { ...original } : r)));
+  }
+
+  function resetarTudo() {
+    setRegras(REGRAS_DEFAULT.map((r) => ({ ...r })));
+  }
+
   const gabaritoKey = `${contratoSelecionado}_${periodoSelecionado}`;
   const gabarito = GABARITO[gabaritoKey];
 
   return (
     <div className="p-6 space-y-5">
-      {/* Seletores */}
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="block text-sm font-semibold text-navy-700 mb-1.5">Contrato</label>
-          <select
-            value={contratoSelecionado}
-            onChange={(e) => setContratoSelecionado(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-md bg-white text-sm text-navy-700"
-          >
-            {contratos.map((c) => {
-              const cli = clientes.find((cl) => cl.id === c.clienteId);
-              return (
-                <option key={c.id} value={c.id}>
-                  {c.numero} — {cli?.name}
-                </option>
-              );
-            })}
-          </select>
-        </div>
-        <div>
-          <label className="block text-sm font-semibold text-navy-700 mb-1.5">Período (YYYY-MM)</label>
-          <input
-            type="text"
-            placeholder="2026-04"
-            value={periodoSelecionado}
-            onChange={(e) => setPeriodoSelecionado(e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-md bg-white text-sm text-navy-700"
-          />
-        </div>
-      </div>
+      {/* Abas */}
+      <Tabs
+        tabs={[
+          { id: 'auditoria', label: 'Auditoria de cálculos' },
+          { id: 'formulas', label: 'Fórmulas e regras', count: regras.length },
+        ]}
+        active={abaAtiva}
+        onChange={(id) => setAbaAtiva(id as 'auditoria' | 'formulas')}
+      />
 
-      {contrato && fatura && (
-        <div className="space-y-4">
-          {/* Meta info */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Fatura #{fatura.id}</CardTitle>
-            </CardHeader>
-            <CardBody className="space-y-2 text-sm">
-              <div className="grid grid-cols-2 gap-2">
-                <div><span className="text-ink-500">Contrato:</span> {contrato.numero}</div>
-                <div><span className="text-ink-500">Cliente:</span> {cliente?.name}</div>
-                <div><span className="text-ink-500">Período:</span> {periodoSelecionado}</div>
-                <div><span className="text-ink-500">Emissão:</span> {fatura.issueDate}</div>
-                <div><span className="text-ink-500">Vencimento:</span> {fatura.dueDate}</div>
-                <div><span className="text-ink-500">Status:</span> <Badge tone="info">{fatura.status}</Badge></div>
-              </div>
-            </CardBody>
-          </Card>
+      {/* ── ABA AUDITORIA ─────────────────────────────────────────────────── */}
+      {abaAtiva === 'auditoria' && (
+        <>
+          {/* Seletores */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-semibold text-navy-700 mb-1.5">Contrato</label>
+              <select
+                value={contratoSelecionado}
+                onChange={(e) => setContratoSelecionado(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-md bg-white text-sm text-navy-700"
+              >
+                {contratos.map((c) => {
+                  const cli = clientes.find((cl) => cl.id === c.clienteId);
+                  return (
+                    <option key={c.id} value={c.id}>
+                      {c.numero} — {cli?.name}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-navy-700 mb-1.5">Período (YYYY-MM)</label>
+              <input
+                type="text"
+                placeholder="2026-04"
+                value={periodoSelecionado}
+                onChange={(e) => setPeriodoSelecionado(e.target.value)}
+                className="w-full px-3 py-2 border border-border rounded-md bg-white text-sm text-navy-700"
+              />
+            </div>
+          </div>
 
-          {/* Gabarito */}
-          {gabarito && (
-            <div className="rounded-md border border-border bg-bg-subtle p-4 space-y-2">
-              <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide">Gabarito esperado</div>
-              <div className="font-semibold text-navy-700 text-sm">{gabarito.titulo}</div>
-              <ul className="space-y-1">
-                {gabarito.cenarios.map((c, i) => (
-                  <li key={i} className="text-xs text-ink-700 flex gap-2">
-                    <span className="text-ink-400 flex-shrink-0">•</span>
-                    <span>{c}</span>
-                  </li>
-                ))}
-              </ul>
+          {contrato && fatura && (
+            <div className="space-y-4">
+              {/* Meta info */}
+              <Card>
+                <CardHeader><CardTitle>Fatura #{fatura.id}</CardTitle></CardHeader>
+                <CardBody className="space-y-2 text-sm">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div><span className="text-ink-500">Contrato:</span> {contrato.numero}</div>
+                    <div><span className="text-ink-500">Cliente:</span> {cliente?.name}</div>
+                    <div><span className="text-ink-500">Período:</span> {periodoSelecionado}</div>
+                    <div><span className="text-ink-500">Emissão:</span> {fatura.issueDate}</div>
+                    <div><span className="text-ink-500">Vencimento:</span> {fatura.dueDate}</div>
+                    <div><span className="text-ink-500">Status:</span> <Badge tone="info">{fatura.status}</Badge></div>
+                  </div>
+                </CardBody>
+              </Card>
+
+              {/* Gabarito */}
+              {gabarito && (
+                <div className="rounded-md border border-border bg-bg-subtle p-4 space-y-2">
+                  <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide">Gabarito esperado</div>
+                  <div className="font-semibold text-navy-700 text-sm">{gabarito.titulo}</div>
+                  <ul className="space-y-1">
+                    {gabarito.cenarios.map((c, i) => (
+                      <li key={i} className="text-xs text-ink-700 flex gap-2">
+                        <span className="text-ink-400 flex-shrink-0">•</span>
+                        <span>{c}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Linhas de cobrança */}
+              <Card>
+                <CardHeader><CardTitle>Linhas de Cobrança</CardTitle></CardHeader>
+                <CardBody className="space-y-3">
+                  {auditoria.map((linha) => {
+                    const linhaFatura = fatura.linhas.find((l) => l.itemId === linha.itemId);
+                    return (
+                      <div key={linha.itemId} className="border border-border rounded-md p-3">
+                        <button
+                          type="button"
+                          onClick={() => toggleExpandir(linha.itemId)}
+                          className="w-full flex items-start justify-between hover:bg-bg-subtle p-2 -m-2 rounded transition-colors"
+                        >
+                          <div className="text-left">
+                            <div className="font-semibold text-navy-700">{linha.produto}</div>
+                            <div className="text-xs text-ink-500 mt-0.5">
+                              {linha.tipo}{linha.metrica && ` • ${linha.metrica}`}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {linhaFatura && (
+                              <span className="text-sm font-bold text-navy-700">
+                                {linhaFatura.total < 0 ? '−' : ''}R$ {Math.abs(linhaFatura.total).toFixed(2)}
+                              </span>
+                            )}
+                            {expandidos.has(linha.itemId) ? <ChevronUp className="size-4 text-ink-400" /> : <ChevronDown className="size-4 text-ink-400" />}
+                          </div>
+                        </button>
+                        {expandidos.has(linha.itemId) && (
+                          <div className="mt-3 pt-3 border-t border-border space-y-2">
+                            {linha.auditoria.map((item, idx) => (
+                              <div key={idx} className={`text-sm ${item.destaque ? 'font-semibold' : ''}`}>
+                                <div className="flex justify-between items-start">
+                                  <span className={item.destaque ? 'text-navy-700' : 'text-ink-700'}>{item.label}</span>
+                                  <span className={item.destaque ? 'text-navy-700' : 'text-ink-700'}>{item.valor}</span>
+                                </div>
+                                {item.detalhe && <div className="text-xs text-ink-500 mt-0.5">{item.detalhe}</div>}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  {auditoria.length === 0 && (
+                    <div className="text-ink-500 italic text-sm">Nenhum item vigente neste período.</div>
+                  )}
+                  <div className="mt-4 pt-3 border-t-2 border-navy-700 flex justify-between items-center">
+                    <span className="font-bold text-navy-700">Total da fatura</span>
+                    <span className="font-bold text-lg text-navy-700">R$ {fatura.total.toFixed(2)}</span>
+                  </div>
+                </CardBody>
+              </Card>
+
+              {/* Eventos */}
+              <Card>
+                <CardHeader><CardTitle>Eventos para {periodoSelecionado}</CardTitle></CardHeader>
+                <CardBody className="space-y-2 text-sm">
+                  {eventos
+                    .filter((e) => e.contratoId === contratoSelecionado && e.referencePeriod === periodoSelecionado)
+                    .map((ev) => (
+                      <div key={ev.id} className="p-2 bg-bg-subtle rounded">
+                        <div className="font-semibold text-navy-700">{ev.id}</div>
+                        <div className="text-xs text-ink-500 mt-0.5">
+                          Métrica: {ev.metricaId} • Qtd: {ev.quantity} • Data: {ev.occurredAt} • Estab: {ev.estabelecimentoId}
+                        </div>
+                        {ev.notes && <div className="text-xs text-ink-500 mt-1 italic">{ev.notes}</div>}
+                      </div>
+                    ))}
+                  {!eventos.some((e) => e.contratoId === contratoSelecionado && e.referencePeriod === periodoSelecionado) && (
+                    <div className="text-ink-500 italic">Nenhum evento neste período para este contrato.</div>
+                  )}
+                </CardBody>
+              </Card>
             </div>
           )}
+        </>
+      )}
 
-          {/* Linhas de cobrança */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Linhas de Cobrança</CardTitle>
-            </CardHeader>
-            <CardBody className="space-y-3">
-              {auditoria.map((linha) => {
-                const linhaFatura = fatura.linhas.find((l) => l.itemId === linha.itemId);
-                return (
-                  <div key={linha.itemId} className="border border-border rounded-md p-3">
-                    <button
-                      type="button"
-                      onClick={() => toggleExpandir(linha.itemId)}
-                      className="w-full flex items-start justify-between hover:bg-bg-subtle p-2 -m-2 rounded transition-colors"
-                    >
-                      <div className="text-left">
-                        <div className="font-semibold text-navy-700">{linha.produto}</div>
-                        <div className="text-xs text-ink-500 mt-0.5">
-                          {linha.tipo}
-                          {linha.metrica && ` • ${linha.metrica}`}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        {linhaFatura && (
-                          <span className="text-sm font-bold text-navy-700">
-                            {linhaFatura.total < 0 ? '−' : ''}R$ {Math.abs(linhaFatura.total).toFixed(2)}
-                          </span>
-                        )}
-                        {expandidos.has(linha.itemId)
-                          ? <ChevronUp className="size-4 text-ink-400" />
-                          : <ChevronDown className="size-4 text-ink-400" />
-                        }
-                      </div>
-                    </button>
+      {/* ── ABA FÓRMULAS ──────────────────────────────────────────────────── */}
+      {abaAtiva === 'formulas' && (
+        <div className="space-y-4">
+          {/* Cabeçalho da aba */}
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="text-sm text-ink-500">
+                Regras de cálculo extraídas do documento oficial. Edite para ajustar fórmulas ou observações.
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={resetarTudo}
+              className="flex items-center gap-1.5 text-xs text-ink-500 hover:text-navy-700 px-2 py-1 rounded border border-border hover:border-navy-300 transition-colors"
+            >
+              <RotateCcw className="size-3.5" />
+              Restaurar todos
+            </button>
+          </div>
 
-                    {expandidos.has(linha.itemId) && (
-                      <div className="mt-3 pt-3 border-t border-border space-y-2">
-                        {linha.auditoria.map((item, idx) => (
-                          <div key={idx} className={`text-sm ${item.destaque ? 'font-semibold' : ''}`}>
-                            <div className="flex justify-between items-start">
-                              <span className={item.destaque ? 'text-navy-700' : 'text-ink-700'}>{item.label}</span>
-                              <span className={item.destaque ? 'text-navy-700' : 'text-ink-700'}>{item.valor}</span>
-                            </div>
-                            {item.detalhe && <div className="text-xs text-ink-500 mt-0.5">{item.detalhe}</div>}
-                          </div>
-                        ))}
-                      </div>
+          {/* Tabela de regras */}
+          <div className="rounded-md border border-border overflow-hidden">
+            {/* Header */}
+            <div className="grid grid-cols-[2fr_1.5fr_2fr_1fr_auto] gap-0 bg-bg-subtle border-b border-border text-xs font-semibold text-ink-500 uppercase tracking-wide">
+              <div className="px-4 py-3">Serviço</div>
+              <div className="px-4 py-3 border-l border-border">Tipo de Métrica</div>
+              <div className="px-4 py-3 border-l border-border">Fórmula / Observações</div>
+              <div className="px-4 py-3 border-l border-border">Valor unit.</div>
+              <div className="px-4 py-3 border-l border-border w-20 text-center">Ação</div>
+            </div>
+
+            {regras.map((regra, idx) => {
+              const isAlterado = JSON.stringify(regra) !== JSON.stringify(REGRAS_DEFAULT.find((r) => r.id === regra.id));
+              return (
+                <div
+                  key={regra.id}
+                  className={`grid grid-cols-[2fr_1.5fr_2fr_1fr_auto] gap-0 text-sm border-b border-border last:border-b-0 ${idx % 2 === 0 ? 'bg-white' : 'bg-bg-subtle/40'} ${isAlterado ? 'ring-1 ring-inset ring-orange-300' : ''}`}
+                >
+                  {/* Serviço */}
+                  <div className="px-4 py-3 flex flex-col gap-1">
+                    <span className="font-semibold text-navy-700 leading-snug">{regra.servico}</span>
+                    <span className={`self-start text-xs px-1.5 py-0.5 rounded border font-medium ${ITEM_TYPE_COLOR[regra.itemType]}`}>
+                      {TYPE_LABELS[regra.itemType]}
+                    </span>
+                    {isAlterado && (
+                      <span className="self-start text-xs text-orange-600 font-semibold">● editado</span>
                     )}
                   </div>
-                );
-              })}
 
-              {auditoria.length === 0 && (
-                <div className="text-ink-500 italic text-sm">Nenhum item vigente neste período.</div>
-              )}
-
-              {/* Total */}
-              <div className="mt-4 pt-3 border-t-2 border-navy-700 flex justify-between items-center">
-                <span className="font-bold text-navy-700">Total da fatura</span>
-                <span className="font-bold text-lg text-navy-700">R$ {fatura.total.toFixed(2)}</span>
-              </div>
-            </CardBody>
-          </Card>
-
-          {/* Eventos do período */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Eventos para {periodoSelecionado}</CardTitle>
-            </CardHeader>
-            <CardBody className="space-y-2 text-sm">
-              {eventos
-                .filter((e) => e.contratoId === contratoSelecionado && e.referencePeriod === periodoSelecionado)
-                .map((ev) => (
-                  <div key={ev.id} className="p-2 bg-bg-subtle rounded">
-                    <div className="font-semibold text-navy-700">{ev.id}</div>
-                    <div className="text-xs text-ink-500 mt-0.5">
-                      Métrica: {ev.metricaId} • Qtd: {ev.quantity} • Data: {ev.occurredAt} • Estab: {ev.estabelecimentoId}
-                    </div>
-                    {ev.notes && <div className="text-xs text-ink-500 mt-1 italic">{ev.notes}</div>}
+                  {/* Tipo de métrica */}
+                  <div className="px-4 py-3 border-l border-border text-ink-700 text-xs leading-relaxed">
+                    {regra.tipoMetrica}
                   </div>
-                ))}
-              {!eventos.some((e) => e.contratoId === contratoSelecionado && e.referencePeriod === periodoSelecionado) && (
-                <div className="text-ink-500 italic">Nenhum evento neste período para este contrato.</div>
-              )}
-            </CardBody>
-          </Card>
+
+                  {/* Fórmula + observações */}
+                  <div className="px-4 py-3 border-l border-border space-y-1">
+                    <div className="font-mono text-xs bg-ink-50 rounded px-2 py-1.5 text-navy-700 leading-relaxed whitespace-pre-wrap border border-ink-100">
+                      {regra.formula}
+                    </div>
+                    {regra.observacoes && (
+                      <div className="text-xs text-ink-500 italic leading-relaxed">{regra.observacoes}</div>
+                    )}
+                  </div>
+
+                  {/* Valor unit */}
+                  <div className="px-4 py-3 border-l border-border text-ink-700 text-xs font-semibold">
+                    {regra.exemploValorUnit}
+                  </div>
+
+                  {/* Ações */}
+                  <div className="px-3 py-3 border-l border-border flex flex-col items-center gap-1.5 w-20">
+                    <button
+                      type="button"
+                      onClick={() => abrirEditor(regra)}
+                      className="flex items-center gap-1 text-xs text-navy-700 hover:text-orange-600 px-2 py-1 rounded hover:bg-orange-50 transition-colors"
+                    >
+                      <Pencil className="size-3" />
+                      Editar
+                    </button>
+                    {isAlterado && (
+                      <button
+                        type="button"
+                        onClick={() => resetarRegra(regra.id)}
+                        className="flex items-center gap-1 text-xs text-ink-400 hover:text-ink-700 px-2 py-1 rounded hover:bg-ink-100 transition-colors"
+                      >
+                        <RotateCcw className="size-3" />
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className="text-xs text-ink-400 italic">
+            As edições são aplicadas nesta sessão apenas. Para persistir, exportar via CSV na aba Auditoria ou encaminhar ao time técnico.
+          </p>
         </div>
+      )}
+
+      {/* ── MODAL DE EDIÇÃO ───────────────────────────────────────────────── */}
+      {editando && rascunho && (
+        <Modal
+          open
+          onClose={() => { setEditando(null); setRascunho(null); }}
+          title={`Editar regra — ${editando.servico}`}
+          subtitle="Ajuste a fórmula ou observações conforme a regra acordada com o cliente."
+          size="md"
+          footer={
+            <>
+              <button
+                type="button"
+                onClick={() => { setEditando(null); setRascunho(null); }}
+                className="px-4 py-2 text-sm text-ink-600 hover:text-navy-700 border border-border rounded-md hover:bg-bg-subtle"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={salvarEdicao}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold bg-navy-700 text-white rounded-md hover:bg-navy-800 transition-colors"
+              >
+                <Save className="size-4" />
+                Salvar alterações
+              </button>
+            </>
+          }
+        >
+          <div className="space-y-4">
+            {/* Serviço (somente leitura) */}
+            <div>
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">Serviço</label>
+              <div className="text-sm font-semibold text-navy-700">{rascunho.servico}</div>
+            </div>
+
+            {/* Tipo de métrica */}
+            <div>
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">Tipo de Métrica</label>
+              <input
+                type="text"
+                value={rascunho.tipoMetrica}
+                onChange={(e) => setRascunho({ ...rascunho, tipoMetrica: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+
+            {/* Fórmula */}
+            <div>
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">Fórmula de Cálculo</label>
+              <textarea
+                rows={4}
+                value={rascunho.formula}
+                onChange={(e) => setRascunho({ ...rascunho, formula: e.target.value })}
+                className="w-full px-3 py-2 text-sm font-mono border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 resize-y"
+              />
+              <div className="text-xs text-ink-400 mt-1">Use \n para separar linhas de condição.</div>
+            </div>
+
+            {/* Observações */}
+            <div>
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">Observações / Exceções</label>
+              <textarea
+                rows={3}
+                value={rascunho.observacoes}
+                onChange={(e) => setRascunho({ ...rascunho, observacoes: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400 resize-y"
+              />
+            </div>
+
+            {/* Valor unitário exemplo */}
+            <div>
+              <label className="block text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">Exemplo de Valor Unitário</label>
+              <input
+                type="text"
+                value={rascunho.exemploValorUnit}
+                onChange={(e) => setRascunho({ ...rascunho, exemploValorUnit: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+            </div>
+
+            {/* Preview do original para comparação */}
+            {JSON.stringify(rascunho) !== JSON.stringify(editando) && (
+              <div className="rounded-md border border-orange-200 bg-orange-50 p-3 text-xs text-orange-700 space-y-1">
+                <div className="font-semibold">Você alterou esta regra. Original:</div>
+                <div className="font-mono whitespace-pre-wrap">{editando.formula}</div>
+              </div>
+            )}
+          </div>
+        </Modal>
       )}
     </div>
   );

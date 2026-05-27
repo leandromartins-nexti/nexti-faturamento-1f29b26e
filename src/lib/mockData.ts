@@ -29,24 +29,51 @@ export const filiais: Filial[] = [
 ];
 
 export const metricas: Metrica[] = [
-  { id: 'm1', name: 'Funcionários únicos no mês', unit: 'func', apuracaoType: 'DISTINCT_COUNT' },
-  { id: 'm2', name: 'Terminais ativos', unit: 'terminal', apuracaoType: 'BALANCE_AVG' },
-  { id: 'm3', name: 'Transações de ponto', unit: 'transação', apuracaoType: 'DISTINCT_COUNT' },
-  { id: 'm4', name: 'Usuários SaaS ativos', unit: 'usuário', apuracaoType: 'DISTINCT_COUNT' },
-  { id: 'm5', name: 'Licenças ativas', unit: 'licença', apuracaoType: 'BALANCE_AVG' },
+  { id: 'm1', name: 'Funcionários únicos no mês',   unit: 'func',        apuracaoType: 'DISTINCT_COUNT', description: 'SAAS — contratado vs utilizado' },
+  { id: 'm2', name: 'Terminais ativos',              unit: 'terminal',    apuracaoType: 'BALANCE_AVG',    description: 'HAAS — saldo médio ponderado' },
+  { id: 'm3', name: 'Transações de ponto',           unit: 'transação',   apuracaoType: 'DISTINCT_COUNT' },
+  { id: 'm4', name: 'Usuários SaaS ativos',          unit: 'usuário',     apuracaoType: 'DISTINCT_COUNT' },
+  { id: 'm5', name: 'Licenças ativas',               unit: 'licença',     apuracaoType: 'BALANCE_AVG' },
+  // novos cenários do documento
+  { id: 'm6', name: 'Terminais biométricos (HaaS)',  unit: 'terminal',    apuracaoType: 'BALANCE_AVG',    description: 'HAAS_PRORATA — pró-rata por dias ativos' },
+  { id: 'm7', name: 'Terminais tablet (HaaS)',       unit: 'tablet',      apuracaoType: 'BALANCE_AVG',    description: 'HAAS_PRORATA — tablets' },
+  { id: 'm8', name: 'Terminais facial (HaaS)',       unit: 'terminal',    apuracaoType: 'BALANCE_AVG',    description: 'HAAS_PRORATA — facial' },
+  { id: 'm9', name: 'Dias de atestado inválido',     unit: 'dia',         apuracaoType: 'SUM_DAYS',       description: 'ATESTAI — success fee por dia' },
+  { id: 'm10', name: 'Checagens de background',      unit: 'checagem',    apuracaoType: 'DISTINCT_COUNT', description: 'TALENT Checagem — por utilização' },
+  { id: 'm11', name: 'Utilizações de benefício',     unit: 'utilização',  apuracaoType: 'DISTINCT_COUNT', description: 'BENEFÍCIOS — por uso efetivo' },
+  { id: 'm12', name: 'Dispositivos MDM gerenciados', unit: 'dispositivo', apuracaoType: 'DISTINCT_COUNT', description: 'MDM — por dispositivo no mês' },
+  { id: 'm13', name: 'Colaboradores (bilhetagem)',   unit: 'func',        apuracaoType: 'DISTINCT_COUNT', description: 'SAAS modo METERED — sempre pelo utilizado' },
 ];
 
 export const produtos: Produto[] = [
-  { id: 'p1', name: 'Nexti Ponto Cloud', type: 'RECORRENTE_MEDIDO', metricaId: 'm1', defaultPrice: 4.9, active: true },
-  { id: 'p2', name: 'Nexti Folha', type: 'RECORRENTE_FIXO', defaultPrice: 2200.0, active: true },
-  { id: 'p3', name: 'Terminal Biométrico REP-C', type: 'RECORRENTE_MEDIDO', metricaId: 'm2', defaultPrice: 220.0, active: true },
-  { id: 'p4', name: 'Terminal Facial Pro', type: 'RECORRENTE_MEDIDO', metricaId: 'm2', defaultPrice: 380.0, active: true },
-  { id: 'p5', name: 'Instalação on-site', type: 'AVULSO', active: true },
-  { id: 'p6', name: 'Cortesia onboarding', type: 'AVULSO', active: true },
-  { id: 'p7', name: 'Nexti RH SaaS', type: 'RECORRENTE_MEDIDO', metricaId: 'm4', defaultPrice: 8.5, active: true },
-  { id: 'p8', name: 'Suporte Premium', type: 'RECORRENTE_FIXO', defaultPrice: 1500.0, active: true },
-  { id: 'p9', name: 'Licença ERP Integração', type: 'RECORRENTE_MEDIDO', metricaId: 'm5', defaultPrice: 90.0, active: true },
-  { id: 'p10', name: 'Treinamento EAD', type: 'AVULSO', active: true },
+  // existentes
+  { id: 'p1',  name: 'Nexti Ponto Cloud',            type: 'RECORRENTE_MEDIDO', metricaId: 'm1',  defaultPrice: 4.9,    active: true },
+  { id: 'p2',  name: 'Nexti Folha',                  type: 'RECORRENTE_FIXO',                     defaultPrice: 2200.0, active: true },
+  { id: 'p3',  name: 'Terminal Biométrico REP-C',     type: 'RECORRENTE_MEDIDO', metricaId: 'm2',  defaultPrice: 220.0,  active: true },
+  { id: 'p4',  name: 'Terminal Facial Pro',           type: 'RECORRENTE_MEDIDO', metricaId: 'm2',  defaultPrice: 380.0,  active: true },
+  { id: 'p5',  name: 'Instalação on-site',            type: 'AVULSO',                                                    active: true },
+  { id: 'p6',  name: 'Cortesia onboarding',           type: 'AVULSO',                                                    active: true },
+  { id: 'p7',  name: 'Nexti RH SaaS',                type: 'RECORRENTE_MEDIDO', metricaId: 'm4',  defaultPrice: 8.5,    active: true },
+  { id: 'p8',  name: 'Suporte Premium',               type: 'RECORRENTE_FIXO',                     defaultPrice: 1500.0, active: true },
+  { id: 'p9',  name: 'Licença ERP Integração',        type: 'RECORRENTE_MEDIDO', metricaId: 'm5',  defaultPrice: 90.0,   active: true },
+  { id: 'p10', name: 'Treinamento EAD',               type: 'AVULSO',                                                    active: true },
+  // novos — cenários do documento
+  { id: 'p11', name: 'HaaS Terminal Biométrico',      type: 'RECORRENTE_MEDIDO', metricaId: 'm6',  defaultPrice: 90.0,   active: true, description: 'HAAS com pró-rata de dias ativos' },
+  { id: 'p12', name: 'HaaS Tablet',                   type: 'RECORRENTE_MEDIDO', metricaId: 'm7',  defaultPrice: 70.0,   active: true, description: 'HAAS tablet com pró-rata' },
+  { id: 'p13', name: 'HaaS Terminal Facial',          type: 'RECORRENTE_MEDIDO', metricaId: 'm8',  defaultPrice: 110.0,  active: true, description: 'HAAS facial com pró-rata' },
+  { id: 'p14', name: 'Atestai',                       type: 'RECORRENTE_FIXO',                     defaultPrice: 500.0,  active: true, description: 'Valor fixo + success fee por dia inválido' },
+  { id: 'p15', name: 'Talent Admissão',               type: 'RECORRENTE_FIXO',                     defaultPrice: 500.0,  active: true, description: 'Módulo admissão — valor fixo' },
+  { id: 'p16', name: 'Talent Recrutamento & Seleção', type: 'RECORRENTE_FIXO',                     defaultPrice: 500.0,  active: true, description: 'Módulo R&S — valor fixo' },
+  { id: 'p17', name: 'Talent Checagem',               type: 'RECORRENTE_MEDIDO', metricaId: 'm10', defaultPrice: 12.0,   active: true, description: 'Exceção: cobrado por utilização' },
+  { id: 'p18', name: 'Benefícios',                    type: 'RECORRENTE_MEDIDO', metricaId: 'm11', defaultPrice: 5.0,    active: true, description: 'Por uso efetivo do benefício' },
+  { id: 'p19', name: 'MDM',                           type: 'RECORRENTE_MEDIDO', metricaId: 'm12', defaultPrice: 8.0,    active: true, description: 'Por dispositivo gerenciado no mês' },
+  { id: 'p20', name: 'Nexti Ponto Cloud (bilhetagem)', type: 'RECORRENTE_MEDIDO', metricaId: 'm13', defaultPrice: 4.9,   active: true, description: 'Modo bilhetagem: sempre cobra pelo utilizado' },
+  { id: 'p21', name: 'Manutenção (OS)',               type: 'AVULSO',                              defaultPrice: 350.0,  active: true, description: 'Por chamado/OS encerrada' },
+  { id: 'p22', name: 'AIT',                           type: 'AVULSO',                                                    active: true, description: 'Conforme contrato' },
+  { id: 'p23', name: 'Consultoria',                   type: 'AVULSO',                                                    active: true, description: 'Por projeto ou hora conforme contrato' },
+  { id: 'p24', name: 'Customização',                  type: 'AVULSO',                                                    active: true, description: 'Por demanda de desenvolvimento' },
+  { id: 'p25', name: 'Nexti Time SaaS',               type: 'RECORRENTE_MEDIDO', metricaId: 'm1',  defaultPrice: 15.0,   active: true, description: 'SAAS Prime/Time/Plus — módulos ativos' },
+  { id: 'p26', name: 'Nexti SaaS Facial',             type: 'RECORRENTE_MEDIDO', metricaId: 'm1',  defaultPrice: 18.0,   active: true, description: 'SAAS Facial — mesmo modelo contratado/bilhetagem' },
 ];
 
 export const clientes: Cliente[] = [
@@ -128,6 +155,30 @@ export const clientes: Cliente[] = [
     email: 'contratos@solaris.com.br',
     estabelecimentos: [
       { id: 'e13', clienteId: 'c7', nome: 'Sede Recife', cnpj: '55.666.777/0001-88', cidade: 'Recife', uf: 'PE' },
+    ],
+  },
+  {
+    id: 'c8',
+    code: 'GR008',
+    name: 'Novamed Saúde Corporativa',
+    status: 'ACTIVE',
+    email: 'ti@novamed.com.br',
+    phone: '(11) 4000-1234',
+    notes: 'Contrato HAAS pró-rata + Atestai + Talent.',
+    estabelecimentos: [
+      { id: 'e14', clienteId: 'c8', nome: 'Matriz São Paulo', cnpj: '66.777.888/0001-44', cidade: 'São Paulo', uf: 'SP' },
+      { id: 'e15', clienteId: 'c8', nome: 'Unidade Campinas',  cnpj: '66.777.888/0002-25', cidade: 'Campinas', uf: 'SP' },
+    ],
+  },
+  {
+    id: 'c9',
+    code: 'GR009',
+    name: 'TechMind Digital',
+    status: 'ACTIVE',
+    email: 'financeiro@techmind.com.br',
+    notes: 'MDM + Benefícios + Talent Checagem + bilhetagem.',
+    estabelecimentos: [
+      { id: 'e16', clienteId: 'c9', nome: 'HQ Curitiba', cnpj: '11.222.333/0001-66', cidade: 'Curitiba', uf: 'PR' },
     ],
   },
 ];
@@ -452,6 +503,196 @@ export const contratos: Contrato[] = [
     reajustes: [],
   },
 
+  // ─── CT-2026-0401 Novamed — HAAS pró-rata + Atestai + Talent ─────────────
+  // Cenários: HAAS_PRORATA mês cheio, HAAS_PRORATA entrega no meio do mês,
+  //           ATESTAI (fixo + success fee), TALENT fixo + TALENT Checagem
+  {
+    id: 'ct8',
+    numero: 'CT-2026-0401',
+    status: 'ACTIVE',
+    filialId: 'fil1',
+    clienteId: 'c8',
+    startDate: '2026-02-01',
+    dueType: 'FIXED_DAY',
+    dueDay: 15,
+    dueMonthOffset: 1,
+    paymentMethod: 'BOLETO',
+    readjustmentIndex: 'IPCA',
+    readjustmentPercent: 4.5,
+    readjustmentAnchor: 'ITEM',
+    apresentacaoFatura: 'DETALHADA',
+    notes: 'Novamed — cobre HAAS pró-rata, Atestai e Talent.',
+    itens: [
+      // CENÁRIO A: HaaS Terminal Biométrico — ativo desde antes do mês (mês cheio)
+      // 2026-04: 5 terminais × R$90 × 30/30 = R$450,00
+      {
+        id: 'it20',
+        contratoId: 'ct8',
+        produto: produtos[10],  // p11 HaaS Terminal Biométrico
+        metrica: metricas[5],   // m6 BALANCE_AVG
+        type: 'HAAS_PRORATA',
+        unitPrice: 90.0,
+        minimumQuantity: 5,     // 5 terminais contratados
+        startDate: '2026-02-01',
+        haasActivationDate: '2026-02-01',  // ativo antes do mês → mês cheio
+        politicas: [],
+      },
+      // CENÁRIO B: HaaS Tablet — entregue no dia 11 de abril (pró-rata parcial)
+      // 2026-04: 2 tablets × R$70 × 20/30 = R$93,33
+      {
+        id: 'it21',
+        contratoId: 'ct8',
+        produto: produtos[11],  // p12 HaaS Tablet
+        metrica: metricas[6],   // m7 BALANCE_AVG
+        type: 'HAAS_PRORATA',
+        unitPrice: 70.0,
+        minimumQuantity: 2,
+        startDate: '2026-04-11',
+        haasActivationDate: '2026-04-11',  // entregue dia 11 → 20 dias ativos
+        politicas: [],
+      },
+      // CENÁRIO C: HaaS Terminal Facial — entregue dia 1, mês cheio
+      // 2026-04: 3 faciais × R$110 × 30/30 = R$330,00
+      {
+        id: 'it22',
+        contratoId: 'ct8',
+        produto: produtos[12],  // p13 HaaS Terminal Facial
+        metrica: metricas[7],   // m8 BALANCE_AVG
+        type: 'HAAS_PRORATA',
+        unitPrice: 110.0,
+        minimumQuantity: 3,
+        startDate: '2026-02-01',
+        haasActivationDate: '2026-02-01',
+        politicas: [],
+      },
+      // CENÁRIO D: Atestai
+      // 2026-04: ValorFixo R$500 + (8 dias × R$107 × 20%) = R$500 + R$171,20 = R$671,20
+      // 2026-05: ValorFixo R$500 + (0 dias) = R$500,00
+      {
+        id: 'it23',
+        contratoId: 'ct8',
+        produto: produtos[13],  // p14 Atestai
+        metrica: metricas[8],   // m9 SUM_DAYS (dias atestado inválido)
+        type: 'ATESTAI',
+        unitPrice: 500.0,
+        atestaiValorFixo: 500.0,
+        startDate: '2026-02-01',
+        politicas: [],
+      },
+      // CENÁRIO E: Talent Admissão — valor fixo mensal
+      // 2026-04: R$500,00
+      {
+        id: 'it24',
+        contratoId: 'ct8',
+        produto: produtos[14],  // p15 Talent Admissão
+        type: 'RECORRENTE_FIXO',
+        unitPrice: 500.0,
+        startDate: '2026-02-01',
+        politicas: [],
+      },
+      // CENÁRIO F: Talent Checagem — por utilização (exceção)
+      // 2026-04: 15 checagens × R$12,00 = R$180,00
+      {
+        id: 'it25',
+        contratoId: 'ct8',
+        produto: produtos[16],  // p17 Talent Checagem
+        metrica: metricas[9],   // m10 DISTINCT_COUNT
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 12.0,
+        startDate: '2026-02-01',
+        politicas: [],
+        // saasBillingMode: 'METERED' implícito — Talent Checagem não tem mínimo
+      },
+    ],
+    reajustes: [],
+  },
+
+  // ─── CT-2026-0402 TechMind — MDM + Benefícios + bilhetagem ───────────────
+  // Cenários: MDM por dispositivo, Benefícios por uso, SAAS bilhetagem METERED,
+  //           Manutenção avulsa, Consultoria avulsa
+  {
+    id: 'ct9',
+    numero: 'CT-2026-0402',
+    status: 'ACTIVE',
+    filialId: 'fil1',
+    clienteId: 'c9',
+    startDate: '2026-01-01',
+    dueType: 'DAYS_AFTER_BILLING',
+    dueDay: 0,
+    dueMonthOffset: 0,
+    dueDays: 10,
+    paymentMethod: 'PIX',
+    readjustmentIndex: 'NONE',
+    readjustmentAnchor: 'CONTRACT',
+    apresentacaoFatura: 'DETALHADA',
+    notes: 'TechMind — MDM, Benefícios, bilhetagem sem mínimo.',
+    itens: [
+      // CENÁRIO G: SAAS bilhetagem METERED — sempre cobra pelo utilizado, sem mínimo
+      // 2026-04: 45 func × R$4,90 = R$220,50 (sem mínimo — modo bilhetagem)
+      // 2026-05: 10 func × R$4,90 = R$49,00 (mesmo usando menos, não há mínimo)
+      {
+        id: 'it30',
+        contratoId: 'ct9',
+        produto: produtos[19],  // p20 Nexti Ponto Cloud bilhetagem
+        metrica: metricas[12],  // m13 DISTINCT_COUNT
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 4.9,
+        startDate: '2026-01-01',
+        saasBillingMode: 'METERED',  // sem mínimo aplicado
+        politicas: [],
+      },
+      // CENÁRIO H: MDM — por dispositivo gerenciado no mês
+      // 2026-04: 32 dispositivos × R$8,00 = R$256,00
+      {
+        id: 'it31',
+        contratoId: 'ct9',
+        produto: produtos[18],  // p19 MDM
+        metrica: metricas[11],  // m12 DISTINCT_COUNT
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 8.0,
+        startDate: '2026-01-01',
+        politicas: [],
+      },
+      // CENÁRIO I: Benefícios — por uso efetivo
+      // 2026-04: 78 utilizações × R$5,00 = R$390,00
+      {
+        id: 'it32',
+        contratoId: 'ct9',
+        produto: produtos[17],  // p18 Benefícios
+        metrica: metricas[10],  // m11 DISTINCT_COUNT
+        type: 'RECORRENTE_MEDIDO',
+        unitPrice: 5.0,
+        startDate: '2026-01-01',
+        politicas: [],
+      },
+      // CENÁRIO J: Manutenção avulsa (OS encerrada)
+      // 2026-04: 1 chamado × R$350,00 = R$350,00
+      {
+        id: 'it33',
+        contratoId: 'ct9',
+        produto: produtos[20],  // p21 Manutenção OS
+        type: 'AVULSO',
+        unitPrice: 350.0,
+        startDate: '2026-04-01',
+        endDate: '2026-04-30',  // item pontual — só aparece em abril
+        politicas: [],
+      },
+      // CENÁRIO K: Consultoria avulsa
+      // 2026-04: 1 × R$2.400,00 = R$2.400,00
+      {
+        id: 'it34',
+        contratoId: 'ct9',
+        produto: produtos[22],  // p23 Consultoria
+        type: 'AVULSO',
+        unitPrice: 2400.0,
+        startDate: '2026-04-01',
+        endDate: '2026-04-30',
+        politicas: [],
+      },
+    ],
+    reajustes: [],
+  },
+
   // ─── CT-2026-0302 Solaris Energia ─────────────────────────────────────────
   // Cobre: política temporária de desconto ativa vs expirada
   {
@@ -549,8 +790,36 @@ export const eventos: EventoDeUso[] = [
 
   // ─── ct7 Cenário política temporária ──────────────────────────────────────
   // Funcionários com desconto ativo (50% off primeiros 3 meses)
-  { id: 'ev30', contratoId: 'ct7', estabelecimentoId: 'e13', metricaId: 'm1', quantity: 200, occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API', notes: 'Período de desconto ativo' },
-  { id: 'ev31', contratoId: 'ct7', estabelecimentoId: 'e13', metricaId: 'm1', quantity: 200, occurredAt: '2026-05-31', referencePeriod: '2026-05', source: 'API', notes: 'Fora do período de desconto' },
+  { id: 'ev30', contratoId: 'ct7', estabelecimentoId: 'e13', metricaId: 'm1',  quantity: 200, occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API', notes: 'Período de desconto ativo' },
+  { id: 'ev31', contratoId: 'ct7', estabelecimentoId: 'e13', metricaId: 'm1',  quantity: 200, occurredAt: '2026-05-31', referencePeriod: '2026-05', source: 'API', notes: 'Fora do período de desconto' },
+
+  // ─── ct8 Novamed — HAAS pró-rata + Atestai + Talent ───────────────────────
+  // HAAS biométrico: m6 BALANCE_AVG — instalação inicial 5 terminais (fev/26)
+  { id: 'ev40', contratoId: 'ct8', estabelecimentoId: 'e14', metricaId: 'm6',  quantity: 5,   occurredAt: '2026-02-01', referencePeriod: '2026-02', source: 'CSV',    notes: 'Instalação inicial 5 terminais biométricos' },
+  // HAAS tablet: m7 BALANCE_AVG — entregue 11/04 (pró-rata 20/30 dias)
+  { id: 'ev41', contratoId: 'ct8', estabelecimentoId: 'e14', metricaId: 'm7',  quantity: 2,   occurredAt: '2026-04-11', referencePeriod: '2026-04', source: 'MANUAL', notes: 'Entrega 2 tablets dia 11/04 — pró-rata 20 dias' },
+  // HAAS facial: m8 BALANCE_AVG — instalação fev/26
+  { id: 'ev42', contratoId: 'ct8', estabelecimentoId: 'e15', metricaId: 'm8',  quantity: 3,   occurredAt: '2026-02-01', referencePeriod: '2026-02', source: 'CSV',    notes: 'Instalação 3 terminais faciais' },
+  // Atestai: m9 SUM_DAYS — 8 dias de atestado inválido em abril
+  // 8 × R$107 × 20% = R$171,20 de success fee
+  { id: 'ev43', contratoId: 'ct8', estabelecimentoId: 'e14', metricaId: 'm9',  quantity: 5,   occurredAt: '2026-04-15', referencePeriod: '2026-04', source: 'API',    notes: 'Lote 1: 5 dias atestados inválidos' },
+  { id: 'ev44', contratoId: 'ct8', estabelecimentoId: 'e15', metricaId: 'm9',  quantity: 3,   occurredAt: '2026-04-22', referencePeriod: '2026-04', source: 'API',    notes: 'Lote 2: 3 dias atestados inválidos' },
+  // Atestai maio: sem ocorrências → success fee zero, só valor fixo
+  // Talent Checagem: m10 DISTINCT_COUNT — 15 checagens em abril
+  { id: 'ev45', contratoId: 'ct8', estabelecimentoId: 'e14', metricaId: 'm10', quantity: 10,  occurredAt: '2026-04-10', referencePeriod: '2026-04', source: 'API',    notes: '10 checagens de background — lote 1' },
+  { id: 'ev46', contratoId: 'ct8', estabelecimentoId: 'e15', metricaId: 'm10', quantity: 5,   occurredAt: '2026-04-25', referencePeriod: '2026-04', source: 'API',    notes: '5 checagens — lote 2' },
+
+  // ─── ct9 TechMind — MDM + Benefícios + bilhetagem ─────────────────────────
+  // SAAS bilhetagem METERED: m13 DISTINCT_COUNT — 45 func em abril, 10 em maio
+  { id: 'ev50', contratoId: 'ct9', estabelecimentoId: 'e16', metricaId: 'm13', quantity: 45,  occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API',    notes: 'Bilhetagem abril: 45 colaboradores (sem mínimo)' },
+  { id: 'ev51', contratoId: 'ct9', estabelecimentoId: 'e16', metricaId: 'm13', quantity: 10,  occurredAt: '2026-05-31', referencePeriod: '2026-05', source: 'API',    notes: 'Bilhetagem maio: 10 colaboradores (sem mínimo)' },
+  // MDM: m12 DISTINCT_COUNT — 32 dispositivos em abril
+  { id: 'ev52', contratoId: 'ct9', estabelecimentoId: 'e16', metricaId: 'm12', quantity: 32,  occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API',    notes: '32 dispositivos gerenciados em abril' },
+  { id: 'ev53', contratoId: 'ct9', estabelecimentoId: 'e16', metricaId: 'm12', quantity: 35,  occurredAt: '2026-05-31', referencePeriod: '2026-05', source: 'API',    notes: '35 dispositivos gerenciados em maio' },
+  // Benefícios: m11 DISTINCT_COUNT — 78 utilizações em abril
+  { id: 'ev54', contratoId: 'ct9', estabelecimentoId: 'e16', metricaId: 'm11', quantity: 50,  occurredAt: '2026-04-15', referencePeriod: '2026-04', source: 'API',    notes: 'Benefícios: 50 utilizações quinzena 1' },
+  { id: 'ev55', contratoId: 'ct9', estabelecimentoId: 'e16', metricaId: 'm11', quantity: 28,  occurredAt: '2026-04-30', referencePeriod: '2026-04', source: 'API',    notes: 'Benefícios: 28 utilizações quinzena 2' },
+  { id: 'ev56', contratoId: 'ct9', estabelecimentoId: 'e16', metricaId: 'm11', quantity: 61,  occurredAt: '2026-05-31', referencePeriod: '2026-05', source: 'API',    notes: 'Benefícios: 61 utilizações em maio' },
 ];
 
 export function getCliente(id: string) {

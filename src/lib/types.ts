@@ -2,9 +2,15 @@ export type ItemType =
   | 'RECORRENTE_FIXO'
   | 'RECORRENTE_MEDIDO'
   | 'AVULSO'
-  | 'BONIFICACAO';
+  | 'BONIFICACAO'
+  | 'HAAS_PRORATA'   // HaaS com pró-rata: Qtd × (PreçoUnit × DiasAtivos / DiasMês)
+  | 'ATESTAI';       // Valor fixo mensal + success fee: VF + (QtdDias × 107 × 20%)
 
-export type ApuracaoType = 'DISTINCT_COUNT' | 'BALANCE_AVG';
+export type ApuracaoType =
+  | 'DISTINCT_COUNT'  // soma de eventos do período (SaaS, Talent Checagem, MDM, Benefícios)
+  | 'BALANCE_AVG'     // média ponderada de saldo (terminais HaaS, licenças)
+  | 'SUM_DAYS'        // soma de dias (Atestai success fee: dias de atestado inválido)
+  | 'FIXED_VALUE';    // valor fixo sem apuração de eventos (Manutenção, AIT, Consultoria)
 
 export type ReadjustmentIndex = 'NONE' | 'IPCA' | 'IGPM' | 'INPC' | 'FIXED_PERCENT';
 
@@ -123,6 +129,12 @@ export interface ItemDeContrato {
   endDate?: string;
   politicas: PoliticaTemporaria[];
   lastReadjustedAt?: string;
+  // HAAS_PRORATA: data de ativação do equipamento no período (para calcular dias ativos)
+  haasActivationDate?: string;
+  // ATESTAI: valor fixo mensal cobrado sempre
+  atestaiValorFixo?: number;
+  // SAAS billing mode: 'CONTRACTED' (mín contratado) ou 'METERED' (sempre pelo utilizado)
+  saasBillingMode?: 'CONTRACTED' | 'METERED';
 }
 
 export interface Contrato {
@@ -174,6 +186,14 @@ export interface FaturaLinha {
   eventoIds: string[];
   temMinimo: boolean;
   minimoAplicado: boolean;
+  // HAAS_PRORATA
+  haasQtdEquipamentos?: number;
+  haasDiasAtivos?: number;
+  haasDiasMes?: number;
+  // ATESTAI
+  atestaiValorFixo?: number;
+  atestaiSuccessFee?: number;
+  atestaiQtdDias?: number;
 }
 
 export interface Fatura {

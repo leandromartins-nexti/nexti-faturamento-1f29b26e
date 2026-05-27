@@ -53,6 +53,8 @@ const itemTypeLabel: Record<ItemType, { label: string; tone: 'info' | 'brand' | 
   RECORRENTE_MEDIDO: { label: 'Recorrente medido', tone: 'brand' },
   AVULSO: { label: 'Avulso', tone: 'neutral' },
   BONIFICACAO: { label: 'Bonificação', tone: 'success' },
+  HAAS_PRORATA: { label: 'HaaS pró-rata', tone: 'brand' },
+  ATESTAI: { label: 'Atestai', tone: 'info' },
 };
 
 interface ContratoDetailProps {

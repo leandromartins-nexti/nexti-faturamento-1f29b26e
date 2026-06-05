@@ -3,7 +3,7 @@ import { Button } from '@/ds';
 import { Building2, Calendar, TrendingUp, CreditCard, FileText, Info } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Field, TextInput, Select, Textarea } from '../ui/Form';
-import { useStore } from '../../lib/store';
+import { useClientes } from '../../hooks/useClientes';
 import type {
   ContratoStatus,
   DueType,
@@ -88,7 +88,7 @@ const EMPTY: ContratoFormValues = {
 };
 
 export function ContratoFormModal({ open, onClose, contrato, onCreate, onUpdate }: ContratoFormModalProps) {
-  const { clientes } = useStore();
+  const { clientes } = useClientes();
   const isEditing = !!contrato;
   const [values, setValues] = useState<ContratoFormValues>({ ...EMPTY, clienteId: clientes[0]?.id ?? '' });
 

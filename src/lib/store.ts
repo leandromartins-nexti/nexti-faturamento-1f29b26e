@@ -2,22 +2,18 @@ import { useSyncExternalStore } from 'react';
 import {
   contratos as seedContratos,
   eventos as seedEventos,
-  clientes as seedClientes,
   produtos as seedProdutos,
   metricas as seedMetricas,
 } from './mockData';
-import type { ApuracaoType, Cliente, ClienteStatus, Contrato, DueType, Estabelecimento, Fatura, FaturaStatus, Metrica, PaymentMethod, Produto, ProdutoType, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
+import type { ApuracaoType, Contrato, DueType, Fatura, FaturaStatus, Metrica, PaymentMethod, Produto, ProdutoType, ReadjustmentAnchor, ApresentacaoFatura, EventoDeUso, ItemDeContrato } from './types';
 import { gerarFatura } from './fatura';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
-import type { ClienteFormValues } from '../components/modals/ClienteFormModal';
 import type { ProdutoFormValues } from '../components/modals/ProdutoFormModal';
 import type { MetricaFormValues } from '../components/modals/MetricaFormModal';
-import type { EstabelecimentoFormValues } from '../components/modals/EstabelecimentoFormModal';
 
 interface StoreState {
-  clientes: Cliente[];
   contratos: Contrato[];
   eventos: EventoDeUso[];
   produtos: Produto[];
@@ -26,7 +22,6 @@ interface StoreState {
 }
 
 let state: StoreState = {
-  clientes: seedClientes,
   contratos: seedContratos,
   eventos: seedEventos,
   produtos: seedProdutos,
@@ -63,104 +58,7 @@ function nextContratoNumero(): string {
   return `CT-${year}-${seq}`;
 }
 
-function nextClientCode(): string {
-  const max = state.clientes.reduce((n, c) => {
-    const m = c.code.match(/^GR(\d+)$/);
-    return m ? Math.max(n, parseInt(m[1], 10)) : n;
-  }, 0);
-  return `GR${String(max + 1).padStart(3, '0')}`;
-}
-
 export const store = {
-  addCliente(values: ClienteFormValues): Cliente {
-    const clienteId = nextId('cli_');
-    const novo: Cliente = {
-      id: clienteId,
-      code: values.code || nextClientCode(),
-      name: values.name,
-      status: 'ACTIVE',
-      email: values.email || undefined,
-      phone: values.phone || undefined,
-      notes: values.notes || undefined,
-      estabelecimentos: [],
-    };
-    state = { ...state, clientes: [novo, ...state.clientes] };
-    emit();
-    return novo;
-  },
-
-  updateCliente(id: string, values: ClienteFormValues) {
-    state = {
-      ...state,
-      clientes: state.clientes.map((c) =>
-        c.id !== id ? c : {
-          ...c,
-          code: values.code,
-          name: values.name,
-          email: values.email || undefined,
-          phone: values.phone || undefined,
-          notes: values.notes || undefined,
-        },
-      ),
-    };
-    emit();
-  },
-
-  setClienteStatus(id: string, status: ClienteStatus) {
-    state = {
-      ...state,
-      clientes: state.clientes.map((c) => c.id !== id ? c : { ...c, status }),
-    };
-    emit();
-  },
-
-  addEstabelecimento(clienteId: string, values: EstabelecimentoFormValues): Estabelecimento {
-    const novo: Estabelecimento = {
-      id: nextId('est_'),
-      clienteId,
-      nome: values.nome,
-      cnpj: values.cnpj,
-      cidade: values.cidade,
-      uf: values.uf,
-    };
-    state = {
-      ...state,
-      clientes: state.clientes.map((c) =>
-        c.id !== clienteId ? c : { ...c, estabelecimentos: [...c.estabelecimentos, novo] },
-      ),
-    };
-    emit();
-    return novo;
-  },
-
-  updateEstabelecimento(clienteId: string, estId: string, values: EstabelecimentoFormValues) {
-    state = {
-      ...state,
-      clientes: state.clientes.map((c) =>
-        c.id !== clienteId ? c : {
-          ...c,
-          estabelecimentos: c.estabelecimentos.map((e) =>
-            e.id !== estId ? e : { ...e, nome: values.nome, cnpj: values.cnpj, cidade: values.cidade, uf: values.uf },
-          ),
-        },
-      ),
-    };
-    emit();
-  },
-
-  removeEstabelecimento(clienteId: string, estId: string) {
-    state = {
-      ...state,
-      clientes: state.clientes.map((c) =>
-        c.id !== clienteId ? c : {
-          ...c,
-          estabelecimentos: c.estabelecimentos.filter((e) => e.id !== estId),
-        },
-      ),
-    };
-    emit();
-  },
-
   addContrato(values: ContratoFormValues): Contrato {
     const novo: Contrato = {
       id: nextId('ct_'),

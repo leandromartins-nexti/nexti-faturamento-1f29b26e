@@ -15,6 +15,7 @@ import {
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { useStore, store } from '../lib/store';
+import { useClientes } from '../hooks/useClientes';
 import { fmtBRL, fmtDate, fmtPeriod } from '../lib/format';
 import type { Fatura, FaturaLinha, FaturaStatus } from '../lib/types';
 
@@ -53,7 +54,8 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export function Faturas() {
-  const { contratos, clientes, faturas } = useStore();
+  const { clientes } = useClientes();
+  const { contratos, faturas } = useStore();
   const [periodo, setPeriodo] = useState(PERIODO_ATUAL);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set());

@@ -4,8 +4,9 @@ import { Info, ArrowRight } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Field, TextInput, Select, Textarea } from '../ui/Form';
 import { Badge } from '../ui/Badge';
-import { contratos, clientes, getEventosByContrato } from '../../lib/mockData';
+import { contratos, getEventosByContrato } from '../../lib/mockData';
 import { useStore } from '../../lib/store';
+import { useClientes } from '../../hooks/useClientes';
 import type { Contrato } from '../../lib/types';
 
 interface EventoFormModalProps {
@@ -34,6 +35,7 @@ function periodOf(iso: string) {
 
 export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormModalProps) {
   const { metricas } = useStore();
+  const { clientes } = useClientes();
   const lockedContrato = !!contrato;
 
   const [values, setValues] = useState<EventoFormValues>({

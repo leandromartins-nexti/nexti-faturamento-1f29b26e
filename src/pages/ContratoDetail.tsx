@@ -24,6 +24,7 @@ import { EventoFormModal } from '../components/modals/EventoFormModal';
 import { ContratoFormModal } from '../components/modals/ContratoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
 import { useStore, store } from '../lib/store';
+import { useClientes } from '../hooks/useClientes';
 import { fmtBRL, fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
 import type { Contrato, ItemDeContrato, ItemType, DueType, PaymentMethod } from '../lib/types';
@@ -63,7 +64,8 @@ interface ContratoDetailProps {
 }
 
 export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
-  const { clientes, contratos, eventos: allEventos } = useStore();
+  const { clientes } = useClientes();
+  const { contratos, eventos: allEventos } = useStore();
   const contrato = contratos.find((c) => c.id === id);
   const [tab, setTab] = useState('itens');
   const [itemModalOpen, setItemModalOpen] = useState(false);
@@ -442,7 +444,7 @@ function EventosTab({
   eventos: ReturnType<typeof useStore>['eventos'];
   onLancar: () => void;
 }) {
-  const { clientes } = useStore();
+  const { clientes } = useClientes();
   const cliente = clientes.find((c) => c.id === contrato.clienteId) ?? { estabelecimentos: [] as typeof clientes[0]['estabelecimentos'] };
   const ordenados = [...eventos].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
 
@@ -672,7 +674,7 @@ function Field({ label, value }: { label: string; value: string }) {
 }
 
 function EstabelecimentosTab({ clienteId }: { clienteId: string }) {
-  const { clientes } = useStore();
+  const { clientes } = useClientes();
   const cliente = clientes.find((c) => c.id === clienteId);
   if (!cliente) return null;
   return (

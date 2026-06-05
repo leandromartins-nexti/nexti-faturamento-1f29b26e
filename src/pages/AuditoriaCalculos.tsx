@@ -5,7 +5,8 @@ import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Tabs } from '../components/ui/Tabs';
 import { Modal } from '../components/ui/Modal';
-import { contratos, eventos, clientes } from '../lib/mockData';
+import { contratos, eventos } from '../lib/mockData';
+import { useClientes } from '../hooks/useClientes';
 import { gerarFatura } from '../lib/fatura';
 import type { Contrato, ItemType } from '../lib/types';
 
@@ -531,6 +532,7 @@ const GABARITO: Record<string, { titulo: string; cenarios: string[] }> = {
 };
 
 export function AuditoriaCalculos() {
+  const { clientes } = useClientes();
   const [abaAtiva, setAbaAtiva] = useState<'auditoria' | 'formulas'>('auditoria');
   const [contratoSelecionado, setContratoSelecionado] = useState<string>('ct8');
   const [periodoSelecionado, setPeriodoSelecionado] = useState<string>('2026-04');

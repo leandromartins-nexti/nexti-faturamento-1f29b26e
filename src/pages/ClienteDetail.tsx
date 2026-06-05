@@ -16,7 +16,8 @@ import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ClienteFormModal } from '../components/modals/ClienteFormModal';
 import { EstabelecimentoFormModal } from '../components/modals/EstabelecimentoFormModal';
-import { useStore, store } from '../lib/store';
+import { useStore } from '../lib/store';
+import { useClientes } from '../hooks/useClientes';
 import type { Estabelecimento } from '../lib/types';
 import type { Route } from '../lib/router';
 
@@ -37,7 +38,8 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function ClienteDetail({ id, onNavigate }: ClienteDetailProps) {
-  const { clientes, contratos } = useStore();
+  const { contratos } = useStore();
+  const { clientes, updateCliente, setClienteStatus: setStatus, addEstabelecimento, updateEstabelecimento, removeEstabelecimento } = useClientes();
   const cliente = clientes.find((c) => c.id === id);
 
   const [editClienteOpen, setEditClienteOpen] = useState(false);
@@ -65,16 +67,9 @@ export function ClienteDetail({ id, onNavigate }: ClienteDetailProps) {
     setEstModalOpen(true);
   }
 
-  function handleRemoveEst(e: Estabelecimento) {
-    const emUso = contratos.some((c) =>
-      c.clienteId === id &&
-      c.itens.some(() => true) &&
-      /* verifica eventos vinculados ao estabelecimento */
-      false,
-    );
-    // Verifica se o estabelecimento tem eventos vinculados no store
+  async function handleRemoveEst(e: Estabelecimento) {
     if (confirm(`Remover o estabelecimento "${e.nome}"?`)) {
-      store.removeEstabelecimento(id, e.id);
+      await removeEstabelecimento(id, e.id);
     }
   }
 
@@ -276,19 +271,23 @@ export function ClienteDetail({ id, onNavigate }: ClienteDetailProps) {
         open={editClienteOpen}
         onClose={() => setEditClienteOpen(false)}
         cliente={cliente}
-        onSave={(values) => store.updateCliente(id, values)}
+        onSave={async (values) => {
+          await updateCliente(id, values);
+          setEditClienteOpen(false);
+        }}
       />
 
       <EstabelecimentoFormModal
         open={estModalOpen}
         onClose={() => setEstModalOpen(false)}
         estabelecimento={editingEst}
-        onSave={(values) => {
+        onSave={async (values) => {
           if (editingEst) {
-            store.updateEstabelecimento(id, editingEst.id, values);
+            await updateEstabelecimento(id, editingEst.id, values);
           } else {
-            store.addEstabelecimento(id, values);
+            await addEstabelecimento(id, values);
           }
+          setEstModalOpen(false);
         }}
       />
     </div>

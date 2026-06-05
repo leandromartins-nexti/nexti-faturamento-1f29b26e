@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Button } from '@/ds';
-import { Building2, MapPin, Plus, ArrowRight, FileText, Mail, Phone } from 'lucide-react';
+import { Building2, Loader2, MapPin, Plus, ArrowRight, FileText, Mail, Phone } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ClienteFormModal } from '../components/modals/ClienteFormModal';
-import { useStore, store } from '../lib/store';
+import { useStore } from '../lib/store';
+import { useClientes } from '../hooks/useClientes';
+import { useUser } from '../nexti-sdk';
 import type { Cliente } from '../lib/types';
 import type { Route } from '../lib/router';
 
@@ -25,20 +27,36 @@ const STATUS_LABEL: Record<Cliente['status'], string> = {
 };
 
 export function ClientesList({ onNavigate }: ClientesListProps) {
-  const { clientes, contratos } = useStore();
+  const user = useUser();
+  const { contratos } = useStore();
+  const { clientes, loading, error, addCliente } = useClientes();
   const [modalOpen, setModalOpen] = useState(false);
 
-  function openCreate() {
-    setModalOpen(true);
+  if (!user) {
+    return (
+      <div className="p-6 flex items-center gap-2 text-ink-500">
+        <Loader2 className="size-4 animate-spin" /> Carregando…
+      </div>
+    );
   }
 
   return (
     <div className="p-6 space-y-4">
-      <div className="flex items-center justify-end">
+      {error && (
+        <div className="text-sm text-danger bg-danger-bg border border-danger rounded-md px-3 py-2">{error}</div>
+      )}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-ink-500">
+          {loading ? (
+            <span className="flex items-center gap-1.5"><Loader2 className="size-3.5 animate-spin" /> Carregando…</span>
+          ) : (
+            <>{clientes.length} cliente{clientes.length !== 1 ? 's' : ''}</>
+          )}
+        </div>
         <Button
           size="sm"
           leftIcon={<Plus className="size-4" />}
-          onClick={openCreate}
+          onClick={() => setModalOpen(true)}
         >
           Novo cliente
         </Button>
@@ -155,7 +173,10 @@ export function ClientesList({ onNavigate }: ClientesListProps) {
       <ClienteFormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSave={(values) => store.addCliente(values)}
+        onSave={async (values) => {
+          await addCliente(values);
+          setModalOpen(false);
+        }}
       />
     </div>
   );

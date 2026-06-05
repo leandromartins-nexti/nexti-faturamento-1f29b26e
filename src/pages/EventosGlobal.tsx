@@ -5,6 +5,7 @@ import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
 import { useStore, store } from '../lib/store';
+import { useClientes } from '../hooks/useClientes';
 import { fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
 import type { EventoSource } from '../lib/types';
@@ -14,7 +15,8 @@ interface EventosGlobalProps {
 }
 
 export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
-  const { clientes, contratos, eventos, metricas } = useStore();
+  const { clientes } = useClientes();
+  const { contratos, eventos, metricas } = useStore();
   const [source, setSource] = useState<'ALL' | EventoSource>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
 

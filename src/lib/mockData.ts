@@ -1,5 +1,4 @@
 import type {
-  Cliente,
   Contrato,
   EventoDeUso,
   Metrica,
@@ -52,113 +51,6 @@ export const produtos: Produto[] = [
   { id: 'p24', name: 'Customização',                  type: 'AVULSO',                                                    active: true, description: 'Por demanda de desenvolvimento' },
   { id: 'p25', name: 'Nexti Time SaaS',               type: 'RECORRENTE_MEDIDO', metricaId: 'm1',  defaultPrice: 15.0,   active: true, description: 'SAAS Prime/Time/Plus — módulos ativos' },
   { id: 'p26', name: 'Nexti SaaS Facial',             type: 'RECORRENTE_MEDIDO', metricaId: 'm1',  defaultPrice: 18.0,   active: true, description: 'SAAS Facial — mesmo modelo contratado/bilhetagem' },
-];
-
-export const clientes: Cliente[] = [
-  {
-    id: 'c1',
-    code: 'GR001',
-    name: 'Aurora Alimentos',
-    status: 'ACTIVE',
-    email: 'contato@aurora.com.br',
-    phone: '(49) 3321-5500',
-    estabelecimentos: [
-      { id: 'e1', clienteId: 'c1', nome: 'Matriz Chapecó', cnpj: '12.345.678/0001-90', cidade: 'Chapecó', uf: 'SC' },
-      { id: 'e2', clienteId: 'c1', nome: 'Filial Joaçaba', cnpj: '12.345.678/0002-71', cidade: 'Joaçaba', uf: 'SC' },
-      { id: 'e3', clienteId: 'c1', nome: 'Filial Cuiabá', cnpj: '12.345.678/0003-52', cidade: 'Cuiabá', uf: 'MT' },
-    ],
-  },
-  {
-    id: 'c2',
-    code: 'GR002',
-    name: 'CBN Construções',
-    status: 'ACTIVE',
-    email: 'faturamento@cbn.com.br',
-    estabelecimentos: [
-      { id: 'e4', clienteId: 'c2', nome: 'Sede São Paulo', cnpj: '98.765.432/0001-11', cidade: 'São Paulo', uf: 'SP' },
-      { id: 'e5', clienteId: 'c2', nome: 'Obra Manaus 01', cnpj: '98.765.432/0002-00', cidade: 'Manaus', uf: 'AM' },
-    ],
-  },
-  {
-    id: 'c3',
-    code: 'GR003',
-    name: 'Vitalle Saúde',
-    status: 'ACTIVE',
-    email: 'ti@vitalle.com.br',
-    phone: '(31) 3200-1100',
-    notes: 'Negociação especial — volume acima de 800 func.',
-    estabelecimentos: [
-      { id: 'e6', clienteId: 'c3', nome: 'Hospital Centro', cnpj: '45.678.123/0001-44', cidade: 'Belo Horizonte', uf: 'MG' },
-      { id: 'e7', clienteId: 'c3', nome: 'Clínica Sul', cnpj: '45.678.123/0002-25', cidade: 'Belo Horizonte', uf: 'MG' },
-      { id: 'e8', clienteId: 'c3', nome: 'Pronto-Socorro Norte', cnpj: '45.678.123/0003-06', cidade: 'Contagem', uf: 'MG' },
-    ],
-  },
-  {
-    id: 'c4',
-    code: 'GR004',
-    name: 'Caminhos do Sul',
-    status: 'INACTIVE',
-    estabelecimentos: [
-      { id: 'e9', clienteId: 'c4', nome: 'Garagem Porto Alegre', cnpj: '33.221.998/0001-77', cidade: 'Porto Alegre', uf: 'RS' },
-    ],
-  },
-  {
-    id: 'c5',
-    code: 'GR005',
-    name: 'Argos Tech',
-    status: 'SUSPENDED',
-    notes: 'Contrato suspenso por inadimplência.',
-    estabelecimentos: [
-      { id: 'e10', clienteId: 'c5', nome: 'HQ Florianópolis', cnpj: '77.889.001/0001-22', cidade: 'Florianópolis', uf: 'SC' },
-    ],
-  },
-  {
-    id: 'c6',
-    code: 'GR006',
-    name: 'Meridian Logística',
-    status: 'ACTIVE',
-    email: 'ti@meridian.com.br',
-    phone: '(51) 3400-9900',
-    notes: 'Contrato de cenários especiais para auditoria.',
-    estabelecimentos: [
-      { id: 'e11', clienteId: 'c6', nome: 'CD Gravataí', cnpj: '22.333.444/0001-55', cidade: 'Gravataí', uf: 'RS' },
-      { id: 'e12', clienteId: 'c6', nome: 'CD Curitiba', cnpj: '22.333.444/0002-36', cidade: 'Curitiba', uf: 'PR' },
-    ],
-  },
-  {
-    id: 'c7',
-    code: 'GR007',
-    name: 'Solaris Energia',
-    status: 'ACTIVE',
-    email: 'contratos@solaris.com.br',
-    estabelecimentos: [
-      { id: 'e13', clienteId: 'c7', nome: 'Sede Recife', cnpj: '55.666.777/0001-88', cidade: 'Recife', uf: 'PE' },
-    ],
-  },
-  {
-    id: 'c8',
-    code: 'GR008',
-    name: 'Novamed Saúde Corporativa',
-    status: 'ACTIVE',
-    email: 'ti@novamed.com.br',
-    phone: '(11) 4000-1234',
-    notes: 'Contrato HAAS pró-rata + Atestai + Talent.',
-    estabelecimentos: [
-      { id: 'e14', clienteId: 'c8', nome: 'Matriz São Paulo', cnpj: '66.777.888/0001-44', cidade: 'São Paulo', uf: 'SP' },
-      { id: 'e15', clienteId: 'c8', nome: 'Unidade Campinas',  cnpj: '66.777.888/0002-25', cidade: 'Campinas', uf: 'SP' },
-    ],
-  },
-  {
-    id: 'c9',
-    code: 'GR009',
-    name: 'TechMind Digital',
-    status: 'ACTIVE',
-    email: 'financeiro@techmind.com.br',
-    notes: 'MDM + Benefícios + Talent Checagem + bilhetagem.',
-    estabelecimentos: [
-      { id: 'e16', clienteId: 'c9', nome: 'HQ Curitiba', cnpj: '11.222.333/0001-66', cidade: 'Curitiba', uf: 'PR' },
-    ],
-  },
 ];
 
 export const contratos: Contrato[] = [
@@ -800,9 +692,6 @@ export const eventos: EventoDeUso[] = [
   { id: 'ev56', contratoId: 'ct9', estabelecimentoId: 'e16', metricaId: 'm11', quantity: 61,  occurredAt: '2026-05-31', referencePeriod: '2026-05', source: 'API',    notes: 'Benefícios: 61 utilizações em maio' },
 ];
 
-export function getCliente(id: string) {
-  return clientes.find((c) => c.id === id);
-}
 
 export function getContratosByCliente(clienteId: string) {
   return contratos.filter((c) => c.clienteId === clienteId);

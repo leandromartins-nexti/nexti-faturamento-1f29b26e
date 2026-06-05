@@ -3,6 +3,7 @@ import { AlertTriangle, FileText, TrendingUp, ArrowRight, Activity, Users, Credi
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { useStore } from '../lib/store';
+import { useClientes } from '../hooks/useClientes';
 import { fmtDate, daysBetween } from '../lib/format';
 import type { Route } from '../lib/router';
 import type { PaymentMethod } from '../lib/types';
@@ -14,7 +15,8 @@ interface DashboardProps {
 }
 
 export function Dashboard({ onNavigate }: DashboardProps) {
-  const { clientes, contratos, eventos } = useStore();
+  const { clientes } = useClientes();
+  const { contratos, eventos } = useStore();
   const ativos = contratos.filter((c) => c.status === 'ACTIVE');
 
   // Contratos vencendo em <=90 dias

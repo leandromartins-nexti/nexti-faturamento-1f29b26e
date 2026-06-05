@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useStore, store } from '../lib/store';
 import { useFiliais } from '../hooks/useFiliais';
+import { useClientes } from '../hooks/useClientes';
 import { Button } from '@/ds';
 import { Upload, Trash2, Plus, ChevronDown, ChevronUp, Database, AlertCircle, CheckCircle2, FileJson, Download } from 'lucide-react';
 
@@ -62,17 +63,8 @@ function inferSection(items: Record<string, unknown>[]): Section | null {
 type AddAction = (item: Record<string, unknown>) => void;
 
 // Simplified adders that map plain objects from CSV/JSON to store
-// filiais are handled separately via useFiliais hook
+// filiais e clientes são handled separately via hooks
 const adders: Partial<Record<Section, AddAction>> = {
-  clientes: (item) => {
-    store.addCliente({
-      code: String(item.code ?? ''),
-      name: String(item.name ?? item.nome ?? ''),
-      email: String(item.email ?? ''),
-      phone: String(item.phone ?? item.telefone ?? ''),
-      notes: String(item.notes ?? item.observacoes ?? ''),
-    });
-  },
   metricas: (item) => {
     store.addMetrica({
       name: String(item.name ?? item.nome ?? ''),
@@ -399,6 +391,7 @@ interface RemoveHandlers {
 export function DadosMock() {
   const storeState = useStore();
   const { filiais, removeFilial, addFilial } = useFiliais();
+  const { clientes, addCliente, setClienteStatus } = useClientes();
   const [expanded, setExpanded] = useState<Partial<Record<Section, boolean>>>({ filiais: true });
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -408,12 +401,10 @@ export function DadosMock() {
 
   const removeHandlers: RemoveHandlers = {
     filiais: (id) => { removeFilial(id); },
-    clientes: (id) => { store.setClienteStatus(id, 'INACTIVE'); setRefreshKey((k) => k + 1); },
+    clientes: (id) => { setClienteStatus(id, 'INACTIVE'); },
     produtos: (id) => { store.removeProduto(id); setRefreshKey((k) => k + 1); },
     metricas: (id) => { store.removeMetrica(id); setRefreshKey((k) => k + 1); },
-    contratos: (id) => {
-      void id;
-    },
+    contratos: (id) => { void id; },
     eventos: (id) => { store.removeEvento(id); setRefreshKey((k) => k + 1); },
   };
 
@@ -440,13 +431,25 @@ export function DadosMock() {
       }
       return;
     }
+    if (section === 'clientes') {
+      for (const item of items) {
+        await addCliente({
+          code: String(item.code ?? ''),
+          name: String(item.name ?? item.nome ?? ''),
+          email: String(item.email ?? ''),
+          phone: String(item.phone ?? item.telefone ?? ''),
+          notes: String(item.notes ?? item.observacoes ?? ''),
+        });
+      }
+      return;
+    }
     void section;
     setRefreshKey((k) => k + 1);
   }
 
   const sections: { key: Section; items: Record<string, unknown>[] }[] = [
     { key: 'filiais', items: filiais as unknown as Record<string, unknown>[] },
-    { key: 'clientes', items: storeState.clientes as unknown as Record<string, unknown>[] },
+    { key: 'clientes', items: clientes as unknown as Record<string, unknown>[] },
     { key: 'produtos', items: storeState.produtos as unknown as Record<string, unknown>[] },
     { key: 'metricas', items: storeState.metricas as unknown as Record<string, unknown>[] },
     { key: 'contratos', items: storeState.contratos as unknown as Record<string, unknown>[] },
@@ -459,7 +462,7 @@ export function DadosMock() {
   function handleExportAll() {
     const payload = {
       filiais,
-      clientes: storeState.clientes,
+      clientes,
       produtos: storeState.produtos,
       metricas: storeState.metricas,
       contratos: storeState.contratos,

@@ -6,6 +6,7 @@ import { StatusPill } from '../components/ui/StatusPill';
 import { Badge } from '../components/ui/Badge';
 import { ContratoFormModal } from '../components/modals/ContratoFormModal';
 import { useStore, store } from '../lib/store';
+import { useClientes } from '../hooks/useClientes';
 import { fmtDate } from '../lib/format';
 import type { ContratoStatus, PaymentMethod } from '../lib/types';
 import type { Route } from '../lib/router';
@@ -34,7 +35,8 @@ const STATUS_FILTERS: { id: 'ALL' | ContratoStatus; label: string }[] = [
 ];
 
 export function ContratosList({ onNavigate }: ContratosListProps) {
-  const { clientes, contratos } = useStore();
+  const { clientes } = useClientes();
+  const { contratos } = useStore();
   const [status, setStatus] = useState<'ALL' | ContratoStatus>('ALL');
   const [q, setQ] = useState('');
   const [modalOpen, setModalOpen] = useState(false);

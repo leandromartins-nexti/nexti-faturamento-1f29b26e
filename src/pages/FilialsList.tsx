@@ -5,6 +5,7 @@ import {
   Download,
   Edit3,
   FileText,
+  Loader2,
   Mail,
   MapPin,
   Phone,
@@ -16,7 +17,9 @@ import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { FilialFormModal } from '../components/modals/FilialFormModal';
 import { FilialImportModal } from '../components/modals/FilialImportModal';
-import { useStore, store } from '../lib/store';
+import { useStore } from '../lib/store';
+import { useFiliais } from '../hooks/useFiliais';
+import { useUser } from '../nexti-sdk';
 import type { Filial, RegimeTributario } from '../lib/types';
 
 const REGIME_LABEL: Record<RegimeTributario, string> = {
@@ -32,10 +35,13 @@ const REGIME_TONE: Record<RegimeTributario, 'success' | 'info' | 'brand'> = {
 };
 
 export function FilialsList() {
-  const { filiais, contratos } = useStore();
+  const user = useUser();
+  const { contratos } = useStore();
+  const { filiais, loading, error, addFilial, updateFilial, removeFilial, importFiliais } = useFiliais();
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [editing, setEditing] = useState<Filial | undefined>(undefined);
+  const [saving, setSaving] = useState(false);
 
   function handleEdit(f: Filial) {
     setEditing(f);
@@ -47,22 +53,38 @@ export function FilialsList() {
     setModalOpen(true);
   }
 
-  function handleRemove(f: Filial) {
+  async function handleRemove(f: Filial) {
     const vinculados = contratos.filter((c) => c.filialId === f.id).length;
     if (vinculados > 0) {
       alert(`Não é possível remover: ${vinculados} contrato(s) vinculado(s) a esta filial.`);
       return;
     }
     if (confirm(`Remover filial "${f.nomeFantasia}"?`)) {
-      store.removeFilial(f.id);
+      await removeFilial(f.id);
     }
+  }
+
+  if (!user) {
+    return (
+      <div className="p-6 flex items-center gap-2 text-ink-500">
+        <Loader2 className="size-4 animate-spin" /> Carregando…
+      </div>
+    );
   }
 
   return (
     <div className="p-6 space-y-4">
+      {error && (
+        <div className="text-sm text-danger bg-danger-bg border border-danger rounded-md px-3 py-2">{error}</div>
+      )}
+
       <div className="flex items-center justify-between">
         <div className="text-sm text-ink-500">
-          {filiais.length} filial{filiais.length !== 1 ? 'is' : ''} cadastrada{filiais.length !== 1 ? 's' : ''}
+          {loading ? (
+            <span className="flex items-center gap-1.5"><Loader2 className="size-3.5 animate-spin" /> Carregando…</span>
+          ) : (
+            <>{filiais.length} filial{filiais.length !== 1 ? 'is' : ''} cadastrada{filiais.length !== 1 ? 's' : ''}</>
+          )}
         </div>
         <div className="flex gap-2">
           <Button size="sm" variant="outline" leftIcon={<Download className="size-4" />} onClick={() => setImportModalOpen(true)}>
@@ -183,22 +205,26 @@ export function FilialsList() {
 
       <FilialFormModal
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => { setModalOpen(false); setSaving(false); }}
         filial={editing}
-        onSave={(values) => {
+        onSave={async (values) => {
+          setSaving(true);
           if (editing) {
-            store.updateFilial(editing.id, values);
+            await updateFilial(editing.id, values);
           } else {
-            store.addFilial(values);
+            await addFilial(values);
           }
+          setSaving(false);
+          setModalOpen(false);
         }}
       />
 
       <FilialImportModal
         open={importModalOpen}
         onClose={() => setImportModalOpen(false)}
-        onImport={(filiais) => {
-          filiais.forEach((f) => store.addFilial(f));
+        onImport={async (rows) => {
+          await importFiliais(rows);
+          setImportModalOpen(false);
         }}
       />
     </div>

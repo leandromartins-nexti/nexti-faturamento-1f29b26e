@@ -68,6 +68,103 @@ santuário do DS oficial.
 `src/ds/SPECS/foundations/` documenta cores, tipografia, spacing, motion,
 elevation, accessibility. Consulte antes de inventar valores.
 
+<!-- PERSISTENCE_BLOCK_START -->
+## Persistência de dados (Nexti SDK)
+
+Apps neste ambiente têm um backend de verdade (PostgreSQL via PostgREST).
+**Nunca crie mocks com array literal de dados** — se a feature precisa lembrar,
+crie tabela e use o SDK. As ferramentas estão em `src/nexti-sdk/`.
+
+### Quando criar tabela
+
+Crie `create_table` se a feature inclui qualquer destes sinais:
+
+- Verbos: *adicionar*, *salvar*, *registrar*, *cadastrar*, *lembrar*, *guardar*
+- Substantivos plurais com semântica de coleção: *lista de X*, *histórico de Y*,
+  *comentários*, *posts*, *itens*, *pedidos*, *agendamentos*
+- Form submit (exceto contato/newsletter que envia email externo)
+- Upload de arquivo (precisa bucket + tabela referenciando)
+- "Quando eu fechar e abrir, quero ver de novo"
+- "Cada usuário vê os seus"
+
+NÃO crie tabela pra: calculadora, conversor, jogo sem score salvo, visualização
+de API pública, landing page, animação. Estado em `useState` é suficiente.
+
+**Em dúvida, persiste.** É mais fácil deletar uma tabela depois do que
+adicionar persistência num app já espalhado em vários componentes.
+
+### Como criar tabela (curl)
+
+O backend Nexti expõe endpoints REST que o sandbox alcança via `$NEXTI_API_URL`.
+Auth via `$NEXTI_SANDBOX_TOKEN` (Bearer). `$NEXTI_PROJECT_ID` é o id do projeto.
+
+```bash
+curl -sS -X POST "$NEXTI_API_URL/api/projects/$NEXTI_PROJECT_ID/backend/tables" \
+  -H "Authorization: Bearer $NEXTI_SANDBOX_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "notes",
+    "columns": [
+      { "name": "title", "type": "text" },
+      { "name": "body",  "type": "text", "nullable": true }
+    ]
+  }'
+```
+
+A tabela ganha automaticamente: `id` (uuid PK), `created_at`, `updated_at`,
+`user_id`, `org_id`, RLS dono+org. Você não precisa adicionar essas colunas.
+
+### Outros endpoints
+
+```bash
+# Listar tabelas (use no início pra ver o que já existe)
+GET    /api/projects/$NEXTI_PROJECT_ID/backend/tables
+
+# Adicionar coluna
+PATCH  /api/projects/$NEXTI_PROJECT_ID/backend/tables/notes
+       body: { "add_columns": [{ "name": "starred", "type": "boolean" }] }
+
+# Inserir dados de exemplo
+POST   /api/projects/$NEXTI_PROJECT_ID/backend/seed
+       body: { "table": "notes", "rows": [{ "title": "...", "user_id": "demo", "org_id": "nexti" }] }
+
+# Bucket de storage
+POST   /api/projects/$NEXTI_PROJECT_ID/backend/buckets
+       body: { "name": "uploads", "public": false }
+
+# SQL read-only (SELECT/EXPLAIN/SHOW só)
+POST   /api/projects/$NEXTI_PROJECT_ID/backend/sql/readonly
+       body: { "sql": "SELECT count(*) FROM notes" }
+```
+
+Tipos de coluna aceitos: `text`, `int`, `bigint`, `numeric`, `boolean`, `date`,
+`timestamptz`, `uuid`, `jsonb`.
+
+### Como usar os dados no código (SDK)
+
+```tsx
+import { client, useUser } from './nexti-sdk';
+
+function NotesList() {
+  const user = useUser();           // null enquanto handshake não chegou
+  if (!user) return <div>Carregando…</div>;
+
+  const { data, error } = await client
+    .from('notes')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  return <ul>{data?.map(n => <li key={n.id}>{n.title}</li>)}</ul>;
+}
+```
+
+- `client` é o Supabase client pré-configurado — apikey/Bearer/schema já injetados
+- `useUser()` retorna o usuário do parent (Nexti.Apps); null até o handshake chegar
+- **NUNCA** crie tela de login, signup, AuthGate, ou redirect pra IdP. Se
+  `useUser()` é null, mostre estado de "carregando", nunca redirecione.
+- **NUNCA** importe `@supabase/supabase-js` direto — use sempre `./nexti-sdk`.
+- **NUNCA** persista o token em `localStorage` — ele já vive em memória do bridge.
+<!-- PERSISTENCE_BLOCK_END -->
 
 ## Integrações externas (APIs de terceiros)
 

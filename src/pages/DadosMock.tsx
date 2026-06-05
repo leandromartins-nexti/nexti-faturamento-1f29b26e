@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useStore, store } from '../lib/store';
+import { useFiliais } from '../hooks/useFiliais';
 import { Button } from '@/ds';
 import { Upload, Trash2, Plus, ChevronDown, ChevronUp, Database, AlertCircle, CheckCircle2, FileJson, Download } from 'lucide-react';
 
@@ -61,26 +62,8 @@ function inferSection(items: Record<string, unknown>[]): Section | null {
 type AddAction = (item: Record<string, unknown>) => void;
 
 // Simplified adders that map plain objects from CSV/JSON to store
+// filiais are handled separately via useFiliais hook
 const adders: Partial<Record<Section, AddAction>> = {
-  filiais: (item) => {
-    store.addFilial({
-      document: String(item.document ?? item.cnpj ?? ''),
-      nomeFantasia: String(item.nomeFantasia ?? item.nome_fantasia ?? ''),
-      razaoSocial: String(item.razaoSocial ?? item.razao_social ?? ''),
-      email: String(item.email ?? ''),
-      phone: String(item.phone ?? item.telefone ?? ''),
-      zipCode: String(item.zipCode ?? item.cep ?? ''),
-      street: String(item.street ?? item.logradouro ?? ''),
-      number: String(item.number ?? item.numero ?? ''),
-      complement: String(item.complement ?? item.complemento ?? ''),
-      district: String(item.district ?? item.bairro ?? ''),
-      city: String(item.city ?? item.cidade ?? ''),
-      state: String(item.state ?? item.uf ?? ''),
-      inscricaoMunicipal: String(item.inscricaoMunicipal ?? ''),
-      inscricaoEstadual: String(item.inscricaoEstadual ?? ''),
-      regimeTributario: (item.regimeTributario as 'SIMPLES_NACIONAL' | 'LUCRO_PRESUMIDO' | 'LUCRO_REAL') || undefined,
-    });
-  },
   clientes: (item) => {
     store.addCliente({
       code: String(item.code ?? ''),
@@ -415,6 +398,7 @@ interface RemoveHandlers {
 
 export function DadosMock() {
   const storeState = useStore();
+  const { filiais, removeFilial, addFilial } = useFiliais();
   const [expanded, setExpanded] = useState<Partial<Record<Section, boolean>>>({ filiais: true });
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -423,25 +407,45 @@ export function DadosMock() {
   }
 
   const removeHandlers: RemoveHandlers = {
-    filiais: (id) => { store.removeFilial(id); setRefreshKey((k) => k + 1); },
+    filiais: (id) => { removeFilial(id); },
     clientes: (id) => { store.setClienteStatus(id, 'INACTIVE'); setRefreshKey((k) => k + 1); },
     produtos: (id) => { store.removeProduto(id); setRefreshKey((k) => k + 1); },
     metricas: (id) => { store.removeMetrica(id); setRefreshKey((k) => k + 1); },
     contratos: (id) => {
-      // contratos não têm removeContrato; marcar como TERMINATED
       void id;
     },
     eventos: (id) => { store.removeEvento(id); setRefreshKey((k) => k + 1); },
   };
 
-  function handleImport(section: Section, _items: Record<string, unknown>[]) {
-    // store already updated in ImportPanel; just force re-render
+  async function handleImport(section: Section, items: Record<string, unknown>[]) {
+    if (section === 'filiais') {
+      for (const item of items) {
+        await addFilial({
+          document: String(item.document ?? item.cnpj ?? ''),
+          nomeFantasia: String(item.nomeFantasia ?? item.nome_fantasia ?? ''),
+          razaoSocial: String(item.razaoSocial ?? item.razao_social ?? ''),
+          email: String(item.email ?? ''),
+          phone: String(item.phone ?? item.telefone ?? ''),
+          zipCode: String(item.zipCode ?? item.cep ?? ''),
+          street: String(item.street ?? item.logradouro ?? ''),
+          number: String(item.number ?? item.numero ?? ''),
+          complement: String(item.complement ?? item.complemento ?? ''),
+          district: String(item.district ?? item.bairro ?? ''),
+          city: String(item.city ?? item.cidade ?? ''),
+          state: String(item.state ?? item.uf ?? ''),
+          inscricaoMunicipal: String(item.inscricaoMunicipal ?? ''),
+          inscricaoEstadual: String(item.inscricaoEstadual ?? ''),
+          regimeTributario: (item.regimeTributario as 'SIMPLES_NACIONAL' | 'LUCRO_PRESUMIDO' | 'LUCRO_REAL') || undefined,
+        });
+      }
+      return;
+    }
     void section;
     setRefreshKey((k) => k + 1);
   }
 
   const sections: { key: Section; items: Record<string, unknown>[] }[] = [
-    { key: 'filiais', items: storeState.filiais as unknown as Record<string, unknown>[] },
+    { key: 'filiais', items: filiais as unknown as Record<string, unknown>[] },
     { key: 'clientes', items: storeState.clientes as unknown as Record<string, unknown>[] },
     { key: 'produtos', items: storeState.produtos as unknown as Record<string, unknown>[] },
     { key: 'metricas', items: storeState.metricas as unknown as Record<string, unknown>[] },
@@ -454,7 +458,7 @@ export function DadosMock() {
   // Export current state as JSON download
   function handleExportAll() {
     const payload = {
-      filiais: storeState.filiais,
+      filiais,
       clientes: storeState.clientes,
       produtos: storeState.produtos,
       metricas: storeState.metricas,

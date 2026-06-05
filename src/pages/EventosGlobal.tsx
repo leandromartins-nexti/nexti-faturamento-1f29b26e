@@ -4,8 +4,10 @@ import { Plus, Activity, Lock, Trash2 } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
-import { useStore, store } from '../lib/store';
+import { useStore } from '../lib/store';
 import { useClientes } from '../hooks/useClientes';
+import { useContratos } from '../hooks/useContratos';
+import { useEventos } from '../hooks/useEventos';
 import { fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
 import type { EventoSource } from '../lib/types';
@@ -16,7 +18,9 @@ interface EventosGlobalProps {
 
 export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
   const { clientes } = useClientes();
-  const { contratos, eventos, metricas } = useStore();
+  const { contratos } = useContratos();
+  const { eventos, addEvento, removeEvento } = useEventos();
+  const { metricas } = useStore();
   const [source, setSource] = useState<'ALL' | EventoSource>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -121,7 +125,7 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
                     <td className="px-5 py-3 text-right">
                       {ev.source === 'MANUAL' ? (
                         <button
-                          onClick={() => store.removeEvento(ev.id)}
+                          onClick={() => removeEvento(ev.id)}
                           className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
                           aria-label="Remover evento"
                         >
@@ -150,7 +154,7 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
       <EventoFormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onSave={(values) => store.addEvento(values)}
+        onSave={(values) => addEvento(values)}
       />
     </div>
   );

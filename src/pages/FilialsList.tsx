@@ -17,7 +17,7 @@ import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { FilialFormModal } from '../components/modals/FilialFormModal';
 import { FilialImportModal } from '../components/modals/FilialImportModal';
-import { useStore } from '../lib/store';
+import { useContratos } from '../hooks/useContratos';
 import { useFiliais } from '../hooks/useFiliais';
 import { useUser } from '../nexti-sdk';
 import type { Filial, RegimeTributario } from '../lib/types';
@@ -36,7 +36,7 @@ const REGIME_TONE: Record<RegimeTributario, 'success' | 'info' | 'brand'> = {
 
 export function FilialsList() {
   const user = useUser();
-  const { contratos } = useStore();
+  const { contratos } = useContratos();
   const { filiais, loading, error, addFilial, updateFilial, removeFilial, importFiliais } = useFiliais();
   const [modalOpen, setModalOpen] = useState(false);
   const [importModalOpen, setImportModalOpen] = useState(false);

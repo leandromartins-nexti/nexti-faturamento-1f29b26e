@@ -4,9 +4,10 @@ import { Info, ArrowRight } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Field, TextInput, Select, Textarea } from '../ui/Form';
 import { Badge } from '../ui/Badge';
-import { contratos, getEventosByContrato } from '../../lib/mockData';
 import { useStore } from '../../lib/store';
 import { useClientes } from '../../hooks/useClientes';
+import { useContratos } from '../../hooks/useContratos';
+import { useEventos } from '../../hooks/useEventos';
 import type { Contrato } from '../../lib/types';
 
 interface EventoFormModalProps {
@@ -36,10 +37,12 @@ function periodOf(iso: string) {
 export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormModalProps) {
   const { metricas } = useStore();
   const { clientes } = useClientes();
+  const { contratos } = useContratos();
+  const { eventos: todosEventos } = useEventos();
   const lockedContrato = !!contrato;
 
   const [values, setValues] = useState<EventoFormValues>({
-    contratoId: contrato?.id ?? contratos[0].id,
+    contratoId: contrato?.id ?? '',
     estabelecimentoId: '',
     metricaId: '',
     quantity: 1,
@@ -51,7 +54,7 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
   // Reset on open
   useEffect(() => {
     if (!open) return;
-    const ctId = contrato?.id ?? contratos[0].id;
+    const ctId = contrato?.id ?? contratos[0]?.id ?? '';
     setValues({
       contratoId: ctId,
       estabelecimentoId: '',
@@ -61,9 +64,9 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
       referencePeriod: periodOf(HOJE),
       notes: '',
     });
-  }, [open, contrato?.id]);
+  }, [open, contrato?.id, contratos]);
 
-  const ct = contratos.find((c) => c.id === values.contratoId);
+  const ct = contrato ?? contratos.find((c) => c.id === values.contratoId);
   const cliente = ct ? clientes.find((cl) => cl.id === ct.clienteId) : undefined;
 
   // Métricas disponíveis = métricas dos itens medidos do contrato
@@ -93,10 +96,10 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
 
   const saldoAtual = useMemo(() => {
     if (!ct || !metricaAtual || !isBalance) return null;
-    return getEventosByContrato(ct.id)
-      .filter((e) => e.metricaId === metricaAtual.id)
+    return todosEventos
+      .filter((e) => e.contratoId === ct.id && e.metricaId === metricaAtual.id)
       .reduce((s, e) => s + e.quantity, 0);
-  }, [ct, metricaAtual, isBalance]);
+  }, [ct, metricaAtual, isBalance, todosEventos]);
 
   const errors = useMemo(() => {
     const e: Partial<Record<keyof EventoFormValues, string>> = {};
@@ -159,7 +162,7 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
                   const cli = clientes.find((cl) => cl.id === c.clienteId);
                   return (
                     <option key={c.id} value={c.id}>
-                      {c.numero} · {cli?.name}
+                      {c.numero}{cli ? ` · ${cli.name}` : ''}
                     </option>
                   );
                 })}

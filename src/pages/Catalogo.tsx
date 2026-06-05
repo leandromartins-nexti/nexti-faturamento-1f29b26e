@@ -5,8 +5,8 @@ import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ProdutoFormModal } from '../components/modals/ProdutoFormModal';
 import { MetricaFormModal } from '../components/modals/MetricaFormModal';
-import { contratos } from '../lib/mockData';
 import { useStore, store } from '../lib/store';
+import { useContratos } from '../hooks/useContratos';
 import type { Metrica, Produto, ProdutoType } from '../lib/types';
 
 const TYPE_LABEL: Record<ProdutoType, string> = {
@@ -28,6 +28,7 @@ function fmtPrice(v?: number) {
 
 export function Catalogo() {
   const { produtos, metricas } = useStore();
+  const { contratos } = useContratos();
 
   const [produtoModalOpen, setProdutoModalOpen] = useState(false);
   const [editingProduto, setEditingProduto] = useState<Produto | undefined>();

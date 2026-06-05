@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import { useStore, store } from '../lib/store';
 import { useFiliais } from '../hooks/useFiliais';
 import { useClientes } from '../hooks/useClientes';
+import { useContratos } from '../hooks/useContratos';
+import { useEventos } from '../hooks/useEventos';
 import { Button } from '@/ds';
 import { Upload, Trash2, Plus, ChevronDown, ChevronUp, Database, AlertCircle, CheckCircle2, FileJson, Download } from 'lucide-react';
 
@@ -392,6 +394,8 @@ export function DadosMock() {
   const storeState = useStore();
   const { filiais, removeFilial, addFilial } = useFiliais();
   const { clientes, addCliente, setClienteStatus } = useClientes();
+  const { contratos } = useContratos();
+  const { eventos, removeEvento } = useEventos();
   const [expanded, setExpanded] = useState<Partial<Record<Section, boolean>>>({ filiais: true });
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -405,7 +409,7 @@ export function DadosMock() {
     produtos: (id) => { store.removeProduto(id); setRefreshKey((k) => k + 1); },
     metricas: (id) => { store.removeMetrica(id); setRefreshKey((k) => k + 1); },
     contratos: (id) => { void id; },
-    eventos: (id) => { store.removeEvento(id); setRefreshKey((k) => k + 1); },
+    eventos: (id) => { removeEvento(id); },
   };
 
   async function handleImport(section: Section, items: Record<string, unknown>[]) {
@@ -452,8 +456,8 @@ export function DadosMock() {
     { key: 'clientes', items: clientes as unknown as Record<string, unknown>[] },
     { key: 'produtos', items: storeState.produtos as unknown as Record<string, unknown>[] },
     { key: 'metricas', items: storeState.metricas as unknown as Record<string, unknown>[] },
-    { key: 'contratos', items: storeState.contratos as unknown as Record<string, unknown>[] },
-    { key: 'eventos', items: storeState.eventos as unknown as Record<string, unknown>[] },
+    { key: 'contratos', items: contratos as unknown as Record<string, unknown>[] },
+    { key: 'eventos', items: eventos as unknown as Record<string, unknown>[] },
   ];
 
   const totalRecords = sections.reduce((acc, s) => acc + s.items.length, 0);
@@ -465,8 +469,8 @@ export function DadosMock() {
       clientes,
       produtos: storeState.produtos,
       metricas: storeState.metricas,
-      contratos: storeState.contratos,
-      eventos: storeState.eventos,
+      contratos,
+      eventos,
     };
     const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);

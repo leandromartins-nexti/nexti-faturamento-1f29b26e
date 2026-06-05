@@ -23,11 +23,12 @@ import { ItemFormModal } from '../components/modals/ItemFormModal';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
 import { ContratoFormModal } from '../components/modals/ContratoFormModal';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
-import { useStore, store } from '../lib/store';
 import { useClientes } from '../hooks/useClientes';
+import { useContratos } from '../hooks/useContratos';
+import { useEventos } from '../hooks/useEventos';
 import { fmtBRL, fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
-import type { Contrato, ItemDeContrato, ItemType, DueType, PaymentMethod } from '../lib/types';
+import type { Contrato, EventoDeUso, ItemDeContrato, ItemType, DueType, PaymentMethod } from '../lib/types';
 
 const PAYMENT_LABEL: Record<PaymentMethod, string> = {
   BOLETO: 'Boleto',
@@ -65,7 +66,9 @@ interface ContratoDetailProps {
 
 export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
   const { clientes } = useClientes();
-  const { contratos, eventos: allEventos } = useStore();
+  const { contratos, updateContrato, addItem, updateItem, removeItem } = useContratos();
+  const { eventos: allEventos, addEvento, removeEvento } = useEventos();
+  // useStore mantido para produtos/métricas (ainda não migrados)
   const contrato = contratos.find((c) => c.id === id);
   const [tab, setTab] = useState('itens');
   const [itemModalOpen, setItemModalOpen] = useState(false);
@@ -206,7 +209,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
           }}
           onRemove={(it) => {
             if (confirm(`Remover o item "${it.produto.name}" do contrato?`)) {
-              store.removeItem(contrato.id, it.id);
+              removeItem(contrato.id, it.id);
             }
           }}
         />
@@ -216,6 +219,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
           contrato={contrato}
           eventos={eventos}
           onLancar={() => setEventoModalOpen(true)}
+          onRemoveEvento={removeEvento}
         />
       )}
       {tab === 'reajustes' && <ReajustesTab contrato={contrato} />}
@@ -229,9 +233,9 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
         item={editingItem}
         onSave={(values) => {
           if (editingItem) {
-            store.updateItem(contrato.id, editingItem.id, values);
+            updateItem(contrato.id, editingItem.id, values);
           } else {
-            store.addItem(contrato.id, values);
+            addItem(contrato.id, values);
           }
         }}
       />
@@ -240,7 +244,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
         open={eventoModalOpen}
         onClose={() => setEventoModalOpen(false)}
         contrato={contrato}
-        onSave={(values) => store.addEvento(values)}
+        onSave={(values) => addEvento(values)}
       />
 
       {contrato && (
@@ -268,7 +272,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
             notes: contrato.notes,
           }}
           onUpdate={(contratoId, values) => {
-            store.updateContrato(contratoId, values);
+            updateContrato(contratoId, values);
           }}
         />
       )}
@@ -439,10 +443,12 @@ function EventosTab({
   contrato,
   eventos,
   onLancar,
+  onRemoveEvento,
 }: {
   contrato: Contrato;
-  eventos: ReturnType<typeof useStore>['eventos'];
+  eventos: EventoDeUso[];
   onLancar: () => void;
+  onRemoveEvento: (id: string) => void;
 }) {
   const { clientes } = useClientes();
   const cliente = clientes.find((c) => c.id === contrato.clienteId) ?? { estabelecimentos: [] as typeof clientes[0]['estabelecimentos'] };
@@ -544,7 +550,7 @@ function EventosTab({
                     <td className="px-5 py-3 text-right">
                       {ev.source === 'MANUAL' ? (
                         <button
-                          onClick={() => store.removeEvento(ev.id)}
+                          onClick={() => onRemoveEvento(ev.id)}
                           className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
                           aria-label="Remover evento"
                         >

@@ -2,8 +2,9 @@ import { Button } from '@/ds';
 import { AlertTriangle, FileText, TrendingUp, ArrowRight, Activity, Users, CreditCard } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { useStore } from '../lib/store';
 import { useClientes } from '../hooks/useClientes';
+import { useContratos } from '../hooks/useContratos';
+import { useEventos } from '../hooks/useEventos';
 import { fmtDate, daysBetween } from '../lib/format';
 import type { Route } from '../lib/router';
 import type { PaymentMethod } from '../lib/types';
@@ -16,7 +17,8 @@ interface DashboardProps {
 
 export function Dashboard({ onNavigate }: DashboardProps) {
   const { clientes } = useClientes();
-  const { contratos, eventos } = useStore();
+  const { contratos } = useContratos();
+  const { eventos } = useEventos();
   const ativos = contratos.filter((c) => c.status === 'ACTIVE');
 
   // Contratos vencendo em <=90 dias
@@ -266,7 +268,7 @@ function KpiCard({
   );
 }
 
-function StatusBars({ contratos }: { contratos: ReturnType<typeof useStore>['contratos'] }) {
+function StatusBars({ contratos }: { contratos: import('../lib/types').Contrato[] }) {
   const totals = {
     ACTIVE: contratos.filter((c) => c.status === 'ACTIVE').length,
     DRAFT: contratos.filter((c) => c.status === 'DRAFT').length,

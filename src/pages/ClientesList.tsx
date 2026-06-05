@@ -4,8 +4,8 @@ import { Building2, Loader2, MapPin, Plus, ArrowRight, FileText, Mail, Phone } f
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ClienteFormModal } from '../components/modals/ClienteFormModal';
-import { useStore } from '../lib/store';
 import { useClientes } from '../hooks/useClientes';
+import { useContratos } from '../hooks/useContratos';
 import { useUser } from '../nexti-sdk';
 import type { Cliente } from '../lib/types';
 import type { Route } from '../lib/router';
@@ -28,7 +28,7 @@ const STATUS_LABEL: Record<Cliente['status'], string> = {
 
 export function ClientesList({ onNavigate }: ClientesListProps) {
   const user = useUser();
-  const { contratos } = useStore();
+  const { contratos } = useContratos();
   const { clientes, loading, error, addCliente } = useClientes();
   const [modalOpen, setModalOpen] = useState(false);
 

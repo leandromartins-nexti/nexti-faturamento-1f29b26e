@@ -16,8 +16,8 @@ import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ClienteFormModal } from '../components/modals/ClienteFormModal';
 import { EstabelecimentoFormModal } from '../components/modals/EstabelecimentoFormModal';
-import { useStore } from '../lib/store';
 import { useClientes } from '../hooks/useClientes';
+import { useContratos } from '../hooks/useContratos';
 import type { Estabelecimento } from '../lib/types';
 import type { Route } from '../lib/router';
 
@@ -38,7 +38,7 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 export function ClienteDetail({ id, onNavigate }: ClienteDetailProps) {
-  const { contratos } = useStore();
+  const { contratos } = useContratos();
   const { clientes, updateCliente, setClienteStatus: setStatus, addEstabelecimento, updateEstabelecimento, removeEstabelecimento } = useClientes();
   const cliente = clientes.find((c) => c.id === id);
 

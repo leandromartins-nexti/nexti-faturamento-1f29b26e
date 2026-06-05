@@ -5,8 +5,9 @@ import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Tabs } from '../components/ui/Tabs';
 import { Modal } from '../components/ui/Modal';
-import { contratos, eventos } from '../lib/mockData';
 import { useClientes } from '../hooks/useClientes';
+import { useContratos } from '../hooks/useContratos';
+import { useEventos } from '../hooks/useEventos';
 import { gerarFatura } from '../lib/fatura';
 import type { Contrato, ItemType } from '../lib/types';
 
@@ -198,7 +199,7 @@ function fmt(v: number) {
   return `R$ ${v.toFixed(2)}`;
 }
 
-function auditarContrato(contrato: Contrato, periodo: string): AuditariaLinha[] {
+function auditarContrato(contrato: Contrato, periodo: string, eventos: import('../lib/types').EventoDeUso[]): AuditariaLinha[] {
   const eventosDoCt = eventos.filter((e) => e.contratoId === contrato.id);
   const resultado: AuditariaLinha[] = [];
 
@@ -533,6 +534,8 @@ const GABARITO: Record<string, { titulo: string; cenarios: string[] }> = {
 
 export function AuditoriaCalculos() {
   const { clientes } = useClientes();
+  const { contratos } = useContratos();
+  const { eventos } = useEventos();
   const [abaAtiva, setAbaAtiva] = useState<'auditoria' | 'formulas'>('auditoria');
   const [contratoSelecionado, setContratoSelecionado] = useState<string>('ct8');
   const [periodoSelecionado, setPeriodoSelecionado] = useState<string>('2026-04');
@@ -549,12 +552,12 @@ export function AuditoriaCalculos() {
   const fatura = useMemo(() => {
     if (!contrato) return null;
     return gerarFatura(contrato, periodoSelecionado, eventos, new Date().toISOString().slice(0, 10));
-  }, [contrato, periodoSelecionado]);
+  }, [contrato, periodoSelecionado, eventos]);
 
   const auditoria = useMemo(() => {
     if (!contrato) return [];
-    return auditarContrato(contrato, periodoSelecionado);
-  }, [contrato, periodoSelecionado]);
+    return auditarContrato(contrato, periodoSelecionado, eventos);
+  }, [contrato, periodoSelecionado, eventos]);
 
   function toggleExpandir(itemId: string) {
     const novo = new Set(expandidos);

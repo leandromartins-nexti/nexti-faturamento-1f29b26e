@@ -5,8 +5,8 @@ import { Card, CardBody } from '../components/ui/Card';
 import { StatusPill } from '../components/ui/StatusPill';
 import { Badge } from '../components/ui/Badge';
 import { ContratoFormModal } from '../components/modals/ContratoFormModal';
-import { useStore, store } from '../lib/store';
 import { useClientes } from '../hooks/useClientes';
+import { useContratos } from '../hooks/useContratos';
 import { fmtDate } from '../lib/format';
 import type { ContratoStatus, PaymentMethod } from '../lib/types';
 import type { Route } from '../lib/router';
@@ -36,7 +36,7 @@ const STATUS_FILTERS: { id: 'ALL' | ContratoStatus; label: string }[] = [
 
 export function ContratosList({ onNavigate }: ContratosListProps) {
   const { clientes } = useClientes();
-  const { contratos } = useStore();
+  const { contratos, addContrato } = useContratos();
   const [status, setStatus] = useState<'ALL' | ContratoStatus>('ALL');
   const [q, setQ] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -176,9 +176,9 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
       <ContratoFormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreate={(values) => {
-          const novo = store.addContrato(values);
-          onNavigate({ name: 'contrato', id: novo.id });
+        onCreate={async (values) => {
+          const novo = await addContrato(values);
+          if (novo) onNavigate({ name: 'contrato', id: novo.id });
         }}
       />
     </div>

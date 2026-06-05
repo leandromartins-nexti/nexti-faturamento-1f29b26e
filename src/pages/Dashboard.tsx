@@ -25,8 +25,9 @@ export function Dashboard({ onNavigate }: DashboardProps) {
     .map((c) => ({
       ...c,
       diasRestantes: daysBetween(c.endDate!, HOJE),
-      cliente: clientes.find((cl) => cl.id === c.clienteId)!,
-    }));
+      cliente: clientes.find((cl) => cl.id === c.clienteId),
+    }))
+    .filter((c) => c.cliente !== undefined) as (typeof ativos[0] & { diasRestantes: number; cliente: NonNullable<ReturnType<typeof clientes.find>> })[];
 
   // Contratos com reajuste configurado (agrupados por índice)
   const comReajuste = ativos.filter((c) => c.readjustmentIndex !== 'NONE');
@@ -39,6 +40,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
   const ultimosEventos = [...eventos]
     .sort((a, b) => b.occurredAt.localeCompare(a.occurredAt))
+    .filter((ev) => {
+      const contrato = contratos.find((c) => c.id === ev.contratoId);
+      if (!contrato) return false;
+      return clientes.some((cl) => cl.id === contrato.clienteId);
+    })
     .slice(0, 6);
 
   return (
@@ -55,7 +61,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         <KpiCard
           label="Clientes"
           value={clientes.length.toString()}
-          delta={`${clientes.reduce((s, c) => s + c.estabelecimentos.length, 0)} estabelecimentos`}
+          delta={`${clientes.reduce((s, c) => s + (c.estabelecimentos?.length ?? 0), 0)} estabelecimentos`}
           tone="success"
           icon={Users}
         />
@@ -176,8 +182,10 @@ export function Dashboard({ onNavigate }: DashboardProps) {
           <CardBody className="p-0">
             <ul className="divide-y divide-ink-100">
               {ultimosEventos.map((ev) => {
-                const contrato = contratos.find((c) => c.id === ev.contratoId)!;
-                const cliente = clientes.find((cl) => cl.id === contrato.clienteId)!;
+                const contrato = contratos.find((c) => c.id === ev.contratoId);
+                if (!contrato) return null;
+                const cliente = clientes.find((cl) => cl.id === contrato.clienteId);
+                if (!cliente) return null;
                 const est = cliente.estabelecimentos.find((e) => e.id === ev.estabelecimentoId);
                 const sourceColors: Record<string, 'neutral' | 'info' | 'brand'> = {
                   MANUAL: 'brand',

@@ -4,7 +4,7 @@ import { Info, ArrowRight } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Field, TextInput, Select, Textarea } from '../ui/Form';
 import { Badge } from '../ui/Badge';
-import { useStore } from '../../lib/store';
+import { useMetricas } from '../../hooks/useMetricas';
 import { useClientes } from '../../hooks/useClientes';
 import { useContratos } from '../../hooks/useContratos';
 import { useEventos } from '../../hooks/useEventos';
@@ -35,7 +35,7 @@ function periodOf(iso: string) {
 }
 
 export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormModalProps) {
-  const { metricas } = useStore();
+  const { metricas } = useMetricas();
   const { clientes } = useClientes();
   const { contratos } = useContratos();
   const { eventos: todosEventos } = useEventos();

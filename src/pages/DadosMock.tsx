@@ -1,7 +1,8 @@
 import { useState, useRef } from 'react';
-import { useStore, store } from '../lib/store';
 import { useFiliais } from '../hooks/useFiliais';
 import { useClientes } from '../hooks/useClientes';
+import { useProdutos } from '../hooks/useProdutos';
+import { useMetricas } from '../hooks/useMetricas';
 import { useContratos } from '../hooks/useContratos';
 import { useEventos } from '../hooks/useEventos';
 import { Button } from '@/ds';
@@ -64,28 +65,8 @@ function inferSection(items: Record<string, unknown>[]): Section | null {
 
 type AddAction = (item: Record<string, unknown>) => void;
 
-// Simplified adders that map plain objects from CSV/JSON to store
-// filiais e clientes são handled separately via hooks
-const adders: Partial<Record<Section, AddAction>> = {
-  metricas: (item) => {
-    store.addMetrica({
-      name: String(item.name ?? item.nome ?? ''),
-      unit: String(item.unit ?? item.unidade ?? ''),
-      apuracaoType: String(item.apuracaoType ?? item.apuracao ?? 'DISTINCT_COUNT') as 'DISTINCT_COUNT' | 'BALANCE_AVG',
-      description: String(item.description ?? item.descricao ?? ''),
-    });
-  },
-  produtos: (item) => {
-    store.addProduto({
-      name: String(item.name ?? item.nome ?? ''),
-      description: String(item.description ?? item.descricao ?? ''),
-      type: String(item.type ?? item.tipo ?? 'AVULSO') as 'RECORRENTE_FIXO' | 'RECORRENTE_MEDIDO' | 'AVULSO',
-      defaultPrice: item.defaultPrice !== undefined ? String(item.defaultPrice) : '',
-      metricaId: String(item.metricaId ?? ''),
-      active: item.active !== false,
-    });
-  },
-};
+// Adders são gerenciados via hooks — definidos dentro do componente DadosMock
+const adders: Partial<Record<Section, AddAction>> = {};
 
 const CSV_TEMPLATES: Record<Section, string> = {
   filiais: [
@@ -391,13 +372,14 @@ interface RemoveHandlers {
 }
 
 export function DadosMock() {
-  const storeState = useStore();
   const { filiais, removeFilial, addFilial } = useFiliais();
   const { clientes, addCliente, setClienteStatus } = useClientes();
+  const { produtos, addProduto, removeProduto } = useProdutos();
+  const { metricas, addMetrica, removeMetrica } = useMetricas();
   const { contratos } = useContratos();
   const { eventos, removeEvento } = useEventos();
   const [expanded, setExpanded] = useState<Partial<Record<Section, boolean>>>({ filiais: true });
-  const [refreshKey, setRefreshKey] = useState(0);
+  const [refreshKey] = useState(0);
 
   function toggle(s: Section) {
     setExpanded((prev) => ({ ...prev, [s]: !prev[s] }));
@@ -406,8 +388,8 @@ export function DadosMock() {
   const removeHandlers: RemoveHandlers = {
     filiais: (id) => { removeFilial(id); },
     clientes: (id) => { setClienteStatus(id, 'INACTIVE'); },
-    produtos: (id) => { store.removeProduto(id); setRefreshKey((k) => k + 1); },
-    metricas: (id) => { store.removeMetrica(id); setRefreshKey((k) => k + 1); },
+    produtos: (id) => { void removeProduto(id); },
+    metricas: (id) => { void removeMetrica(id); },
     contratos: (id) => { void id; },
     eventos: (id) => { removeEvento(id); },
   };
@@ -447,15 +429,38 @@ export function DadosMock() {
       }
       return;
     }
+    if (section === 'metricas') {
+      for (const item of items) {
+        await addMetrica({
+          name: String(item.name ?? item.nome ?? ''),
+          unit: String(item.unit ?? item.unidade ?? ''),
+          apuracaoType: String(item.apuracaoType ?? item.apuracao ?? 'DISTINCT_COUNT') as 'DISTINCT_COUNT' | 'BALANCE_AVG',
+          description: String(item.description ?? item.descricao ?? ''),
+        });
+      }
+      return;
+    }
+    if (section === 'produtos') {
+      for (const item of items) {
+        await addProduto({
+          name: String(item.name ?? item.nome ?? ''),
+          description: String(item.description ?? item.descricao ?? ''),
+          type: String(item.type ?? item.tipo ?? 'AVULSO') as 'RECORRENTE_FIXO' | 'RECORRENTE_MEDIDO' | 'AVULSO',
+          defaultPrice: item.defaultPrice !== undefined ? String(item.defaultPrice) : '',
+          metricaId: String(item.metricaId ?? ''),
+          active: item.active !== false,
+        });
+      }
+      return;
+    }
     void section;
-    setRefreshKey((k) => k + 1);
   }
 
   const sections: { key: Section; items: Record<string, unknown>[] }[] = [
     { key: 'filiais', items: filiais as unknown as Record<string, unknown>[] },
     { key: 'clientes', items: clientes as unknown as Record<string, unknown>[] },
-    { key: 'produtos', items: storeState.produtos as unknown as Record<string, unknown>[] },
-    { key: 'metricas', items: storeState.metricas as unknown as Record<string, unknown>[] },
+    { key: 'produtos', items: produtos as unknown as Record<string, unknown>[] },
+    { key: 'metricas', items: metricas as unknown as Record<string, unknown>[] },
     { key: 'contratos', items: contratos as unknown as Record<string, unknown>[] },
     { key: 'eventos', items: eventos as unknown as Record<string, unknown>[] },
   ];
@@ -467,8 +472,8 @@ export function DadosMock() {
     const payload = {
       filiais,
       clientes,
-      produtos: storeState.produtos,
-      metricas: storeState.metricas,
+      produtos,
+      metricas,
       contratos,
       eventos,
     };

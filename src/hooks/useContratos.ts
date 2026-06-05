@@ -11,7 +11,8 @@ import type {
 } from '../lib/types';
 import type { ContratoFormValues } from '../components/modals/ContratoFormModal';
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
-import { useStore } from '../lib/store';
+import { useProdutos } from './useProdutos';
+import { useMetricas } from './useMetricas';
 
 // ── tipos crus do banco ───────────────────────────────────────────────────────
 
@@ -178,7 +179,8 @@ function mapContrato(
 
 export function useContratos() {
   const user = useUser();
-  const { produtos, metricas } = useStore();
+  const { produtos } = useProdutos();
+  const { metricas } = useMetricas();
   const [contratos, setContratos] = useState<Contrato[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

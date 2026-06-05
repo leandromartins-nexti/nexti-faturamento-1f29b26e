@@ -4,10 +4,10 @@ import { Plus, Activity, Lock, Trash2 } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
-import { useStore } from '../lib/store';
 import { useClientes } from '../hooks/useClientes';
 import { useContratos } from '../hooks/useContratos';
 import { useEventos } from '../hooks/useEventos';
+import { useMetricas } from '../hooks/useMetricas';
 import { fmtDate } from '../lib/format';
 import type { Route } from '../lib/router';
 import type { EventoSource } from '../lib/types';
@@ -20,7 +20,7 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
   const { clientes } = useClientes();
   const { contratos } = useContratos();
   const { eventos, addEvento, removeEvento } = useEventos();
-  const { metricas } = useStore();
+  const { metricas } = useMetricas();
   const [source, setSource] = useState<'ALL' | EventoSource>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
 

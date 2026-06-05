@@ -5,7 +5,8 @@ import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ProdutoFormModal } from '../components/modals/ProdutoFormModal';
 import { MetricaFormModal } from '../components/modals/MetricaFormModal';
-import { useStore, store } from '../lib/store';
+import { useProdutos } from '../hooks/useProdutos';
+import { useMetricas } from '../hooks/useMetricas';
 import { useContratos } from '../hooks/useContratos';
 import type { Metrica, Produto, ProdutoType } from '../lib/types';
 
@@ -27,7 +28,8 @@ function fmtPrice(v?: number) {
 }
 
 export function Catalogo() {
-  const { produtos, metricas } = useStore();
+  const { produtos, addProduto, updateProduto, removeProduto } = useProdutos();
+  const { metricas, addMetrica, updateMetrica, removeMetrica } = useMetricas();
   const { contratos } = useContratos();
 
   const [produtoModalOpen, setProdutoModalOpen] = useState(false);
@@ -56,7 +58,7 @@ export function Catalogo() {
       return;
     }
     if (confirm(`Remover o produto "${p.name}"?`)) {
-      store.removeProduto(p.id);
+      void removeProduto(p.id);
     }
   }
 
@@ -79,7 +81,7 @@ export function Catalogo() {
       return;
     }
     if (confirm(`Remover a métrica "${m.name}"?`)) {
-      store.removeMetrica(m.id);
+      void removeMetrica(m.id);
     }
   }
 
@@ -254,9 +256,9 @@ export function Catalogo() {
         produto={editingProduto}
         onSave={(values) => {
           if (editingProduto) {
-            store.updateProduto(editingProduto.id, values);
+            void updateProduto(editingProduto.id, values);
           } else {
-            store.addProduto(values);
+            void addProduto(values);
           }
         }}
       />
@@ -267,9 +269,9 @@ export function Catalogo() {
         metrica={editingMetrica}
         onSave={(values) => {
           if (editingMetrica) {
-            store.updateMetrica(editingMetrica.id, values);
+            void updateMetrica(editingMetrica.id, values);
           } else {
-            store.addMetrica(values);
+            void addMetrica(values);
           }
         }}
       />

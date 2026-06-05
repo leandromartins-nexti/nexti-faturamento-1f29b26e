@@ -4,7 +4,8 @@ import { Lock, AlertTriangle } from 'lucide-react';
 import { Modal } from '../ui/Modal';
 import { Field, TextInput, Select, PrefixInput } from '../ui/Form';
 import { Badge } from '../ui/Badge';
-import { useStore } from '../../lib/store';
+import { useProdutos } from '../../hooks/useProdutos';
+import { useMetricas } from '../../hooks/useMetricas';
 import { fmtBRL } from '../../lib/format';
 import type { Contrato, ItemDeContrato, ItemType } from '../../lib/types';
 
@@ -40,7 +41,8 @@ const PRODUTO_TYPE_LABEL: Record<string, string> = {
 };
 
 export function ItemFormModal({ open, onClose, contrato, item, onSave }: ItemFormModalProps) {
-  const { produtos, metricas } = useStore();
+  const { produtos } = useProdutos();
+  const { metricas } = useMetricas();
   const isEditing = !!item;
   const priceLocked = contrato.readjustmentIndex !== 'NONE' && isEditing;
 

@@ -68,7 +68,6 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
   const { clientes } = useClientes();
   const { contratos, updateContrato, addItem, updateItem, removeItem } = useContratos();
   const { eventos: allEventos, addEvento, removeEvento } = useEventos();
-  // useStore mantido para produtos/métricas (ainda não migrados)
   const contrato = contratos.find((c) => c.id === id);
   const [tab, setTab] = useState('itens');
   const [itemModalOpen, setItemModalOpen] = useState(false);

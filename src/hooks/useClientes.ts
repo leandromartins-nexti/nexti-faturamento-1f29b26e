@@ -151,6 +151,15 @@ export function useClientes() {
     return true;
   }, []);
 
+  const removeCliente = useCallback(async (id: string): Promise<boolean> => {
+    // Cascade: estabelecimentos são deletados primeiro
+    await client.from('estabelecimentos').delete().eq('cliente_id', id);
+    const { error: err } = await client.from('clientes').delete().eq('id', id);
+    if (err) { setError(err.message); return false; }
+    setClientes((prev) => prev.filter((c) => c.id !== id));
+    return true;
+  }, []);
+
   return {
     clientes,
     loading,
@@ -158,6 +167,7 @@ export function useClientes() {
     addCliente,
     updateCliente,
     setClienteStatus,
+    removeCliente,
     addEstabelecimento,
     updateEstabelecimento,
     removeEstabelecimento,

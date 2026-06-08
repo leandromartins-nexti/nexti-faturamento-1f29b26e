@@ -84,5 +84,26 @@ export function useEventos() {
     setEventos((prev) => prev.filter((e) => e.id !== id));
   }, []);
 
-  return { eventos, loading, error, addEvento, removeEvento };
+  const updateEvento = useCallback(async (id: string, values: EventoFormValues) => {
+    const row = {
+      contrato_id: values.contratoId,
+      estabelecimento_id: values.estabelecimentoId,
+      metrica_id: values.metricaId,
+      quantity: values.quantity,
+      occurred_at: values.occurredAt,
+      reference_period: values.referencePeriod,
+      notes: values.notes || null,
+    };
+    const { data, error: err } = await client
+      .from('eventos_de_uso')
+      .update(row)
+      .eq('id', id)
+      .select()
+      .single();
+    if (err || !data) { setError(String(err)); return; }
+    const atualizado = mapEvento(data as DBEvento);
+    setEventos((prev) => prev.map((e) => (e.id === id ? atualizado : e)));
+  }, []);
+
+  return { eventos, loading, error, addEvento, updateEvento, removeEvento };
 }

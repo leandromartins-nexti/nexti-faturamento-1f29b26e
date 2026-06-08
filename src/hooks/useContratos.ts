@@ -402,14 +402,130 @@ export function useContratos() {
     );
   }, []);
 
+  const removeContrato = useCallback(async (contratoId: string): Promise<boolean> => {
+    // Cascade manual: políticas → itens → reajustes → eventos → contrato
+    const { data: itens } = await client
+      .from('itens_de_contrato')
+      .select('id')
+      .eq('contrato_id', contratoId);
+    const itemIds = (itens ?? []).map((i) => (i as { id: string }).id);
+    if (itemIds.length > 0) {
+      await client.from('politicas_temporarias').delete().in('item_id', itemIds);
+    }
+    await client.from('itens_de_contrato').delete().eq('contrato_id', contratoId);
+    await client.from('reajustes_historicos').delete().eq('contrato_id', contratoId);
+    await client.from('eventos_de_uso').delete().eq('contrato_id', contratoId);
+    const { error: err } = await client.from('contratos').delete().eq('id', contratoId);
+    if (err) { setError(String(err)); return false; }
+    setContratos((prev) => prev.filter((c) => c.id !== contratoId));
+    return true;
+  }, []);
+
+  interface ReajusteFormValues {
+    effectiveDate: string;
+    percent: number;
+    indice: ReajusteHistorico['indice'];
+    /** Se não informado, aplica a todos os itens */
+    itemId?: string;
+  }
+
+  const addReajuste = useCallback(async (
+    contratoId: string,
+    values: ReajusteFormValues,
+  ): Promise<boolean> => {
+    const contrato = contratos.find((c) => c.id === contratoId);
+    if (!contrato) return false;
+
+    // Itens alvo: item específico ou todos
+    const itensAlvo = values.itemId
+      ? contrato.itens.filter((i) => i.id === values.itemId)
+      : contrato.itens;
+
+    const rows = itensAlvo.map((it) => ({
+      contrato_id: contratoId,
+      item_id: it.id,
+      effective_date: values.effectiveDate,
+      percent: values.percent,
+      old_unit_price: it.unitPrice,
+      new_unit_price: Number((it.unitPrice * (1 + values.percent / 100)).toFixed(4)),
+      indice: values.indice,
+    }));
+
+    const { data: inserted, error: err } = await client
+      .from('reajustes_historicos')
+      .insert(rows)
+      .select();
+    if (err) { setError(String(err)); return false; }
+
+    // Atualiza unit_price de cada item
+    await Promise.all(
+      itensAlvo.map((it) =>
+        client
+          .from('itens_de_contrato')
+          .update({
+            unit_price: Number((it.unitPrice * (1 + values.percent / 100)).toFixed(4)),
+            last_readjusted_at: values.effectiveDate,
+          })
+          .eq('id', it.id),
+      ),
+    );
+
+    // Atualiza estado local
+    const novosReajustes: ReajusteHistorico[] = ((inserted ?? []) as DBReajuste[]).map((r) => ({
+      id: r.id,
+      contratoId: r.contrato_id,
+      itemId: r.item_id,
+      effectiveDate: r.effective_date,
+      percent: Number(r.percent),
+      oldUnitPrice: Number(r.old_unit_price),
+      newUnitPrice: Number(r.new_unit_price),
+      indice: r.indice as ReajusteHistorico['indice'],
+    }));
+
+    setContratos((prev) =>
+      prev.map((c) => {
+        if (c.id !== contratoId) return c;
+        const itensAtualizados = c.itens.map((it) => {
+          const hit = itensAlvo.find((a) => a.id === it.id);
+          if (!hit) return it;
+          return {
+            ...it,
+            unitPrice: Number((it.unitPrice * (1 + values.percent / 100)).toFixed(4)),
+            lastReadjustedAt: values.effectiveDate,
+          };
+        });
+        return {
+          ...c,
+          itens: itensAtualizados,
+          reajustes: [...c.reajustes, ...novosReajustes],
+        };
+      }),
+    );
+    return true;
+  }, [contratos]);
+
+  const removeReajuste = useCallback(async (contratoId: string, reajusteId: string): Promise<boolean> => {
+    const { error: err } = await client.from('reajustes_historicos').delete().eq('id', reajusteId);
+    if (err) { setError(String(err)); return false; }
+    setContratos((prev) =>
+      prev.map((c) =>
+        c.id !== contratoId ? c : { ...c, reajustes: c.reajustes.filter((r) => r.id !== reajusteId) },
+      ),
+    );
+    return true;
+  }, []);
+
   return {
     contratos,
     loading,
     error,
     addContrato,
     updateContrato,
+    removeContrato,
     addItem,
     updateItem,
     removeItem,
+    addReajuste,
+    removeReajuste,
   };
 }

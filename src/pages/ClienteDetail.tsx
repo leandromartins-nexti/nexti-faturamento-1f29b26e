@@ -11,6 +11,9 @@ import {
   Plus,
   StickyNote,
   Trash2,
+  UserX,
+  UserCheck,
+  PauseCircle,
 } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -39,7 +42,7 @@ const STATUS_LABEL: Record<string, string> = {
 
 export function ClienteDetail({ id, onNavigate }: ClienteDetailProps) {
   const { contratos } = useContratos();
-  const { clientes, updateCliente, setClienteStatus: setStatus, addEstabelecimento, updateEstabelecimento, removeEstabelecimento } = useClientes();
+  const { clientes, updateCliente, setClienteStatus: setStatus, removeCliente, addEstabelecimento, updateEstabelecimento, removeEstabelecimento } = useClientes();
   const cliente = clientes.find((c) => c.id === id);
 
   const [editClienteOpen, setEditClienteOpen] = useState(false);
@@ -99,14 +102,68 @@ export function ClienteDetail({ id, onNavigate }: ClienteDetailProps) {
             </div>
           </div>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          leftIcon={<Edit3 className="size-3.5" />}
-          onClick={() => setEditClienteOpen(true)}
-        >
-          Editar cliente
-        </Button>
+        <div className="flex items-center gap-2">
+          {cliente.status === 'ACTIVE' && (
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<PauseCircle className="size-3.5" />}
+              onClick={() => { if (confirm('Suspender este cliente?')) void setStatus(id, 'SUSPENDED'); }}
+            >
+              Suspender
+            </Button>
+          )}
+          {cliente.status === 'SUSPENDED' && (
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<UserCheck className="size-3.5" />}
+              onClick={() => void setStatus(id, 'ACTIVE')}
+            >
+              Reativar
+            </Button>
+          )}
+          {cliente.status !== 'INACTIVE' && (
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<UserX className="size-3.5" />}
+              onClick={() => { if (confirm('Inativar este cliente?')) void setStatus(id, 'INACTIVE'); }}
+            >
+              Inativar
+            </Button>
+          )}
+          {cliente.status === 'INACTIVE' && (
+            <Button
+              variant="outline"
+              size="sm"
+              leftIcon={<UserCheck className="size-3.5" />}
+              onClick={() => void setStatus(id, 'ACTIVE')}
+            >
+              Reativar
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            leftIcon={<Edit3 className="size-3.5" />}
+            onClick={() => setEditClienteOpen(true)}
+          >
+            Editar
+          </Button>
+          <button
+            onClick={async () => {
+              if (confirm(`Excluir o cliente "${cliente.name}"? Esta ação remove todos os estabelecimentos vinculados.`)) {
+                const ok = await removeCliente(id);
+                if (ok) onNavigate({ name: 'clientes' });
+              }
+            }}
+            className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm border border-ink-200"
+            title="Excluir cliente"
+          >
+            <Trash2 className="size-3.5" />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-3 gap-5">

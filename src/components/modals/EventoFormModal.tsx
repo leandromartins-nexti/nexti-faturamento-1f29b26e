@@ -8,13 +8,15 @@ import { useMetricas } from '../../hooks/useMetricas';
 import { useClientes } from '../../hooks/useClientes';
 import { useContratos } from '../../hooks/useContratos';
 import { useEventos } from '../../hooks/useEventos';
-import type { Contrato } from '../../lib/types';
+import type { Contrato, EventoDeUso } from '../../lib/types';
 
 interface EventoFormModalProps {
   open: boolean;
   onClose: () => void;
   /** Quando vier preenchido, trava o contrato. */
   contrato?: Contrato;
+  /** Quando vier preenchido, entra em modo edição. */
+  evento?: EventoDeUso;
   onSave: (data: EventoFormValues) => void;
 }
 
@@ -34,7 +36,7 @@ function periodOf(iso: string) {
   return iso.slice(0, 7);
 }
 
-export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormModalProps) {
+export function EventoFormModal({ open, onClose, contrato, evento, onSave }: EventoFormModalProps) {
   const { metricas } = useMetricas();
   const { clientes } = useClientes();
   const { contratos } = useContratos();
@@ -54,17 +56,29 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
   // Reset on open
   useEffect(() => {
     if (!open) return;
-    const ctId = contrato?.id ?? contratos[0]?.id ?? '';
-    setValues({
-      contratoId: ctId,
-      estabelecimentoId: '',
-      metricaId: '',
-      quantity: 1,
-      occurredAt: HOJE,
-      referencePeriod: periodOf(HOJE),
-      notes: '',
-    });
-  }, [open, contrato?.id, contratos]);
+    if (evento) {
+      setValues({
+        contratoId: evento.contratoId,
+        estabelecimentoId: evento.estabelecimentoId,
+        metricaId: evento.metricaId,
+        quantity: evento.quantity,
+        occurredAt: evento.occurredAt,
+        referencePeriod: evento.referencePeriod,
+        notes: evento.notes ?? '',
+      });
+    } else {
+      const ctId = contrato?.id ?? contratos[0]?.id ?? '';
+      setValues({
+        contratoId: ctId,
+        estabelecimentoId: '',
+        metricaId: '',
+        quantity: 1,
+        occurredAt: HOJE,
+        referencePeriod: periodOf(HOJE),
+        notes: '',
+      });
+    }
+  }, [open, evento, contrato?.id, contratos]);
 
   const ct = contrato ?? contratos.find((c) => c.id === values.contratoId);
   const cliente = ct ? clientes.find((cl) => cl.id === ct.clienteId) : undefined;
@@ -134,7 +148,7 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
     <Modal
       open={open}
       onClose={onClose}
-      title="Lançar evento de uso"
+      title={evento ? 'Editar evento de uso' : 'Lançar evento de uso'}
       subtitle="Movimentação manual da medição (entrada, saída ou ajuste)"
       size="lg"
       footer={
@@ -143,7 +157,7 @@ export function EventoFormModal({ open, onClose, contrato, onSave }: EventoFormM
             Cancelar
           </Button>
           <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
-            Lançar evento
+            {evento ? 'Salvar alterações' : 'Lançar evento'}
           </Button>
         </>
       }

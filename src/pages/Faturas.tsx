@@ -14,10 +14,10 @@ import {
 } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
-import { useStore, store } from '../lib/store';
 import { useClientes } from '../hooks/useClientes';
 import { useContratos } from '../hooks/useContratos';
 import { useEventos } from '../hooks/useEventos';
+import { useFaturas } from '../hooks/useFaturas';
 import { fmtBRL, fmtDate, fmtPeriod } from '../lib/format';
 import type { Fatura, FaturaLinha, FaturaStatus } from '../lib/types';
 
@@ -59,7 +59,7 @@ export function Faturas() {
   const { clientes } = useClientes();
   const { contratos } = useContratos();
   const { eventos } = useEventos();
-  const { faturas } = useStore();
+  const { faturas, gerarFatura, setFaturaStatus, removeFatura } = useFaturas();
   const [periodo, setPeriodo] = useState(PERIODO_ATUAL);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set());
@@ -84,9 +84,10 @@ export function Faturas() {
     });
   }
 
-  function handleGerar(contratoId: string) {
+  async function handleGerar(contratoId: string) {
     const contrato = contratos.find((c) => c.id === contratoId);
-    const fatura = store.gerarFatura(contratoId, periodo, HOJE, contrato, eventos);
+    if (!contrato) return;
+    const fatura = await gerarFatura(contratoId, periodo, HOJE, contrato, eventos);
     setPreviewId(fatura.id);
   }
 
@@ -198,7 +199,7 @@ export function Faturas() {
                               <button
                                 onClick={() => {
                                   if (previewId === fatura.id) setPreviewId(null);
-                                  store.removeFatura(fatura.id);
+                                  void removeFatura(fatura.id);
                                 }}
                                 className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
                                 title="Descartar rascunho"
@@ -207,7 +208,7 @@ export function Faturas() {
                               </button>
                               <Button
                                 size="sm"
-                                onClick={() => store.setFaturaStatus(fatura.id, 'ISSUED')}
+                                onClick={() => void setFaturaStatus(fatura.id, 'ISSUED')}
                               >
                                 Emitir
                               </Button>
@@ -217,7 +218,7 @@ export function Faturas() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => store.setFaturaStatus(fatura.id, 'PAID')}
+                              onClick={() => void setFaturaStatus(fatura.id, 'PAID')}
                             >
                               Marcar paga
                             </Button>

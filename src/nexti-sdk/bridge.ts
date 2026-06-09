@@ -20,16 +20,20 @@ let bridgeInitialized = false;
 
 // Whitelist de origens permitidas — o parent é uma dessas. Vem injetada pelo
 // backend Nexti no .env.local do sandbox como CSV.
-const ALLOWED_PARENT_ORIGINS = (import.meta.env.VITE_NEXTI_APPS_ORIGINS || '')
-  .split(',')
-  .map((s: string) => s.trim())
-  .filter(Boolean);
+// Inclui origens fixas do Nexti.Apps como fallback para quando o .env não foi recarregado.
+const NEXTI_BUILT_IN_ORIGINS = [
+  'https://studio.ilabs.nexti.com',
+  'https://apps.ilabs.nexti.com',
+];
+const ALLOWED_PARENT_ORIGINS = [
+  ...NEXTI_BUILT_IN_ORIGINS,
+  ...(import.meta.env.VITE_NEXTI_APPS_ORIGINS || '')
+    .split(',')
+    .map((s: string) => s.trim())
+    .filter(Boolean),
+];
 
 function isAllowedOrigin(origin: string): boolean {
-  if (ALLOWED_PARENT_ORIGINS.length === 0) {
-    // Em dev sem config, aceita só same-origin (mesmo host) pra não travar
-    return origin === window.location.origin;
-  }
   return ALLOWED_PARENT_ORIGINS.includes(origin);
 }
 

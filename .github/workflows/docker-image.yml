@@ -1,0 +1,30 @@
+name: Docker Build e Push
+
+on:
+  push:
+    branches: [ "main" ] # Dispara o build sempre que você der push na main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          # Criamos uma configuração customizada para o Buildx aceitar HTTP
+          config-inline: |
+            [registry."213.199.35.49:5000"]
+              http = true
+            
+      - name: Build e Push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: 213.199.35.49:5000/nexti-faturamento:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

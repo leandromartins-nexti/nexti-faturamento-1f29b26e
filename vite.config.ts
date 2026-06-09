@@ -15,7 +15,9 @@ function frameAncestors(env: Record<string, string>): string {
     .map((s) => s.trim())
     .filter(Boolean);
   if (origins.length === 0) return "'self' *";
-  return `'self' ${origins.join(' ')}`;
+  // Garante que sempre inclui wildcard além das origens explícitas,
+  // para cobrir variações de subdomínio do Nexti.Apps
+  return `'self' * ${origins.join(' ')}`;
 }
 
 export default defineConfig(({ mode }) => {

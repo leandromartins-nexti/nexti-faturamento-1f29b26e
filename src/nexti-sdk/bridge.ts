@@ -20,7 +20,7 @@ let bridgeInitialized = false;
 
 // Whitelist de origens permitidas — o parent é uma dessas. Vem injetada pelo
 // backend Nexti no .env.local do sandbox como CSV.
-// Inclui origens fixas do Nexti.Apps como fallback para quando o .env não foi recarregado.
+// Inclui origens fixas do Nexti.Apps como fallback.
 const NEXTI_BUILT_IN_ORIGINS = [
   'https://studio.ilabs.nexti.com',
   'https://apps.ilabs.nexti.com',
@@ -34,6 +34,9 @@ const ALLOWED_PARENT_ORIGINS = [
 ];
 
 function isAllowedOrigin(origin: string): boolean {
+  // Aceita qualquer subdomínio de ilabs.nexti.com ou nexti.com
+  if (/^https?:\/\/([a-z0-9-]+\.)*nexti\.com$/.test(origin)) return true;
+  if (/^https?:\/\/([a-z0-9-]+\.)*ilabs\.nexti\.com$/.test(origin)) return true;
   return ALLOWED_PARENT_ORIGINS.includes(origin);
 }
 
@@ -69,9 +72,12 @@ function emit(): void {
 // ── Handler de mensagens ──────────────────────────────────────────────────────
 
 function onMessage(event: MessageEvent): void {
+  // Log temporário para diagnóstico de origem
+  if (event.data && typeof event.data === 'object' && 'type' in event.data) {
+    console.info('[nexti-sdk] postMessage recebido:', event.data.type, '| origem:', event.origin, '| permitida:', isAllowedOrigin(event.origin));
+  }
   if (!isAllowedOrigin(event.origin)) {
-    // Mensagem de origem não-confiável — ignora silenciosamente.
-    // Não loga pra evitar spam (pode ter outras libs mandando postMessage)
+    console.warn('[nexti-sdk] origem bloqueada:', event.origin, '| permitidas:', ALLOWED_PARENT_ORIGINS);
     return;
   }
   const data = event.data as NextiBridgeMessage;

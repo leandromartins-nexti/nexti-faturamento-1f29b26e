@@ -88,9 +88,9 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
             </thead>
             <tbody>
               {rows.map((ev) => {
-                const contrato = contratos.find((c) => c.id === ev.contratoId)!;
-                const cliente = clientes.find((c) => c.id === contrato.clienteId)!;
-                const est = cliente.estabelecimentos.find((e) => e.id === ev.estabelecimentoId);
+                const contrato = contratos.find((c) => c.id === ev.contratoId);
+                const cliente = contrato ? clientes.find((c) => c.id === contrato.clienteId) : undefined;
+                const est = cliente?.estabelecimentos.find((e) => e.id === ev.estabelecimentoId);
                 const metrica = metricas.find((m) => m.id === ev.metricaId);
                 return (
                   <tr key={ev.id} className="border-t border-ink-100 hover:bg-bg-subtle">
@@ -98,15 +98,19 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
                       {fmtDate(ev.occurredAt)}
                     </td>
                     <td className="px-5 py-3">
-                      <button
-                        onClick={() => onNavigate({ name: 'contrato', id: contrato.id })}
-                        className="text-left"
-                      >
-                        <div className="font-semibold text-navy-700 hover:text-orange-600">
-                          {contrato.numero}
-                        </div>
-                        <div className="text-xs text-ink-500">{cliente.name}</div>
-                      </button>
+                      {contrato ? (
+                        <button
+                          onClick={() => onNavigate({ name: 'contrato', id: contrato.id })}
+                          className="text-left"
+                        >
+                          <div className="font-semibold text-navy-700 hover:text-orange-600">
+                            {contrato.numero}
+                          </div>
+                          <div className="text-xs text-ink-500">{cliente?.name}</div>
+                        </button>
+                      ) : (
+                        <span className="text-ink-400 text-xs">—</span>
+                      )}
                     </td>
                     <td className="px-5 py-3 text-ink-700">{est?.nome}</td>
                     <td className="px-5 py-3 text-ink-700">{metrica?.name}</td>

@@ -35,8 +35,8 @@ const STATUS_FILTERS: { id: 'ALL' | ContratoStatus; label: string }[] = [
 ];
 
 export function ContratosList({ onNavigate }: ContratosListProps) {
-  const { clientes } = useClientes();
-  const { contratos, addContrato } = useContratos();
+  const { clientes, loading: loadingClientes } = useClientes();
+  const { contratos, loading: loadingContratos, addContrato } = useContratos();
   const [status, setStatus] = useState<'ALL' | ContratoStatus>('ALL');
   const [q, setQ] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -50,6 +50,21 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
         return blob.includes(q.toLowerCase());
       });
   }, [status, q, contratos]);
+
+  if (loadingContratos || loadingClientes) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardBody>
+            <div className="flex items-center gap-3 text-ink-500 text-sm">
+              <div className="w-4 h-4 border-2 border-ink-300 border-t-orange-500 rounded-full animate-spin" />
+              Carregando contratos…
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-4">

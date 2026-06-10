@@ -70,8 +70,8 @@ interface ContratoDetailProps {
 }
 
 export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
-  const { clientes } = useClientes();
-  const { contratos, updateContrato, removeContrato, addItem, updateItem, removeItem, addReajuste, removeReajuste } = useContratos();
+  const { clientes, loading: loadingClientes } = useClientes();
+  const { contratos, loading: loadingContratos, updateContrato, removeContrato, addItem, updateItem, removeItem, addReajuste, removeReajuste } = useContratos();
   const { eventos: allEventos, addEvento, updateEvento, removeEvento } = useEventos();
   const { faturas: allFaturas, gerarFatura, setFaturaStatus, removeFatura } = useFaturas();
   const contrato = contratos.find((c) => c.id === id);
@@ -81,6 +81,21 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
   const [eventoModalOpen, setEventoModalOpen] = useState(false);
   const [editingEvento, setEditingEvento] = useState<EventoDeUso | undefined>(undefined);
   const [contratoModalOpen, setContratoModalOpen] = useState(false);
+
+  if (loadingContratos || loadingClientes) {
+    return (
+      <div className="p-6">
+        <Card>
+          <CardBody>
+            <div className="flex items-center gap-3 text-ink-500 text-sm">
+              <div className="w-4 h-4 border-2 border-ink-300 border-t-orange-500 rounded-full animate-spin" />
+              Carregando contrato…
+            </div>
+          </CardBody>
+        </Card>
+      </div>
+    );
+  }
 
   if (!contrato) {
     return (

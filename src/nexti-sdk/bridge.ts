@@ -98,6 +98,8 @@ function onMessage(event: MessageEvent): void {
       expiresAt: exp ? exp * 1000 : Date.now() + 3600_000,
     };
     setClientAuthToken(data.token);
+    // Log temporário para seed de dados
+    console.info('[nexti-sdk] AUTH OK — user_id:', data.user.id, '| org_id:', data.orgId);
     emit();
     return;
   }

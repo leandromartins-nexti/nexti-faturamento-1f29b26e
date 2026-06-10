@@ -94,8 +94,13 @@ function onMessage(event: MessageEvent): void {
       expiresAt: exp ? exp * 1000 : Date.now() + 3600_000,
     };
     setClientAuthToken(data.token);
-    // Persiste token em sessionStorage — reutilizado no modo standalone (Studio preview)
-    try { sessionStorage.setItem('_nx_dev_token', data.token); } catch { /* noop */ }
+    // Persiste dados em localStorage — compartilhado entre abas, reutilizado no modo standalone
+    try {
+      localStorage.setItem('_nx_dev_token', data.token);
+      localStorage.setItem('_nx_dev_user_id', data.user.id);
+      localStorage.setItem('_nx_dev_org_id', data.orgId);
+      localStorage.setItem('_nx_dev_project_id', data.projectId);
+    } catch { /* noop */ }
     emit();
     return;
   }

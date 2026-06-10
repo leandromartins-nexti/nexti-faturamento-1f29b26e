@@ -109,7 +109,8 @@ export function ContratosList({ onNavigate }: ContratosListProps) {
             </thead>
             <tbody>
               {rows.map((c) => {
-                const cli = clientes.find((cl) => cl.id === c.clienteId)!;
+                const cli = clientes.find((cl) => cl.id === c.clienteId);
+                if (!cli) return null;
                 const medidos = c.itens.filter((i) => i.produto.type === 'RECORRENTE_MEDIDO').length;
                 const fixos = c.itens.filter((i) => i.produto.type === 'RECORRENTE_FIXO').length;
                 return (

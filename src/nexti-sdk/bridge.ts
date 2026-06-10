@@ -72,10 +72,6 @@ function emit(): void {
 // ── Handler de mensagens ──────────────────────────────────────────────────────
 
 function onMessage(event: MessageEvent): void {
-  // Log temporário para diagnóstico de origem
-  if (event.data && typeof event.data === 'object' && 'type' in event.data) {
-    console.info('[nexti-sdk] postMessage recebido:', event.data.type, '| origem:', event.origin, '| permitida:', isAllowedOrigin(event.origin));
-  }
   if (!isAllowedOrigin(event.origin)) {
     console.warn('[nexti-sdk] origem bloqueada:', event.origin, '| permitidas:', ALLOWED_PARENT_ORIGINS);
     return;
@@ -84,12 +80,6 @@ function onMessage(event: MessageEvent): void {
   if (!data || typeof data !== 'object' || !('type' in data)) return;
 
   if (data.type === 'NEXTI_AUTH') {
-    console.info('[nexti-sdk] NEXTI_AUTH payload:', JSON.stringify({
-      hasToken: typeof data.token === 'string',
-      user: data.user,
-      orgId: data.orgId,
-      projectId: data.projectId,
-    }));
     if (typeof data.token !== 'string' || !data.user || !data.orgId || !data.projectId) {
       console.warn('[nexti-sdk] NEXTI_AUTH inválido', data);
       return;
@@ -104,8 +94,6 @@ function onMessage(event: MessageEvent): void {
       expiresAt: exp ? exp * 1000 : Date.now() + 3600_000,
     };
     setClientAuthToken(data.token);
-    // Log temporário para seed de dados
-    console.info('[nexti-sdk] AUTH OK — user_id:', data.user.id, '| org_id:', data.orgId);
     emit();
     return;
   }

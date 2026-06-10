@@ -94,6 +94,8 @@ function onMessage(event: MessageEvent): void {
       expiresAt: exp ? exp * 1000 : Date.now() + 3600_000,
     };
     setClientAuthToken(data.token);
+    // Persiste token em sessionStorage — reutilizado no modo standalone (Studio preview)
+    try { sessionStorage.setItem('_nx_dev_token', data.token); } catch { /* noop */ }
     emit();
     return;
   }
@@ -152,6 +154,26 @@ export function initBridge(): void {
       'Apps são esperados rodar embarcados no Nexti.Apps.'
     );
   }
+}
+
+/**
+ * Injeta sessão de dev quando o app roda standalone (sem iframe do Nexti.Apps).
+ * Usado pelo main.tsx no preview do Studio.
+ */
+export function _injectDevSession(opts: {
+  id: string;
+  orgId: string;
+  projectId: string;
+  token: string;
+}): void {
+  currentSession = {
+    user: { id: opts.id, roles: [] },
+    token: opts.token,
+    orgId: opts.orgId,
+    projectId: opts.projectId,
+    expiresAt: Date.now() + 24 * 3600_000,
+  };
+  emit();
 }
 
 /** Cleanup pra testes */

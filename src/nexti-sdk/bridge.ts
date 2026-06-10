@@ -84,6 +84,12 @@ function onMessage(event: MessageEvent): void {
   if (!data || typeof data !== 'object' || !('type' in data)) return;
 
   if (data.type === 'NEXTI_AUTH') {
+    console.info('[nexti-sdk] NEXTI_AUTH payload:', JSON.stringify({
+      hasToken: typeof data.token === 'string',
+      user: data.user,
+      orgId: data.orgId,
+      projectId: data.projectId,
+    }));
     if (typeof data.token !== 'string' || !data.user || !data.orgId || !data.projectId) {
       console.warn('[nexti-sdk] NEXTI_AUTH inválido', data);
       return;

@@ -13,6 +13,14 @@ import type { ContratoFormValues } from '../components/modals/ContratoFormModal'
 import type { ItemFormValues } from '../components/modals/ItemFormModal';
 import { useProdutos } from './useProdutos';
 import { useMetricas } from './useMetricas';
+import {
+  normalizeContratoStatus,
+  normalizeDueType,
+  normalizePaymentMethod,
+  normalizeReadjustmentIndex,
+  normalizeReadjustmentAnchor,
+  normalizeApresentacaoFatura,
+} from '../lib/normalize';
 
 // ── tipos crus do banco ───────────────────────────────────────────────────────
 
@@ -153,22 +161,22 @@ function mapContrato(
   return {
     id: r.id,
     numero: r.numero,
-    status: r.status as Contrato['status'],
+    status: normalizeContratoStatus(r.status),
     filialId: r.filial_id,
     clienteId: r.cliente_id,
     carteiraId: r.carteira_id,
     startDate: r.start_date,
     endDate: r.end_date,
-    dueType: r.due_type as Contrato['dueType'],
+    dueType: normalizeDueType(r.due_type),
     dueDay: Number(r.due_day),
     dueMonthOffset: Number(r.due_month_offset),
     dueDays: r.due_days != null ? Number(r.due_days) : undefined,
-    paymentMethod: r.payment_method as Contrato['paymentMethod'],
-    readjustmentIndex: r.readjustment_index as Contrato['readjustmentIndex'],
+    paymentMethod: normalizePaymentMethod(r.payment_method),
+    readjustmentIndex: normalizeReadjustmentIndex(r.readjustment_index),
     readjustmentPercent:
       r.readjustment_percent != null ? Number(r.readjustment_percent) : undefined,
-    readjustmentAnchor: r.readjustment_anchor as Contrato['readjustmentAnchor'],
-    apresentacaoFatura: r.apresentacao_fatura as Contrato['apresentacaoFatura'],
+    readjustmentAnchor: normalizeReadjustmentAnchor(r.readjustment_anchor),
+    apresentacaoFatura: normalizeApresentacaoFatura(r.apresentacao_fatura),
     notes: r.notes,
     itens: contratoItens,
     reajustes: contratoReajustes,

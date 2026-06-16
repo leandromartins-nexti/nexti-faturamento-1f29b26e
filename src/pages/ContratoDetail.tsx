@@ -559,9 +559,6 @@ function EventosTab({
           <Button variant="outline" size="sm">
             Importar CSV
           </Button>
-          <Button size="sm" leftIcon={<Plus className="size-4" />} onClick={onLancar}>
-            Lançar evento
-          </Button>
         </div>
       </div>
 

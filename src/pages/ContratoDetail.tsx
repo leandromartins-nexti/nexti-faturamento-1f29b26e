@@ -555,11 +555,6 @@ function EventosTab({
 
       <div className="flex items-center justify-between">
         <h4 className="font-bold text-navy-700">Últimas movimentações</h4>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm">
-            Importar CSV
-          </Button>
-        </div>
       </div>
 
       <Card>

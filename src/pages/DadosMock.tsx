@@ -448,6 +448,7 @@ export function DadosMock() {
           type: String(item.type ?? item.tipo ?? 'AVULSO') as 'RECORRENTE_FIXO' | 'RECORRENTE_MEDIDO' | 'AVULSO',
           defaultPrice: item.defaultPrice !== undefined ? String(item.defaultPrice) : '',
           metricaId: String(item.metricaId ?? ''),
+          codigoServico: String(item.codigoServico ?? item.codigo_servico ?? ''),
           active: item.active !== false,
         });
       }

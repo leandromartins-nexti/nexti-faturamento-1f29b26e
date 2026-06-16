@@ -86,6 +86,7 @@ export interface Produto {
   type: ProdutoType;
   defaultPrice?: number;
   metricaId?: string;
+  codigoServico?: string; // código de serviço LC 116 para emissão de NFS-e
   active: boolean;
 }
 

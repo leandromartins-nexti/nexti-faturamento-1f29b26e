@@ -11,6 +11,7 @@ interface DBProduto {
   type: string;
   default_price?: number | string | null;
   metrica_id?: string | null;
+  codigo_servico?: string | null;
   active: boolean;
 }
 
@@ -22,6 +23,7 @@ function mapProduto(r: DBProduto): Produto {
     type: r.type as ProdutoType,
     defaultPrice: r.default_price != null ? Number(r.default_price) : undefined,
     metricaId: r.metrica_id ?? undefined,
+    codigoServico: r.codigo_servico ?? undefined,
     active: r.active,
   };
 }
@@ -60,6 +62,7 @@ export function useProdutos() {
       type: values.type,
       default_price: values.defaultPrice !== '' ? Number(values.defaultPrice) : null,
       metrica_id: values.metricaId || null,
+      codigo_servico: values.codigoServico || null,
       active: values.active,
     };
     const { data, error: err } = await client.from('produtos').insert(row).select().single();
@@ -76,6 +79,7 @@ export function useProdutos() {
       type: values.type,
       default_price: values.defaultPrice !== '' ? Number(values.defaultPrice) : null,
       metrica_id: values.metricaId || null,
+      codigo_servico: values.codigoServico || null,
       active: values.active,
     };
     const { error: err } = await client.from('produtos').update(row).eq('id', id);
@@ -91,6 +95,7 @@ export function useProdutos() {
               type: values.type as ProdutoType,
               defaultPrice: values.defaultPrice !== '' ? Number(values.defaultPrice) : undefined,
               metricaId: values.metricaId || undefined,
+              codigoServico: values.codigoServico || undefined,
               active: values.active,
             },
       ),

@@ -106,6 +106,7 @@ export function Catalogo() {
                 <tr>
                   <th className="text-left px-5 py-2.5 font-semibold">Nome</th>
                   <th className="text-left px-5 py-2.5 font-semibold">Tipo</th>
+                  <th className="text-left px-5 py-2.5 font-semibold">Cód. serviço</th>
                   <th className="text-left px-5 py-2.5 font-semibold">Preço padrão</th>
                   <th className="text-right px-5 py-2.5 font-semibold">Em uso</th>
                   <th className="px-5 py-2.5"></th>
@@ -134,6 +135,9 @@ export function Catalogo() {
                       <td className="px-5 py-3">
                         <Badge tone={TYPE_TONE[p.type]}>{TYPE_LABEL[p.type]}</Badge>
                       </td>
+                      <td className="px-5 py-3 font-mono text-xs text-ink-700">
+                        {p.codigoServico ?? <span className="text-danger text-xs font-sans">não informado</span>}
+                      </td>
                       <td className="px-5 py-3 text-ink-700 tabular-nums">
                         {fmtPrice(p.defaultPrice)}
                       </td>
@@ -161,7 +165,7 @@ export function Catalogo() {
                 })}
                 {loadingProdutos && produtos.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-ink-500">
+                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-ink-500">
                       <Loader2 className="size-6 text-ink-300 mx-auto mb-2 animate-spin" />
                       Carregando produtos…
                     </td>
@@ -169,7 +173,7 @@ export function Catalogo() {
                 )}
                 {!loadingProdutos && produtos.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-ink-500">
+                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-ink-500">
                       <Package className="size-7 text-ink-300 mx-auto mb-2" />
                       Nenhum produto cadastrado.
                     </td>

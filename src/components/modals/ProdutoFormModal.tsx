@@ -19,6 +19,7 @@ export interface ProdutoFormValues {
   type: ProdutoType;
   defaultPrice: string;
   metricaId: string;
+  codigoServico: string;
   active: boolean;
 }
 
@@ -34,6 +35,7 @@ const EMPTY: ProdutoFormValues = {
   type: 'RECORRENTE_FIXO',
   defaultPrice: '',
   metricaId: '',
+  codigoServico: '',
   active: true,
 };
 
@@ -44,6 +46,7 @@ function produtoToValues(p: Produto): ProdutoFormValues {
     type: p.type,
     defaultPrice: p.defaultPrice != null ? String(p.defaultPrice) : '',
     metricaId: p.metricaId ?? '',
+    codigoServico: p.codigoServico ?? '',
     active: p.active,
   };
 }
@@ -67,6 +70,7 @@ export function ProdutoFormModal({ open, onClose, produto, onSave }: ProdutoForm
   const errors = useMemo(() => {
     const e: Partial<Record<keyof ProdutoFormValues, string>> = {};
     if (!values.name.trim()) e.name = 'Nome obrigatório.';
+    if (!values.codigoServico.trim()) e.codigoServico = 'Código de serviço obrigatório para emissão de NFS-e.';
     if (needsMetric && !values.metricaId) e.metricaId = 'Selecione a métrica para produto medido.';
     if (values.defaultPrice !== '' && isNaN(Number(values.defaultPrice)))
       e.defaultPrice = 'Preço inválido.';
@@ -130,6 +134,20 @@ export function ProdutoFormModal({ open, onClose, produto, onSave }: ProdutoForm
             value={values.name}
             onChange={(e) => update('name', e.target.value)}
             placeholder="ex.: Módulo Ponto, Terminal Facial X1"
+          />
+        </Field>
+
+        {/* Código de serviço */}
+        <Field
+          label="Código de serviço (NFS-e)"
+          required
+          hint="Código LC 116 ou ISS municipal — obrigatório para emissão de nota fiscal"
+          error={errors.codigoServico}
+        >
+          <TextInput
+            value={values.codigoServico}
+            onChange={(e) => update('codigoServico', e.target.value)}
+            placeholder="ex.: 1.01, 1.02, 14.01"
           />
         </Field>
 

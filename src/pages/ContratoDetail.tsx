@@ -124,7 +124,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
   const itensBonificacao = contrato.itens.filter((i) => i.type === 'BONIFICACAO');
 
   const tabs = [
-    { id: 'itens', label: 'Itens', count: contrato.itens.length },
+    { id: 'itens', label: 'Itens', count: contrato.itens.filter((i) => i.type !== 'BONIFICACAO').length },
     { id: 'eventos', label: 'Eventos de uso', count: eventos.length },
     { id: 'reajustes', label: 'Reajustes', count: contrato.reajustes.length },
     { id: 'bonificacoes', label: 'Bonificações', count: itensBonificacao.length },
@@ -427,7 +427,7 @@ function ItensTab({
               </tr>
             </thead>
             <tbody>
-              {contrato.itens.map((it) => {
+              {contrato.itens.filter((i) => i.type !== 'BONIFICACAO').map((it) => {
                 const t = itemTypeLabel[it.type];
                 return (
                   <tr key={it.id} className="border-t border-ink-100 hover:bg-bg-subtle">

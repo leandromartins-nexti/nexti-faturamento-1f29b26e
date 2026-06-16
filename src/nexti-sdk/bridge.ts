@@ -150,8 +150,19 @@ export function initBridge(): void {
   // só dispara quando o iframe está carregado, então o parent já vai estar
   // ouvindo (ele instala o listener antes de criar o iframe).
   if (window.parent && window.parent !== window) {
-    // origin '*' aqui é OK porque NEXTI_READY não carrega segredo
-    window.parent.postMessage({ type: 'NEXTI_READY' }, '*');
+    // Envia NEXTI_READY e reenvia a cada 300ms até receber NEXTI_AUTH.
+    // Necessário pois o parent pode não estar ouvindo ainda no primeiro dispatch.
+    const sendReady = () => window.parent.postMessage({ type: 'NEXTI_READY' }, '*');
+    sendReady();
+    const retryId = setInterval(() => {
+      if (currentSession) {
+        clearInterval(retryId);
+        return;
+      }
+      sendReady();
+    }, 300);
+    // Para de tentar após 10s mesmo sem resposta (evita memory leak)
+    setTimeout(() => clearInterval(retryId), 10_000);
   } else {
     // Não está em iframe — provavelmente preview standalone (dev)
     console.warn(

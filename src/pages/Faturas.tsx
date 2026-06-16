@@ -3,6 +3,7 @@ import { Button } from '@/ds';
 import {
   AlertTriangle,
   ArrowRight,
+  Building2,
   ChevronDown,
   ChevronUp,
   Download,
@@ -19,7 +20,7 @@ import { useContratos } from '../hooks/useContratos';
 import { useEventos } from '../hooks/useEventos';
 import { useFaturas } from '../hooks/useFaturas';
 import { fmtBRL, fmtDate, fmtPeriod } from '../lib/format';
-import type { Fatura, FaturaLinha, FaturaStatus } from '../lib/types';
+import type { Estabelecimento, Fatura, FaturaLinha, FaturaStatus } from '../lib/types';
 
 const HOJE = '2026-05-20';
 const PERIODO_ATUAL = HOJE.slice(0, 7);
@@ -59,10 +60,12 @@ export function Faturas() {
   const { clientes } = useClientes();
   const { contratos } = useContratos();
   const { eventos } = useEventos();
-  const { faturas, gerarFatura, setFaturaStatus, removeFatura } = useFaturas();
+  const { faturas, gerarFatura, gerarFaturasPorEstabelecimento, setFaturaStatus, removeFatura } = useFaturas();
   const [periodo, setPeriodo] = useState(PERIODO_ATUAL);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set());
+  // modo de geração por contrato: 'agregada' | 'por-estabelecimento'
+  const [modos, setModos] = useState<Record<string, 'agregada' | 'por-estabelecimento'>>({});
 
   const contratosAtivos = useMemo(
     () => contratos.filter((c) => c.status === 'ACTIVE' || c.status === 'DRAFT'),
@@ -84,11 +87,25 @@ export function Faturas() {
     });
   }
 
-  async function handleGerar(contratoId: string) {
+  function getModo(contratoId: string, estabelecimentos: Estabelecimento[]): 'agregada' | 'por-estabelecimento' {
+    return modos[contratoId] ?? (estabelecimentos.length > 1 ? 'por-estabelecimento' : 'agregada');
+  }
+
+  function setModo(contratoId: string, modo: 'agregada' | 'por-estabelecimento') {
+    setModos((prev) => ({ ...prev, [contratoId]: modo }));
+  }
+
+  async function handleGerar(contratoId: string, estabelecimentos: Estabelecimento[]) {
     const contrato = contratos.find((c) => c.id === contratoId);
     if (!contrato) return;
-    const fatura = await gerarFatura(contratoId, periodo, HOJE, contrato, eventos);
-    setPreviewId(fatura.id);
+    const modo = getModo(contratoId, estabelecimentos);
+    if (modo === 'por-estabelecimento') {
+      const fs = await gerarFaturasPorEstabelecimento(contratoId, periodo, HOJE, contrato, eventos, estabelecimentos);
+      if (fs[0]) setPreviewId(fs[0].id);
+    } else {
+      const fatura = await gerarFatura(contratoId, periodo, HOJE, contrato, eventos);
+      setPreviewId(fatura.id);
+    }
   }
 
   return (
@@ -131,7 +148,15 @@ export function Faturas() {
 
           {contratosAtivos.map((ct) => {
             const cli = clientes.find((c) => c.id === ct.clienteId);
-            const fatura = faturasDoPeriodo.find((f) => f.contratoId === ct.id);
+            const estabelecimentos = cli?.estabelecimentos ?? [];
+            const modo = getModo(ct.id, estabelecimentos);
+            // faturas do período para este contrato
+            const faturasDoCtPeriodo = faturasDoPeriodo.filter((f) => f.contratoId === ct.id);
+            // fatura principal a exibir (agregada ou primeira por estab, dependendo do modo)
+            const faturaAgregada = faturasDoCtPeriodo.find((f) => f.estabelecimentoId == null);
+            const faturasPorEstab = faturasDoCtPeriodo.filter((f) => f.estabelecimentoId != null);
+            const faturasVisiveis = modo === 'por-estabelecimento' ? faturasPorEstab : (faturaAgregada ? [faturaAgregada] : []);
+            const temFatura = faturasVisiveis.length > 0;
             const expanded = expandidas.has(ct.id);
 
             return (
@@ -145,11 +170,11 @@ export function Faturas() {
                         <Badge tone={ct.status === 'ACTIVE' ? 'success' : 'neutral'}>
                           {ct.status}
                         </Badge>
-                        {fatura && (
-                          <Badge tone={STATUS_TONE[fatura.status]}>
-                            {STATUS_LABEL[fatura.status]}
+                        {faturasVisiveis.map((f) => (
+                          <Badge key={f.id} tone={STATUS_TONE[f.status]}>
+                            {STATUS_LABEL[f.status]}
                           </Badge>
-                        )}
+                        ))}
                       </div>
                       <div className="text-xs text-ink-500 mt-0.5 ml-6">
                         {cli?.name} · {ct.itens.length} item{ct.itens.length !== 1 ? 'ns' : ''}
@@ -157,40 +182,75 @@ export function Faturas() {
                       </div>
                     </div>
 
-                    {fatura && (
+                    {temFatura && modo === 'agregada' && faturaAgregada && (
                       <div className="text-right flex-shrink-0">
                         <div className="text-sm font-black text-navy-700 tabular-nums">
-                          {fmtBRL(fatura.total)}
+                          {fmtBRL(faturaAgregada.total)}
                         </div>
                         <div className="text-xs text-ink-500">
-                          vence {fmtDate(fatura.dueDate)}
+                          vence {fmtDate(faturaAgregada.dueDate)}
                         </div>
                       </div>
                     )}
 
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {!fatura ? (
-                        <Button size="sm" onClick={() => handleGerar(ct.id)}>
+                    {temFatura && modo === 'por-estabelecimento' && (
+                      <div className="text-right flex-shrink-0">
+                        <div className="text-sm font-black text-navy-700 tabular-nums">
+                          {fmtBRL(faturasPorEstab.reduce((s, f) => s + f.total, 0))}
+                        </div>
+                        <div className="text-xs text-ink-500">
+                          {faturasPorEstab.length} CNPJ{faturasPorEstab.length !== 1 ? 's' : ''}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-1.5 flex-shrink-0 flex-wrap">
+                      {/* Toggle modo (só aparece quando há 2+ estabelecimentos) */}
+                      {estabelecimentos.length > 1 && (
+                        <div className="flex items-center gap-0.5 bg-bg-subtle border border-ink-200 rounded-sm p-0.5">
+                          <button
+                            onClick={() => setModo(ct.id, 'agregada')}
+                            className={`px-2 py-0.5 text-[11px] font-semibold rounded-sm transition-colors ${
+                              modo === 'agregada' ? 'bg-white text-navy-700 shadow-sm' : 'text-ink-400 hover:text-ink-700'
+                            }`}
+                          >
+                            Agregada
+                          </button>
+                          <button
+                            onClick={() => setModo(ct.id, 'por-estabelecimento')}
+                            className={`px-2 py-0.5 text-[11px] font-semibold rounded-sm transition-colors flex items-center gap-1 ${
+                              modo === 'por-estabelecimento' ? 'bg-white text-navy-700 shadow-sm' : 'text-ink-400 hover:text-ink-700'
+                            }`}
+                          >
+                            <Building2 className="size-3" />
+                            Por CNPJ
+                          </button>
+                        </div>
+                      )}
+
+                      {!temFatura ? (
+                        <Button size="sm" onClick={() => void handleGerar(ct.id, estabelecimentos)}>
                           Gerar fatura
                         </Button>
                       ) : (
                         <>
+                          {/* Detalhe da primeira fatura visível */}
                           <button
                             onClick={() =>
-                              setPreviewId(previewId === fatura.id ? null : fatura.id)
+                              setPreviewId(previewId === faturasVisiveis[0].id ? null : faturasVisiveis[0].id)
                             }
                             className={`px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors ${
-                              previewId === fatura.id
+                              previewId === faturasVisiveis[0].id
                                 ? 'bg-navy-700 text-white border-navy-700'
                                 : 'border-ink-200 text-ink-600 hover:border-ink-300'
                             }`}
                           >
-                            {previewId === fatura.id ? 'Fechar' : 'Detalhe'}
+                            {previewId === faturasVisiveis[0].id ? 'Fechar' : 'Detalhe'}
                           </button>
-                          {fatura.status === 'DRAFT' && (
+                          {faturasVisiveis.some((f) => f.status === 'DRAFT') && (
                             <>
                               <button
-                                onClick={() => handleGerar(ct.id)}
+                                onClick={() => void handleGerar(ct.id, estabelecimentos)}
                                 className="p-1.5 text-ink-400 hover:text-navy-700 rounded-sm"
                                 title="Regenerar apuração"
                               >
@@ -198,30 +258,40 @@ export function Faturas() {
                               </button>
                               <button
                                 onClick={() => {
-                                  if (previewId === fatura.id) setPreviewId(null);
-                                  void removeFatura(fatura.id);
+                                  faturasVisiveis.forEach((f) => {
+                                    if (previewId === f.id) setPreviewId(null);
+                                    void removeFatura(f.id);
+                                  });
                                 }}
                                 className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
-                                title="Descartar rascunho"
+                                title="Descartar rascunho(s)"
                               >
                                 <Trash2 className="size-3.5" />
                               </button>
-                              <Button
-                                size="sm"
-                                onClick={() => void setFaturaStatus(fatura.id, 'ISSUED')}
-                              >
-                                Emitir
-                              </Button>
+                              {faturasVisiveis.map((f) => f.status === 'DRAFT' && (
+                                <Button
+                                  key={f.id}
+                                  size="sm"
+                                  onClick={() => void setFaturaStatus(f.id, 'ISSUED')}
+                                >
+                                  {modo === 'por-estabelecimento'
+                                    ? `Emitir ${estabelecimentos.find((e) => e.id === f.estabelecimentoId)?.cnpj?.slice(-6) ?? ''}`
+                                    : 'Emitir'}
+                                </Button>
+                              ))}
                             </>
                           )}
-                          {fatura.status === 'ISSUED' && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => void setFaturaStatus(fatura.id, 'PAID')}
-                            >
-                              Marcar paga
-                            </Button>
+                          {faturasVisiveis.every((f) => f.status === 'ISSUED') && (
+                            faturasVisiveis.map((f) => (
+                              <Button
+                                key={f.id}
+                                size="sm"
+                                variant="outline"
+                                onClick={() => void setFaturaStatus(f.id, 'PAID')}
+                              >
+                                Marcar paga
+                              </Button>
+                            ))
                           )}
                         </>
                       )}
@@ -237,6 +307,37 @@ export function Faturas() {
                       </button>
                     </div>
                   </div>
+
+                  {/* Faturas por estabelecimento expandidas */}
+                  {temFatura && modo === 'por-estabelecimento' && faturasPorEstab.length > 1 && (
+                    <div className="mt-3 pt-3 border-t border-ink-100 space-y-2">
+                      <div className="text-xs text-ink-500 font-semibold uppercase tracking-wide mb-1">
+                        Faturas por estabelecimento
+                      </div>
+                      {faturasPorEstab.map((f) => {
+                        const est = estabelecimentos.find((e) => e.id === f.estabelecimentoId);
+                        return (
+                          <div key={f.id} className="flex items-center justify-between text-xs text-ink-700 gap-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <Building2 className="size-3 text-ink-400 flex-shrink-0" />
+                              <span className="font-semibold truncate">{est?.nome ?? f.estabelecimentoId}</span>
+                              <span className="text-ink-400">{est?.cnpj}</span>
+                              <Badge tone={STATUS_TONE[f.status]}>{STATUS_LABEL[f.status]}</Badge>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="font-black tabular-nums text-navy-700">{fmtBRL(f.total)}</span>
+                              <button
+                                onClick={() => setPreviewId(previewId === f.id ? null : f.id)}
+                                className="px-2 py-0.5 text-[11px] font-semibold border border-ink-200 rounded-sm text-ink-600 hover:border-ink-300"
+                              >
+                                Ver
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   {expanded && (
                     <div className="mt-3 pt-3 border-t border-ink-100 space-y-1">

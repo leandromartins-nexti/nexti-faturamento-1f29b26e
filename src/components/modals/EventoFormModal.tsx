@@ -163,40 +163,38 @@ export function EventoFormModal({ open, onClose, contrato, evento, onSave }: Eve
       }
     >
       <div className="space-y-5">
-        <div className="grid grid-cols-2 gap-4">
-          <Field label="Contrato" required error={errors.contratoId}>
-            <Select
-              value={values.contratoId}
-              onChange={(e) => update('contratoId', e.target.value)}
-              disabled={lockedContrato}
-            >
-              {contratos
-                .filter((c) => c.status === 'ACTIVE' || c.id === values.contratoId)
-                .map((c) => {
-                  const cli = clientes.find((cl) => cl.id === c.clienteId);
-                  return (
-                    <option key={c.id} value={c.id}>
-                      {c.numero}{cli ? ` · ${cli.name}` : ''}
-                    </option>
-                  );
-                })}
-            </Select>
-          </Field>
+        <Field label="Contrato" required error={errors.contratoId}>
+          <Select
+            value={values.contratoId}
+            onChange={(e) => update('contratoId', e.target.value)}
+            disabled={lockedContrato}
+          >
+            {contratos
+              .filter((c) => c.status === 'ACTIVE' || c.id === values.contratoId)
+              .map((c) => {
+                const cli = clientes.find((cl) => cl.id === c.clienteId);
+                return (
+                  <option key={c.id} value={c.id}>
+                    {c.numero}{cli ? ` · ${cli.name}` : ''}
+                  </option>
+                );
+              })}
+          </Select>
+        </Field>
 
-          <Field label="Estabelecimento" required error={errors.estabelecimentoId}>
-            <Select
-              value={values.estabelecimentoId}
-              onChange={(e) => update('estabelecimentoId', e.target.value)}
-            >
-              <option value="">— selecione —</option>
-              {cliente?.estabelecimentos.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.nome} · {e.cidade}/{e.uf}
-                </option>
-              ))}
-            </Select>
-          </Field>
-        </div>
+        <Field label="Estabelecimento" required error={errors.estabelecimentoId}>
+          <Select
+            value={values.estabelecimentoId}
+            onChange={(e) => update('estabelecimentoId', e.target.value)}
+          >
+            <option value="">— selecione —</option>
+            {cliente?.estabelecimentos.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.cnpj} · {e.nome} · {e.cidade}/{e.uf}
+              </option>
+            ))}
+          </Select>
+        </Field>
 
         <Field label="Métrica" required error={errors.metricaId}>
           {metricasDoContrato.length === 0 ? (

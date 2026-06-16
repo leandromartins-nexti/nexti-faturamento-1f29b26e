@@ -523,6 +523,56 @@ export function useContratos() {
     return true;
   }, []);
 
+  interface BonificacaoFormValues {
+    descricao: string;
+    valor: number;   // positivo na UI — salvo como negativo
+    startDate: string;
+    endDate: string;
+  }
+
+  const BONIFICACAO_PRODUTO_ID = '00000000-0000-0000-0000-000000000000';
+
+  const addBonificacao = useCallback(async (
+    contratoId: string,
+    values: BonificacaoFormValues,
+  ): Promise<boolean> => {
+    const row = {
+      contrato_id: contratoId,
+      produto_id: BONIFICACAO_PRODUTO_ID,
+      produto_name: values.descricao,
+      produto_type: 'BONIFICACAO',
+      produto_description: null,
+      produto_default_price: null,
+      metrica_id: null,
+      metrica_name: null,
+      metrica_unit: null,
+      metrica_apuracao_type: null,
+      type: 'BONIFICACAO',
+      unit_price: -Math.abs(values.valor),
+      minimum_quantity: null,
+      start_date: values.startDate,
+      end_date: values.endDate,
+      haas_activation_date: null,
+      atestai_valor_fixo: null,
+      saas_billing_mode: null,
+    };
+
+    const { data, error: err } = await client
+      .from('itens_de_contrato')
+      .insert(row)
+      .select()
+      .single();
+    if (err || !data) { setError(String(err)); return false; }
+
+    const novoItem = mapItem(data as DBItem, []);
+    setContratos((prev) =>
+      prev.map((c) =>
+        c.id === contratoId ? { ...c, itens: [...c.itens, novoItem] } : c,
+      ),
+    );
+    return true;
+  }, []);
+
   return {
     contratos,
     loading,
@@ -535,5 +585,6 @@ export function useContratos() {
     removeItem,
     addReajuste,
     removeReajuste,
+    addBonificacao,
   };
 }

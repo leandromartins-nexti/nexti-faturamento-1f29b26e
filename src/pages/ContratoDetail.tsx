@@ -71,7 +71,7 @@ interface ContratoDetailProps {
 
 export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
   const { clientes, loading: loadingClientes } = useClientes();
-  const { contratos, loading: loadingContratos, updateContrato, removeContrato, addItem, updateItem, removeItem, addReajuste, removeReajuste } = useContratos();
+  const { contratos, loading: loadingContratos, updateContrato, removeContrato, addItem, updateItem, removeItem, addReajuste, removeReajuste, addBonificacao } = useContratos();
   const { eventos: allEventos, addEvento, updateEvento, removeEvento } = useEventos();
   const { faturas: allFaturas, gerarFatura, setFaturaStatus, removeFatura } = useFaturas();
   const contrato = contratos.find((c) => c.id === id);
@@ -121,10 +121,13 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
     );
   }
 
+  const itensBonificacao = contrato.itens.filter((i) => i.type === 'BONIFICACAO');
+
   const tabs = [
     { id: 'itens', label: 'Itens', count: contrato.itens.length },
     { id: 'eventos', label: 'Eventos de uso', count: eventos.length },
     { id: 'reajustes', label: 'Reajustes', count: contrato.reajustes.length },
+    { id: 'bonificacoes', label: 'Bonificações', count: itensBonificacao.length },
     { id: 'estabelecimentos', label: 'Estabelecimentos', count: cliente.estabelecimentos.length },
     { id: 'faturas', label: 'Faturas' },
   ];
@@ -259,6 +262,13 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
           contrato={contrato}
           onAddReajuste={(values) => addReajuste(contrato.id, values)}
           onRemoveReajuste={(rId) => removeReajuste(contrato.id, rId)}
+        />
+      )}
+      {tab === 'bonificacoes' && (
+        <BonificacoesTab
+          contrato={contrato}
+          onAdd={(v) => addBonificacao(contrato.id, v)}
+          onRemove={(itemId) => removeItem(contrato.id, itemId)}
         />
       )}
       {tab === 'estabelecimentos' && <EstabelecimentosTab clienteId={cliente.id} />}
@@ -923,6 +933,276 @@ function Field({ label, value }: { label: string; value: string }) {
     <div>
       <div className="text-xs text-ink-500 font-semibold uppercase tracking-wide">{label}</div>
       <div className="text-base font-bold text-navy-700 mt-1">{value}</div>
+    </div>
+  );
+}
+
+interface BonificacaoFormValues {
+  descricao: string;
+  valor: number;
+  startDate: string;
+  endDate: string;
+}
+
+function BonificacoesTab({
+  contrato,
+  onAdd,
+  onRemove,
+}: {
+  contrato: Contrato;
+  onAdd: (v: BonificacaoFormValues) => Promise<boolean>;
+  onRemove: (itemId: string) => Promise<void>;
+}) {
+  const HOJE_ISO = new Date().toISOString().slice(0, 10);
+  const itensBonificacao = contrato.itens.filter((i) => i.type === 'BONIFICACAO');
+  const itensCobraveis = contrato.itens.filter((i) => i.type !== 'BONIFICACAO');
+
+  const [showForm, setShowForm] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [aplicarEmOpen, setAplicarEmOpen] = useState(false);
+  const [form, setForm] = useState<BonificacaoFormValues & { itemIds: string[] }>({
+    descricao: '',
+    valor: 0,
+    startDate: HOJE_ISO,
+    endDate: '',
+    itemIds: [],
+  });
+
+  async function handleSalvar() {
+    if (!form.descricao || form.valor <= 0 || !form.startDate || !form.endDate) return;
+    setSaving(true);
+    const ok = await onAdd({ descricao: form.descricao, valor: form.valor, startDate: form.startDate, endDate: form.endDate });
+    setSaving(false);
+    if (ok) {
+      setShowForm(false);
+      setForm({ descricao: '', valor: 0, startDate: HOJE_ISO, endDate: '', itemIds: [] });
+    }
+  }
+
+  const itensSimulacao = form.itemIds.length > 0
+    ? itensCobraveis.filter((i) => form.itemIds.includes(i.id))
+    : itensCobraveis;
+
+  const totalItens = itensSimulacao.reduce((s, i) => s + i.unitPrice, 0);
+  const canSubmit = form.descricao.trim() !== '' && form.valor > 0 && !!form.startDate && !!form.endDate;
+
+  return (
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle>Bonificações</CardTitle>
+          <Button
+            size="sm"
+            leftIcon={<Plus className="size-4" />}
+            onClick={() => setShowForm((v) => !v)}
+          >
+            {showForm ? 'Cancelar' : 'Adicionar bonificação'}
+          </Button>
+        </CardHeader>
+        <CardBody>
+          {showForm && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="col-span-2">
+                  <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
+                    Descrição
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="ex.: Desconto implantação, Bonificação fidelidade…"
+                    value={form.descricao}
+                    onChange={(e) => setForm((v) => ({ ...v, descricao: e.target.value }))}
+                    className="mt-1 w-full rounded-sm border border-ink-200 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
+                    Valor (R$)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.01"
+                    placeholder="0,00"
+                    value={form.valor || ''}
+                    onChange={(e) => setForm((v) => ({ ...v, valor: Number(e.target.value) }))}
+                    className="mt-1 w-full rounded-sm border border-ink-200 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div className="relative">
+                  <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
+                    Referência (itens simulados)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setAplicarEmOpen((v) => !v)}
+                    className="mt-1 w-full flex items-center justify-between rounded-sm border border-ink-200 px-3 py-2 text-sm bg-white text-left"
+                  >
+                    <span className="truncate text-ink-700">
+                      {form.itemIds.length === 0 || form.itemIds.length === itensCobraveis.length
+                        ? 'Todos os itens'
+                        : form.itemIds.length === 1
+                        ? itensCobraveis.find((i) => i.id === form.itemIds[0])?.produto.name ?? '1 item'
+                        : `${form.itemIds.length} itens selecionados`}
+                    </span>
+                    <svg className={`size-4 text-ink-400 shrink-0 transition-transform ${aplicarEmOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                  {aplicarEmOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setAplicarEmOpen(false)} />
+                      <div className="absolute z-20 mt-1 w-full rounded-sm border border-ink-200 bg-white shadow-md">
+                        <label className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-bg-subtle border-b border-ink-100">
+                          <input
+                            type="checkbox"
+                            className="accent-orange-500"
+                            checked={form.itemIds.length === 0 || form.itemIds.length === itensCobraveis.length}
+                            onChange={() => setForm((v) => ({ ...v, itemIds: [] }))}
+                          />
+                          <span className="font-medium text-ink-700">Todos os itens</span>
+                        </label>
+                        {itensCobraveis.map((it) => {
+                          const checked = form.itemIds.includes(it.id);
+                          return (
+                            <label key={it.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-bg-subtle">
+                              <input
+                                type="checkbox"
+                                className="accent-orange-500"
+                                checked={checked}
+                                onChange={() =>
+                                  setForm((v) => ({
+                                    ...v,
+                                    itemIds: checked
+                                      ? v.itemIds.filter((id) => id !== it.id)
+                                      : [...v.itemIds, it.id],
+                                  }))
+                                }
+                              />
+                              <span className="text-ink-700">{it.produto.name}</span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
+                    Vigência — início
+                  </label>
+                  <input
+                    type="date"
+                    value={form.startDate}
+                    onChange={(e) => setForm((v) => ({ ...v, startDate: e.target.value }))}
+                    className="mt-1 w-full rounded-sm border border-ink-200 px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
+                    Vigência — fim
+                  </label>
+                  <input
+                    type="date"
+                    value={form.endDate}
+                    min={form.startDate}
+                    onChange={(e) => setForm((v) => ({ ...v, endDate: e.target.value }))}
+                    className="mt-1 w-full rounded-sm border border-ink-200 px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+
+              {form.valor > 0 && itensSimulacao.length > 0 && (
+                <div className="p-3 bg-success-bg border border-success/30 rounded-sm">
+                  <div className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-2">
+                    Simulação de impacto na fatura
+                  </div>
+                  <div className="space-y-1 mb-2">
+                    {itensSimulacao.map((it) => (
+                      <div key={it.id} className="flex items-center justify-between text-xs text-ink-700">
+                        <span>{it.produto.name}</span>
+                        <span className="tabular-nums">{fmtBRL(it.unitPrice, 4)}</span>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-between text-xs font-bold border-t border-success/30 pt-2">
+                    <span className="text-ink-600">Bonificação</span>
+                    <span className="text-danger tabular-nums">− {fmtBRL(form.valor, 2)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-sm font-black mt-1">
+                    <span className="text-navy-700">Total estimado</span>
+                    <span className={`tabular-nums ${totalItens - form.valor < 0 ? 'text-danger' : 'text-success'}`}>
+                      {fmtBRL(totalItens - form.valor, 2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <Button
+                  size="sm"
+                  leftIcon={<Plus className="size-4" />}
+                  onClick={() => void handleSalvar()}
+                  disabled={saving || !canSubmit}
+                >
+                  {saving ? 'Salvando…' : 'Salvar bonificação'}
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {!showForm && itensBonificacao.length === 0 && (
+            <p className="text-sm text-ink-500 py-2">
+              Nenhuma bonificação cadastrada. Clique em "Adicionar bonificação" para criar.
+            </p>
+          )}
+        </CardBody>
+      </Card>
+
+      {itensBonificacao.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Bonificações ativas</CardTitle>
+          </CardHeader>
+          <CardBody className="p-0">
+            <table className="w-full text-sm">
+              <thead className="bg-bg-subtle text-xs text-ink-500">
+                <tr>
+                  <th className="text-left px-5 py-3 font-semibold">Descrição</th>
+                  <th className="text-right px-5 py-3 font-semibold">Valor</th>
+                  <th className="text-left px-5 py-3 font-semibold">Vigência</th>
+                  <th className="px-5 py-3" />
+                </tr>
+              </thead>
+              <tbody>
+                {itensBonificacao.map((b) => (
+                  <tr key={b.id} className="border-t border-ink-100">
+                    <td className="px-5 py-3 font-semibold text-navy-700">{b.produto.name}</td>
+                    <td className="px-5 py-3 text-right tabular-nums text-danger font-bold">
+                      − {fmtBRL(Math.abs(b.unitPrice), 2)}
+                    </td>
+                    <td className="px-5 py-3 text-xs text-ink-600">
+                      {fmtDate(b.startDate)} → {b.endDate ? fmtDate(b.endDate) : '—'}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      <button
+                        onClick={() => {
+                          if (confirm(`Remover a bonificação "${b.produto.name}"?`)) {
+                            void onRemove(b.id);
+                          }
+                        }}
+                        className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </CardBody>
+        </Card>
+      )}
     </div>
   );
 }

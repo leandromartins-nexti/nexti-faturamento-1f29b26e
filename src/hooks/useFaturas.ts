@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { client, useUser } from '../nexti-sdk';
 import { gerarFatura as calcFatura } from '../lib/fatura';
-import type { Contrato, EventoDeUso, Fatura, FaturaStatus } from '../lib/types';
+import type { Contrato, Estabelecimento, EventoDeUso, Fatura, FaturaStatus } from '../lib/types';
 
 // ─── DB row → Fatura ──────────────────────────────────────────────────────────
 
@@ -11,6 +11,7 @@ function rowToFatura(row: Record<string, unknown>): Fatura {
     contratoId: row.contrato_id as string,
     clienteId: row.cliente_id as string,
     filialId: row.filial_id as string,
+    estabelecimentoId: row.estabelecimento_id as string | undefined,
     referencePeriod: row.reference_period as string,
     issueDate: row.issue_date as string,
     dueDate: row.due_date as string,
@@ -20,6 +21,53 @@ function rowToFatura(row: Record<string, unknown>): Fatura {
     linhas: (row.linhas as Fatura['linhas']) ?? [],
     total: Number(row.total),
   };
+}
+
+async function persistirFatura(
+  fatura: Fatura,
+  userId: string,
+  contratoId: string,
+  referencePeriod: string,
+  estabelecimentoId?: string,
+) {
+  // Remove rascunho existente para o mesmo contrato+período+estabelecimento
+  const del = client
+    .from('faturas')
+    .delete()
+    .eq('contrato_id', contratoId)
+    .eq('reference_period', referencePeriod)
+    .eq('status', 'DRAFT');
+
+  if (estabelecimentoId) {
+    await del.eq('estabelecimento_id', estabelecimentoId);
+  } else {
+    await del.is('estabelecimento_id', null);
+  }
+
+  const { data, error } = await client
+    .from('faturas')
+    .insert({
+      id: fatura.id,
+      contrato_id: fatura.contratoId,
+      cliente_id: fatura.clienteId,
+      filial_id: fatura.filialId,
+      estabelecimento_id: fatura.estabelecimentoId ?? null,
+      reference_period: fatura.referencePeriod,
+      issue_date: fatura.issueDate,
+      due_date: fatura.dueDate,
+      payment_method: fatura.paymentMethod,
+      apresentacao: fatura.apresentacao,
+      status: fatura.status,
+      linhas: fatura.linhas,
+      total: fatura.total,
+      user_id: userId,
+      org_id: 'nexti',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return rowToFatura(data as Record<string, unknown>);
 }
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
@@ -39,7 +87,7 @@ export function useFaturas() {
 
   useEffect(() => { void load(); }, [load]);
 
-  // ── gerarFatura ─────────────────────────────────────────────────────────────
+  // ── gerarFatura (agregada ou por estabelecimento) ────────────────────────────
   const gerarFatura = useCallback(
     async (
       contratoId: string,
@@ -47,49 +95,74 @@ export function useFaturas() {
       issueDate: string,
       contrato: Contrato,
       eventos: EventoDeUso[],
+      estabelecimentoId?: string,
     ): Promise<Fatura> => {
-      const fatura = calcFatura(contrato, referencePeriod, eventos, issueDate);
-
-      // Upsert: remove rascunho existente para o mesmo contrato+período
-      await client
-        .from('faturas')
-        .delete()
-        .eq('contrato_id', contratoId)
-        .eq('reference_period', referencePeriod)
-        .eq('status', 'DRAFT');
-
-      const { data, error } = await client
-        .from('faturas')
-        .insert({
-          id: fatura.id,
-          contrato_id: fatura.contratoId,
-          cliente_id: fatura.clienteId,
-          filial_id: fatura.filialId,
-          reference_period: fatura.referencePeriod,
-          issue_date: fatura.issueDate,
-          due_date: fatura.dueDate,
-          payment_method: fatura.paymentMethod,
-          apresentacao: fatura.apresentacao,
-          status: fatura.status,
-          linhas: fatura.linhas,
-          total: fatura.total,
-          user_id: user?.id ?? 'demo',
-          org_id: 'nexti',
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      const salva = rowToFatura(data as Record<string, unknown>);
+      const fatura = calcFatura(contrato, referencePeriod, eventos, issueDate, estabelecimentoId);
+      const salva = await persistirFatura(
+        fatura,
+        user?.id ?? 'demo',
+        contratoId,
+        referencePeriod,
+        estabelecimentoId,
+      );
       setFaturas((prev) => {
         const sem = prev.filter(
-          (f) => !(f.contratoId === contratoId && f.referencePeriod === referencePeriod && f.status === 'DRAFT'),
+          (f) =>
+            !(
+              f.contratoId === contratoId &&
+              f.referencePeriod === referencePeriod &&
+              f.status === 'DRAFT' &&
+              (estabelecimentoId ? f.estabelecimentoId === estabelecimentoId : f.estabelecimentoId == null)
+            ),
         );
         return [salva, ...sem];
       });
       return salva;
     },
     [user],
+  );
+
+  // ── gerarFaturasPorEstabelecimento ───────────────────────────────────────────
+  const gerarFaturasPorEstabelecimento = useCallback(
+    async (
+      contratoId: string,
+      referencePeriod: string,
+      issueDate: string,
+      contrato: Contrato,
+      eventos: EventoDeUso[],
+      estabelecimentos: Estabelecimento[],
+    ): Promise<Fatura[]> => {
+      // Quais estabelecimentos têm pelo menos 1 evento no período?
+      const comEventos = estabelecimentos.filter((est) =>
+        eventos.some(
+          (e) =>
+            e.contratoId === contratoId &&
+            e.estabelecimentoId === est.id &&
+            e.referencePeriod === referencePeriod,
+        ),
+      );
+
+      if (comEventos.length === 0) {
+        // Nenhum evento por estabelecimento — gera uma fatura agregada normal
+        const f = await gerarFatura(contratoId, referencePeriod, issueDate, contrato, eventos);
+        return [f];
+      }
+
+      const resultados: Fatura[] = [];
+      for (const est of comEventos) {
+        const f = await gerarFatura(
+          contratoId,
+          referencePeriod,
+          issueDate,
+          contrato,
+          eventos,
+          est.id,
+        );
+        resultados.push(f);
+      }
+      return resultados;
+    },
+    [gerarFatura],
   );
 
   // ── setFaturaStatus ──────────────────────────────────────────────────────────
@@ -111,5 +184,5 @@ export function useFaturas() {
     setFaturas((prev) => prev.filter((f) => f.id !== faturaId));
   }, []);
 
-  return { faturas, gerarFatura, setFaturaStatus, removeFatura, reload: load };
+  return { faturas, gerarFatura, gerarFaturasPorEstabelecimento, setFaturaStatus, removeFatura, reload: load };
 }

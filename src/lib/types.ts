@@ -202,6 +202,7 @@ export interface Fatura {
   contratoId: string;
   clienteId: string;
   filialId: string;
+  estabelecimentoId?: string; // undefined = fatura agregada (cobre todo o contrato)
   referencePeriod: string;
   issueDate: string;
   dueDate: string;

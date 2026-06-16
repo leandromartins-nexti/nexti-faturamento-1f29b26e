@@ -73,7 +73,7 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
   const { clientes, loading: loadingClientes } = useClientes();
   const { contratos, loading: loadingContratos, updateContrato, removeContrato, addItem, updateItem, removeItem, addReajuste, removeReajuste, addBonificacao } = useContratos();
   const { eventos: allEventos, addEvento, updateEvento, removeEvento } = useEventos();
-  const { faturas: allFaturas, gerarFatura, setFaturaStatus, removeFatura } = useFaturas();
+  const { faturas: allFaturas, gerarFatura, gerarFaturasPorEstabelecimento, setFaturaStatus, removeFatura } = useFaturas();
   const contrato = contratos.find((c) => c.id === id);
   const [tab, setTab] = useState('itens');
   const [itemModalOpen, setItemModalOpen] = useState(false);
@@ -278,7 +278,11 @@ export function ContratoDetail({ id, onNavigate }: ContratoDetailProps) {
           faturas={faturas}
           eventos={eventos}
           clienteNome={cliente.name}
+          estabelecimentos={cliente.estabelecimentos}
           onGerar={(periodo, hoje) => gerarFatura(contrato.id, periodo, hoje, contrato, eventos)}
+          onGerarPorEstabelecimento={(periodo, hoje) =>
+            gerarFaturasPorEstabelecimento(contrato.id, periodo, hoje, contrato, eventos, cliente.estabelecimentos)
+          }
           onSetStatus={setFaturaStatus}
           onRemove={removeFatura}
         />
@@ -1256,7 +1260,9 @@ function FaturasTab({
   faturas,
   eventos,
   clienteNome,
+  estabelecimentos,
   onGerar,
+  onGerarPorEstabelecimento,
   onSetStatus,
   onRemove,
 }: {
@@ -1264,7 +1270,9 @@ function FaturasTab({
   faturas: Fatura[];
   eventos: EventoDeUso[];
   clienteNome: string;
+  estabelecimentos: { id: string; nome: string; cnpj: string }[];
   onGerar: (periodo: string, hoje: string) => Promise<Fatura>;
+  onGerarPorEstabelecimento: (periodo: string, hoje: string) => Promise<Fatura[]>;
   onSetStatus: (id: string, status: FaturaStatus) => Promise<void>;
   onRemove: (id: string) => Promise<void>;
 }) {
@@ -1273,37 +1281,144 @@ function FaturasTab({
   const [periodo, setPeriodo] = useState(periodos[0]);
   const [previewFatura, setPreviewFatura] = useState<Fatura | null>(null);
   const [gerando, setGerando] = useState(false);
+  // 'agregada' = comportamento original | 'por-estabelecimento' = uma fatura por CNPJ
+  const [modoGeracao, setModoGeracao] = useState<'agregada' | 'por-estabelecimento'>(
+    estabelecimentos.length > 1 ? 'por-estabelecimento' : 'agregada',
+  );
 
-  const faturaDoPeriodo = faturas.find((f) => f.referencePeriod === periodo);
+  // Faturas do período selecionado
+  const faturasDoPeriodo = faturas.filter((f) => f.referencePeriod === periodo);
+  // Fatura agregada (sem estabelecimento vinculado)
+  const faturaAgregada = faturasDoPeriodo.find((f) => f.estabelecimentoId == null);
+  // Faturas por estabelecimento
+  const faturasPorEstab = faturasDoPeriodo.filter((f) => f.estabelecimentoId != null);
 
   async function handleGerar() {
     setGerando(true);
     try {
-      const f = await onGerar(periodo, HOJE_ISO);
-      setPreviewFatura(f);
+      if (modoGeracao === 'por-estabelecimento') {
+        const fs = await onGerarPorEstabelecimento(periodo, HOJE_ISO);
+        setPreviewFatura(fs[0] ?? null);
+      } else {
+        const f = await onGerar(periodo, HOJE_ISO);
+        setPreviewFatura(f);
+      }
     } finally {
       setGerando(false);
     }
   }
 
+  // Decide quais faturas mostrar no painel principal conforme modo
+  const faturasVisiveis = modoGeracao === 'por-estabelecimento' ? faturasPorEstab : (faturaAgregada ? [faturaAgregada] : []);
+  const temFaturasNoPeriodo = faturasVisiveis.length > 0;
+
+  function FaturaCard({ fatura }: { readonly fatura: Fatura }) {
+    const estab = estabelecimentos.find((e) => e.id === fatura.estabelecimentoId);
+    return (
+      <div className="border border-ink-200 rounded-md p-4 space-y-2">
+        <div className="flex items-center justify-between gap-2">
+          <div>
+            {estab && (
+              <div className="text-xs font-bold text-navy-700 flex items-center gap-1.5">
+                <Building2 className="size-3 text-ink-400" />
+                {estab.nome}
+                <span className="text-ink-400 font-normal">{estab.cnpj}</span>
+              </div>
+            )}
+            {!estab && (
+              <div className="text-xs font-bold text-navy-700">Todos os estabelecimentos</div>
+            )}
+            <div className="text-xs text-ink-500 mt-0.5 tabular-nums">{fmtBRL(fatura.total)}</div>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            <Badge tone={STATUS_TONE_FAT[fatura.status]}>{STATUS_LABEL_FAT[fatura.status]}</Badge>
+            <button
+              onClick={() => setPreviewFatura(previewFatura?.id === fatura.id ? null : fatura)}
+              className={`px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors ${
+                previewFatura?.id === fatura.id
+                  ? 'bg-navy-700 text-white border-navy-700'
+                  : 'border-ink-200 text-ink-600 hover:border-ink-300'
+              }`}
+            >
+              {previewFatura?.id === fatura.id ? 'Fechar' : 'Detalhe'}
+            </button>
+            {fatura.status === 'DRAFT' && (
+              <>
+                <button
+                  onClick={() => void handleGerar()}
+                  className="p-1.5 text-ink-400 hover:text-navy-700 rounded-sm"
+                  title="Regenerar apuração"
+                >
+                  <RefreshCw className="size-3.5" />
+                </button>
+                <button
+                  onClick={() => {
+                    if (previewFatura?.id === fatura.id) setPreviewFatura(null);
+                    void onRemove(fatura.id);
+                  }}
+                  className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
+                  title="Descartar rascunho"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
+                <Button size="sm" onClick={() => void onSetStatus(fatura.id, 'ISSUED')}>
+                  Emitir
+                </Button>
+              </>
+            )}
+            {fatura.status === 'ISSUED' && (
+              <Button size="sm" variant="outline" onClick={() => void onSetStatus(fatura.id, 'PAID')}>
+                Marcar paga
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
-      {/* Seletor de período */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-sm font-semibold text-ink-600">Período:</span>
-        {periodos.map((p) => (
-          <button
-            key={p}
-            onClick={() => { setPeriodo(p); setPreviewFatura(null); }}
-            className={`px-3 py-1.5 rounded-pill text-sm font-semibold transition-colors ${
-              periodo === p
-                ? 'bg-navy-700 text-white'
-                : 'bg-white text-ink-600 border border-ink-200 hover:border-ink-300'
-            }`}
-          >
-            {fmtPeriod(p)}
-          </button>
-        ))}
+      {/* Seletor de período + modo */}
+      <div className="flex items-center justify-between gap-3 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-sm font-semibold text-ink-600">Período:</span>
+          {periodos.map((p) => (
+            <button
+              key={p}
+              onClick={() => { setPeriodo(p); setPreviewFatura(null); }}
+              className={`px-3 py-1.5 rounded-pill text-sm font-semibold transition-colors ${
+                periodo === p
+                  ? 'bg-navy-700 text-white'
+                  : 'bg-white text-ink-600 border border-ink-200 hover:border-ink-300'
+              }`}
+            >
+              {fmtPeriod(p)}
+            </button>
+          ))}
+        </div>
+
+        {/* Toggle de modo de geração */}
+        {estabelecimentos.length > 1 && (
+          <div className="flex items-center gap-1 bg-bg-subtle border border-ink-200 rounded-sm p-0.5">
+            <button
+              onClick={() => setModoGeracao('agregada')}
+              className={`px-3 py-1 text-xs font-semibold rounded-sm transition-colors ${
+                modoGeracao === 'agregada' ? 'bg-white text-navy-700 shadow-sm' : 'text-ink-500 hover:text-ink-700'
+              }`}
+            >
+              Agregada
+            </button>
+            <button
+              onClick={() => setModoGeracao('por-estabelecimento')}
+              className={`px-3 py-1 text-xs font-semibold rounded-sm transition-colors ${
+                modoGeracao === 'por-estabelecimento' ? 'bg-white text-navy-700 shadow-sm' : 'text-ink-500 hover:text-ink-700'
+              }`}
+            >
+              Por estabelecimento
+            </button>
+          </div>
+        )}
       </div>
 
       <div className={`grid gap-5 ${previewFatura ? 'grid-cols-[1fr_380px]' : 'grid-cols-1'}`}>
@@ -1311,81 +1426,57 @@ function FaturasTab({
           <CardBody>
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-bold text-navy-700">
-                  {fmtPeriod(periodo)}
-                </div>
+                <div className="text-sm font-bold text-navy-700">{fmtPeriod(periodo)}</div>
                 <div className="text-xs text-ink-500 mt-0.5">
                   {contrato.itens.length} item{contrato.itens.length !== 1 ? 'ns' : ''} · {clienteNome}
+                  {modoGeracao === 'por-estabelecimento' && (
+                    <span className="ml-1 text-orange-500 font-semibold">· por CNPJ</span>
+                  )}
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {!faturaDoPeriodo ? (
+                {!temFaturasNoPeriodo ? (
                   <Button
                     size="sm"
                     leftIcon={<Receipt className="size-4" />}
                     onClick={() => void handleGerar()}
                     disabled={gerando}
                   >
-                    {gerando ? 'Gerando…' : 'Gerar fatura'}
+                    {gerando
+                      ? 'Gerando…'
+                      : modoGeracao === 'por-estabelecimento'
+                      ? 'Gerar por estabelecimento'
+                      : 'Gerar fatura'}
                   </Button>
                 ) : (
-                  <>
-                    <Badge tone={STATUS_TONE_FAT[faturaDoPeriodo.status]}>
-                      {STATUS_LABEL_FAT[faturaDoPeriodo.status]}
-                    </Badge>
-                    <span className="font-black text-navy-700 text-sm tabular-nums">
-                      {fmtBRL(faturaDoPeriodo.total)}
-                    </span>
-                    <button
-                      onClick={() => setPreviewFatura(previewFatura?.id === faturaDoPeriodo.id ? null : faturaDoPeriodo)}
-                      className={`px-3 py-1.5 text-xs font-semibold rounded-sm border transition-colors ${
-                        previewFatura?.id === faturaDoPeriodo.id
-                          ? 'bg-navy-700 text-white border-navy-700'
-                          : 'border-ink-200 text-ink-600 hover:border-ink-300'
-                      }`}
-                    >
-                      {previewFatura?.id === faturaDoPeriodo.id ? 'Fechar' : 'Detalhe'}
-                    </button>
-                    {faturaDoPeriodo.status === 'DRAFT' && (
-                      <>
-                        <button
-                          onClick={() => void handleGerar()}
-                          className="p-1.5 text-ink-400 hover:text-navy-700 rounded-sm"
-                          title="Regenerar apuração"
-                        >
-                          <RefreshCw className="size-3.5" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            if (previewFatura?.id === faturaDoPeriodo.id) setPreviewFatura(null);
-                            void onRemove(faturaDoPeriodo.id);
-                          }}
-                          className="p-1.5 text-ink-400 hover:text-danger hover:bg-danger-bg rounded-sm"
-                          title="Descartar rascunho"
-                        >
-                          <Trash2 className="size-3.5" />
-                        </button>
-                        <Button
-                          size="sm"
-                          onClick={() => void onSetStatus(faturaDoPeriodo.id, 'ISSUED')}
-                        >
-                          Emitir
-                        </Button>
-                      </>
-                    )}
-                    {faturaDoPeriodo.status === 'ISSUED' && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => void onSetStatus(faturaDoPeriodo.id, 'PAID')}
-                      >
-                        Marcar paga
-                      </Button>
-                    )}
-                  </>
+                  <span className="text-xs text-ink-500">
+                    {faturasVisiveis.length} fatura{faturasVisiveis.length !== 1 ? 's' : ''} gerada{faturasVisiveis.length !== 1 ? 's' : ''}
+                  </span>
                 )}
               </div>
             </div>
+
+            {/* Cards das faturas do período */}
+            {temFaturasNoPeriodo && (
+              <div className="mt-4 pt-4 border-t border-ink-100 space-y-3">
+                {faturasVisiveis.map((f) => (
+                  <FaturaCard key={f.id} fatura={f} />
+                ))}
+              </div>
+            )}
+
+            {/* Aviso: modo por-estab mas sem eventos vinculados */}
+            {modoGeracao === 'por-estabelecimento' && !temFaturasNoPeriodo && (
+              <div className="mt-4 pt-4 border-t border-ink-100">
+                <div className="flex items-start gap-2 p-3 bg-info-bg border border-info/30 rounded-sm text-xs text-ink-700">
+                  <Info className="size-3.5 text-info mt-0.5 flex-shrink-0" />
+                  Gere faturas por estabelecimento. Cada CNPJ com eventos no período receberá uma fatura separada.
+                  {estabelecimentos.length > 0 && (
+                    <span className="ml-1">{estabelecimentos.length} estabelecimento{estabelecimentos.length !== 1 ? 's' : ''} cadastrado{estabelecimentos.length !== 1 ? 's' : ''}.</span>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Itens do contrato expandidos */}
             <div className="mt-4 pt-4 border-t border-ink-100 space-y-1.5">
@@ -1416,7 +1507,7 @@ function FaturasTab({
           </CardBody>
         </Card>
 
-        {/* Preview */}
+        {/* Preview da fatura selecionada */}
         {previewFatura && (
           <div className="sticky top-4 max-h-[calc(100vh-200px)] overflow-y-auto">
             <Card>
@@ -1425,6 +1516,10 @@ function FaturasTab({
                   <CardTitle>Pré-visualização</CardTitle>
                   <div className="text-xs text-ink-500 mt-0.5">
                     {contrato.numero} · {fmtPeriod(previewFatura.referencePeriod)}
+                    {previewFatura.estabelecimentoId && (() => {
+                      const est = estabelecimentos.find((e) => e.id === previewFatura.estabelecimentoId);
+                      return est ? <span className="ml-1">· {est.nome}</span> : null;
+                    })()}
                   </div>
                 </div>
                 <button onClick={() => setPreviewFatura(null)} className="p-1 text-ink-400 hover:text-ink-700 rounded-sm">
@@ -1445,6 +1540,17 @@ function FaturasTab({
                     </div>
                   ))}
                 </div>
+
+                {previewFatura.estabelecimentoId && (() => {
+                  const est = estabelecimentos.find((e) => e.id === previewFatura.estabelecimentoId);
+                  return est ? (
+                    <div className="p-3 bg-bg-subtle rounded-sm border border-ink-200 text-xs">
+                      <div className="text-ink-400 font-semibold uppercase tracking-wide text-[10px] mb-1">Estabelecimento</div>
+                      <div className="font-semibold text-navy-700">{est.nome}</div>
+                      <div className="text-ink-500">{est.cnpj}</div>
+                    </div>
+                  ) : null;
+                })()}
 
                 <div>
                   <div className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-2">Linhas</div>
@@ -1509,6 +1615,7 @@ function FaturasTab({
               <thead className="bg-bg-subtle text-xs text-ink-500">
                 <tr>
                   <th className="text-left px-5 py-3 font-semibold">Período</th>
+                  <th className="text-left px-5 py-3 font-semibold">Estabelecimento</th>
                   <th className="text-left px-5 py-3 font-semibold">Status</th>
                   <th className="text-left px-5 py-3 font-semibold">Emissão</th>
                   <th className="text-left px-5 py-3 font-semibold">Vencimento</th>
@@ -1519,26 +1626,39 @@ function FaturasTab({
               <tbody>
                 {faturas
                   .slice()
-                  .sort((a, b) => b.referencePeriod.localeCompare(a.referencePeriod))
-                  .map((f) => (
-                    <tr key={f.id} className="border-t border-ink-100 hover:bg-bg-subtle">
-                      <td className="px-5 py-3 font-semibold text-navy-700">{fmtPeriod(f.referencePeriod)}</td>
-                      <td className="px-5 py-3">
-                        <Badge tone={STATUS_TONE_FAT[f.status]}>{STATUS_LABEL_FAT[f.status]}</Badge>
-                      </td>
-                      <td className="px-5 py-3 text-ink-700">{fmtDate(f.issueDate)}</td>
-                      <td className="px-5 py-3 text-ink-700">{fmtDate(f.dueDate)}</td>
-                      <td className="px-5 py-3 text-right font-black text-navy-700 tabular-nums">{fmtBRL(f.total)}</td>
-                      <td className="px-5 py-3 text-right">
-                        <button
-                          onClick={() => { setPeriodo(f.referencePeriod); setPreviewFatura(f); }}
-                          className="px-2 py-1 text-xs font-semibold border border-ink-200 rounded-sm text-ink-600 hover:border-ink-300"
-                        >
-                          Ver
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  .sort((a, b) => b.referencePeriod.localeCompare(a.referencePeriod) || (a.estabelecimentoId ?? '').localeCompare(b.estabelecimentoId ?? ''))
+                  .map((f) => {
+                    const est = estabelecimentos.find((e) => e.id === f.estabelecimentoId);
+                    return (
+                      <tr key={f.id} className="border-t border-ink-100 hover:bg-bg-subtle">
+                        <td className="px-5 py-3 font-semibold text-navy-700">{fmtPeriod(f.referencePeriod)}</td>
+                        <td className="px-5 py-3 text-ink-700">
+                          {est ? (
+                            <div>
+                              <div className="font-semibold">{est.nome}</div>
+                              <div className="text-ink-400 text-xs">{est.cnpj}</div>
+                            </div>
+                          ) : (
+                            <span className="text-ink-400 text-xs">Todos</span>
+                          )}
+                        </td>
+                        <td className="px-5 py-3">
+                          <Badge tone={STATUS_TONE_FAT[f.status]}>{STATUS_LABEL_FAT[f.status]}</Badge>
+                        </td>
+                        <td className="px-5 py-3 text-ink-700">{fmtDate(f.issueDate)}</td>
+                        <td className="px-5 py-3 text-ink-700">{fmtDate(f.dueDate)}</td>
+                        <td className="px-5 py-3 text-right font-black text-navy-700 tabular-nums">{fmtBRL(f.total)}</td>
+                        <td className="px-5 py-3 text-right">
+                          <button
+                            onClick={() => { setPeriodo(f.referencePeriod); setPreviewFatura(f); }}
+                            className="px-2 py-1 text-xs font-semibold border border-ink-200 rounded-sm text-ink-600 hover:border-ink-300"
+                          >
+                            Ver
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
               </tbody>
             </table>
           </CardBody>

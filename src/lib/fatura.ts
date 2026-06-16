@@ -165,8 +165,13 @@ export function gerarFatura(
   referencePeriod: string,
   todosEventos: EventoDeUso[],
   issueDate: string,
+  estabelecimentoId?: string,
 ): Fatura {
-  const eventosDoCt = todosEventos.filter((e) => e.contratoId === contrato.id);
+  const eventosDoCt = todosEventos.filter(
+    (e) =>
+      e.contratoId === contrato.id &&
+      (estabelecimentoId == null || e.estabelecimentoId === estabelecimentoId),
+  );
   const linhas: FaturaLinha[] = [];
   const totalDiasMes = diasNoMes(referencePeriod);
 
@@ -303,10 +308,11 @@ export function gerarFatura(
   const total = linhas.reduce((s, l) => s + l.total, 0);
 
   return {
-    id: `fat_${contrato.id}_${referencePeriod}`,
+    id: `fat_${contrato.id}_${referencePeriod}${estabelecimentoId ? `_${estabelecimentoId}` : ''}`,
     contratoId: contrato.id,
     clienteId: contrato.clienteId,
     filialId: contrato.filialId,
+    estabelecimentoId,
     referencePeriod,
     issueDate,
     dueDate: calcDueDate(contrato, referencePeriod),

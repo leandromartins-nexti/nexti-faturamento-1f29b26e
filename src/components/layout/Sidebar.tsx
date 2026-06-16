@@ -1,4 +1,4 @@
-import { LayoutDashboard, FileText, Users, Package, Activity, Receipt, Settings, Landmark, HelpCircle, DatabaseZap, CheckCircle2 } from 'lucide-react';
+import { LayoutDashboard, FileText, Users, Package, Activity, Receipt, Landmark, HelpCircle, DatabaseZap, CheckCircle2 } from 'lucide-react';
 import type { Route } from '../../lib/router';
 
 interface SidebarProps {
@@ -55,21 +55,6 @@ export function Sidebar({ route, onNavigate }: SidebarProps) {
         })}
       </nav>
 
-      <div className="p-3 border-t border-navy-600">
-        <button className="w-full flex items-center gap-3 px-3 py-2 rounded-sm text-sm text-navy-100 hover:bg-navy-600 hover:text-white">
-          <Settings className="size-4" />
-          Configurações
-        </button>
-        <div className="mt-3 px-3 py-2 flex items-center gap-2">
-          <div className="w-8 h-8 rounded-pill bg-orange-300 flex items-center justify-center text-navy-800 text-xs font-bold">
-            CF
-          </div>
-          <div className="text-xs">
-            <div className="text-white font-semibold">Carla Freitas</div>
-            <div className="text-navy-200">Faturamento</div>
-          </div>
-        </div>
-      </div>
     </aside>
   );
 }

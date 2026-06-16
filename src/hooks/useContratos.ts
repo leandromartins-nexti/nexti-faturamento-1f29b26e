@@ -433,8 +433,8 @@ export function useContratos() {
     effectiveDate: string;
     percent: number;
     indice: ReajusteHistorico['indice'];
-    /** Se não informado, aplica a todos os itens */
-    itemId?: string;
+    /** Se vazio ou undefined, aplica a todos os itens */
+    itemIds?: string[];
   }
 
   const addReajuste = useCallback(async (
@@ -444,9 +444,9 @@ export function useContratos() {
     const contrato = contratos.find((c) => c.id === contratoId);
     if (!contrato) return false;
 
-    // Itens alvo: item específico ou todos
-    const itensAlvo = values.itemId
-      ? contrato.itens.filter((i) => i.id === values.itemId)
+    // Itens alvo: seleção específica ou todos
+    const itensAlvo = values.itemIds && values.itemIds.length > 0
+      ? contrato.itens.filter((i) => values.itemIds!.includes(i.id))
       : contrato.itens;
 
     const rows = itensAlvo.map((it) => ({

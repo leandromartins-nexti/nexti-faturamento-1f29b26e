@@ -648,7 +648,7 @@ interface ReajusteFormValues {
   effectiveDate: string;
   percent: number;
   indice: ReajusteHistorico['indice'];
-  itemId?: string;
+  itemIds?: string[];
 }
 
 function ReajustesTab({
@@ -665,8 +665,9 @@ function ReajustesTab({
     effectiveDate: HOJE_ISO,
     percent: contrato.readjustmentPercent ?? 5,
     indice: contrato.readjustmentIndex === 'NONE' ? 'IPCA' : contrato.readjustmentIndex,
-    itemId: undefined,
+    itemIds: [],
   });
+  const [aplicarEmOpen, setAplicarEmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
@@ -742,20 +743,67 @@ function ReajustesTab({
                     ))}
                   </select>
                 </div>
-                <div>
+                <div className="relative">
                   <label className="text-xs font-semibold text-ink-500 uppercase tracking-wide">
                     Aplicar em
                   </label>
-                  <select
-                    value={form.itemId ?? ''}
-                    onChange={(e) => setForm((v) => ({ ...v, itemId: e.target.value || undefined }))}
-                    className="mt-1 w-full rounded-sm border border-ink-200 px-3 py-2 text-sm"
+                  {/* Trigger */}
+                  <button
+                    type="button"
+                    onClick={() => setAplicarEmOpen((v) => !v)}
+                    className="mt-1 w-full flex items-center justify-between rounded-sm border border-ink-200 px-3 py-2 text-sm bg-white text-left"
                   >
-                    <option value="">Todos os itens</option>
-                    {contrato.itens.map((it) => (
-                      <option key={it.id} value={it.id}>{it.produto.name}</option>
-                    ))}
-                  </select>
+                    <span className="truncate text-ink-700">
+                      {!form.itemIds || form.itemIds.length === 0
+                        ? 'Todos os itens'
+                        : form.itemIds.length === contrato.itens.length
+                        ? 'Todos os itens'
+                        : form.itemIds.length === 1
+                        ? contrato.itens.find((i) => i.id === form.itemIds![0])?.produto.name ?? '1 item'
+                        : `${form.itemIds.length} itens selecionados`}
+                    </span>
+                    <svg className={`size-4 text-ink-400 shrink-0 transition-transform ${aplicarEmOpen ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd"/></svg>
+                  </button>
+                  {/* Dropdown */}
+                  {aplicarEmOpen && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setAplicarEmOpen(false)} />
+                      <div className="absolute z-20 mt-1 w-full rounded-sm border border-ink-200 bg-white shadow-md">
+                      {/* Todos os itens */}
+                      <label className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-bg-subtle border-b border-ink-100">
+                        <input
+                          type="checkbox"
+                          className="accent-orange-500"
+                          checked={!form.itemIds || form.itemIds.length === 0 || form.itemIds.length === contrato.itens.length}
+                          onChange={() => setForm((v) => ({ ...v, itemIds: [] }))}
+                        />
+                        <span className="font-medium text-ink-700">Todos os itens</span>
+                      </label>
+                      {contrato.itens.map((it) => {
+                        const checked = (form.itemIds ?? []).includes(it.id);
+                        return (
+                          <label key={it.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-bg-subtle">
+                            <input
+                              type="checkbox"
+                              className="accent-orange-500"
+                              checked={checked}
+                              onChange={() => {
+                                setForm((v) => {
+                                  const current = v.itemIds ?? [];
+                                  const next = checked
+                                    ? current.filter((id) => id !== it.id)
+                                    : [...current, it.id];
+                                  return { ...v, itemIds: next };
+                                });
+                              }}
+                            />
+                            <span className="text-ink-700">{it.produto.name}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -765,7 +813,10 @@ function ReajustesTab({
                     Simulação
                   </div>
                   <div className="space-y-1.5">
-                    {(form.itemId ? contrato.itens.filter((i) => i.id === form.itemId) : contrato.itens).map((it) => (
+                    {(form.itemIds && form.itemIds.length > 0 && form.itemIds.length < contrato.itens.length
+                    ? contrato.itens.filter((i) => form.itemIds!.includes(i.id))
+                    : contrato.itens
+                  ).map((it) => (
                       <div key={it.id} className="flex items-center justify-between text-xs text-ink-700">
                         <span>{it.produto.name}</span>
                         <span className="tabular-nums">

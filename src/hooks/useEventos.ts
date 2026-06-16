@@ -8,6 +8,7 @@ interface DBEvento {
   contrato_id: string;
   estabelecimento_id: string;
   metrica_id: string;
+  item_id?: string;
   quantity: number;
   occurred_at: string;
   reference_period: string;
@@ -21,6 +22,7 @@ function mapEvento(r: DBEvento): EventoDeUso {
     contratoId: r.contrato_id,
     estabelecimentoId: r.estabelecimento_id,
     metricaId: r.metrica_id,
+    itemId: r.item_id ?? undefined,
     quantity: Number(r.quantity),
     occurredAt: r.occurred_at,
     referencePeriod: r.reference_period,
@@ -62,6 +64,7 @@ export function useEventos() {
       contrato_id: values.contratoId,
       estabelecimento_id: values.estabelecimentoId,
       metrica_id: values.metricaId,
+      item_id: values.itemId ?? null,
       quantity: values.quantity,
       occurred_at: values.occurredAt,
       reference_period: values.referencePeriod,
@@ -89,6 +92,7 @@ export function useEventos() {
       contrato_id: values.contratoId,
       estabelecimento_id: values.estabelecimentoId,
       metrica_id: values.metricaId,
+      item_id: values.itemId ?? null,
       quantity: values.quantity,
       occurred_at: values.occurredAt,
       reference_period: values.referencePeriod,

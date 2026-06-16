@@ -165,6 +165,7 @@ export interface EventoDeUso {
   contratoId: string;
   estabelecimentoId: string;
   metricaId: string;
+  itemId?: string;
   quantity: number;
   occurredAt: string;
   referencePeriod: string;

@@ -24,6 +24,7 @@ export interface EventoFormValues {
   contratoId: string;
   estabelecimentoId: string;
   metricaId: string;
+  itemId?: string;
   quantity: number;
   occurredAt: string;
   referencePeriod: string;
@@ -47,6 +48,7 @@ export function EventoFormModal({ open, onClose, contrato, evento, onSave }: Eve
     contratoId: contrato?.id ?? '',
     estabelecimentoId: '',
     metricaId: '',
+    itemId: undefined,
     quantity: 1,
     occurredAt: HOJE,
     referencePeriod: periodOf(HOJE),
@@ -61,6 +63,7 @@ export function EventoFormModal({ open, onClose, contrato, evento, onSave }: Eve
         contratoId: evento.contratoId,
         estabelecimentoId: evento.estabelecimentoId,
         metricaId: evento.metricaId,
+        itemId: evento.itemId,
         quantity: evento.quantity,
         occurredAt: evento.occurredAt,
         referencePeriod: evento.referencePeriod,
@@ -72,6 +75,7 @@ export function EventoFormModal({ open, onClose, contrato, evento, onSave }: Eve
         contratoId: ctId,
         estabelecimentoId: '',
         metricaId: '',
+        itemId: undefined,
         quantity: 1,
         occurredAt: HOJE,
         referencePeriod: periodOf(HOJE),
@@ -83,24 +87,21 @@ export function EventoFormModal({ open, onClose, contrato, evento, onSave }: Eve
   const ct = contrato ?? contratos.find((c) => c.id === values.contratoId);
   const cliente = ct ? clientes.find((cl) => cl.id === ct.clienteId) : undefined;
 
-  // Métricas disponíveis = métricas dos itens medidos do contrato
-  const metricasDoContrato = useMemo(() => {
+  // Itens medidos disponíveis = itens RECORRENTE_MEDIDO com métrica
+  const itensMedidos = useMemo(() => {
     if (!ct) return [];
-    const ids = new Set(
-      ct.itens
-        .filter((i) => i.type === 'RECORRENTE_MEDIDO' && i.metrica)
-        .map((i) => i.metrica!.id),
-    );
-    return metricas.filter((m) => ids.has(m.id));
+    return ct.itens.filter((i) => i.type === 'RECORRENTE_MEDIDO' && i.metrica);
   }, [ct]);
 
-  // Auto-seleciona primeira métrica/estabelecimento ao trocar contrato
+  // Auto-seleciona primeiro item medido/estabelecimento ao trocar contrato
   useEffect(() => {
     if (!ct || !cliente) return;
+    const primeiro = itensMedidos[0];
     setValues((v) => ({
       ...v,
       estabelecimentoId: cliente.estabelecimentos[0]?.id ?? '',
-      metricaId: metricasDoContrato[0]?.id ?? '',
+      itemId: primeiro?.id,
+      metricaId: primeiro?.metrica?.id ?? '',
     }));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [values.contratoId]);
@@ -196,30 +197,35 @@ export function EventoFormModal({ open, onClose, contrato, evento, onSave }: Eve
           </Select>
         </Field>
 
-        <Field label="Métrica" required error={errors.metricaId}>
-          {metricasDoContrato.length === 0 ? (
+        <Field label="Produto · Métrica" required error={errors.metricaId}>
+          {itensMedidos.length === 0 ? (
             <div className="text-sm text-ink-500 p-3 bg-bg-subtle border border-ink-200 rounded-sm">
               Este contrato não possui itens medidos.
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-2 mt-1">
-              {metricasDoContrato.map((m) => (
+              {itensMedidos.map((item) => (
                 <button
                   type="button"
-                  key={m.id}
-                  onClick={() => update('metricaId', m.id)}
+                  key={item.id}
+                  onClick={() => {
+                    update('itemId', item.id);
+                    update('metricaId', item.metrica!.id);
+                  }}
                   className={`text-left p-3 rounded-sm border flex items-center justify-between transition-colors ${
-                    values.metricaId === m.id
+                    values.itemId === item.id
                       ? 'border-orange-500 bg-orange-50'
                       : 'border-ink-200 bg-white hover:border-ink-300'
                   }`}
                 >
                   <div>
-                    <div className="text-sm font-bold text-navy-700">{m.name}</div>
-                    <div className="text-xs text-ink-500">unidade: {m.unit}</div>
+                    <div className="text-sm font-bold text-navy-700">{item.produto.name}</div>
+                    <div className="text-xs text-ink-500">
+                      {item.metrica!.unit} · {item.metrica!.name}
+                    </div>
                   </div>
-                  <Badge tone={m.apuracaoType === 'BALANCE_AVG' ? 'brand' : 'info'}>
-                    {m.apuracaoType}
+                  <Badge tone={item.metrica!.apuracaoType === 'BALANCE_AVG' ? 'brand' : 'info'}>
+                    {item.metrica!.apuracaoType}
                   </Badge>
                 </button>
               ))}

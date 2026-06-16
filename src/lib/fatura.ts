@@ -65,9 +65,13 @@ function apurarDistinctCount(
   eventos: EventoDeUso[],
   metricaId: string,
   referencePeriod: string,
+  itemId?: string,
 ): { quantidade: number; eventoIds: string[] } {
   const filtrados = eventos.filter(
-    (e) => e.metricaId === metricaId && e.referencePeriod === referencePeriod,
+    (e) =>
+      e.metricaId === metricaId &&
+      e.referencePeriod === referencePeriod &&
+      (itemId == null || e.itemId == null || e.itemId === itemId),
   );
   return {
     quantidade: filtrados.reduce((s, e) => s + e.quantity, 0),
@@ -80,6 +84,7 @@ function apurarBalanceAvg(
   metricaId: string,
   referencePeriod: string,
   contratoId: string,
+  itemId?: string,
 ): { quantidade: number; eventoIds: string[] } {
   const total = diasNoMes(referencePeriod);
 
@@ -88,7 +93,8 @@ function apurarBalanceAvg(
     (e) =>
       e.contratoId === contratoId &&
       e.metricaId === metricaId &&
-      e.referencePeriod < referencePeriod,
+      e.referencePeriod < referencePeriod &&
+      (itemId == null || e.itemId == null || e.itemId === itemId),
   );
   const saldoInicial = anteriores.reduce((s, e) => s + e.quantity, 0);
 
@@ -98,7 +104,8 @@ function apurarBalanceAvg(
       (e) =>
         e.contratoId === contratoId &&
         e.metricaId === metricaId &&
-        e.referencePeriod === referencePeriod,
+        e.referencePeriod === referencePeriod &&
+        (itemId == null || e.itemId == null || e.itemId === itemId),
     )
     .sort((a, b) => a.occurredAt.localeCompare(b.occurredAt));
 
@@ -137,9 +144,13 @@ function apurarSumDays(
   eventos: EventoDeUso[],
   metricaId: string,
   referencePeriod: string,
+  itemId?: string,
 ): { quantidade: number; eventoIds: string[] } {
   const filtrados = eventos.filter(
-    (e) => e.metricaId === metricaId && e.referencePeriod === referencePeriod,
+    (e) =>
+      e.metricaId === metricaId &&
+      e.referencePeriod === referencePeriod &&
+      (itemId == null || e.itemId == null || e.itemId === itemId),
   );
   return {
     quantidade: filtrados.reduce((s, e) => s + e.quantity, 0),
@@ -203,7 +214,7 @@ export function gerarFatura(
       // caso contrário usa minimumQuantity como qtd contratada
       let qtdEquip = item.minimumQuantity ?? 1;
       if (item.metrica) {
-        const r = apurarBalanceAvg(todosEventos, item.metrica.id, referencePeriod, contrato.id);
+        const r = apurarBalanceAvg(todosEventos, item.metrica.id, referencePeriod, contrato.id, item.id);
         qtdEquip = Math.max(r.quantidade, qtdEquip);
         eventoIds = r.eventoIds;
       }
@@ -224,7 +235,7 @@ export function gerarFatura(
 
       let qtdDias = 0;
       if (item.metrica) {
-        const r = apurarSumDays(eventosDoCt, item.metrica.id, referencePeriod);
+        const r = apurarSumDays(eventosDoCt, item.metrica.id, referencePeriod, item.id);
         qtdDias = r.quantidade;
         eventoIds = r.eventoIds;
       }
@@ -240,16 +251,16 @@ export function gerarFatura(
     } else if (item.type === 'RECORRENTE_MEDIDO' && item.metrica) {
       // ── SaaS medido / HaaS padrão / MDM / Benefícios / Talent Checagem ──
       if (item.metrica.apuracaoType === 'DISTINCT_COUNT') {
-        const r = apurarDistinctCount(eventosDoCt, item.metrica.id, referencePeriod);
+        const r = apurarDistinctCount(eventosDoCt, item.metrica.id, referencePeriod, item.id);
         quantidade = r.quantidade;
         eventoIds = r.eventoIds;
       } else if (item.metrica.apuracaoType === 'BALANCE_AVG') {
-        const r = apurarBalanceAvg(todosEventos, item.metrica.id, referencePeriod, contrato.id);
+        const r = apurarBalanceAvg(todosEventos, item.metrica.id, referencePeriod, contrato.id, item.id);
         quantidade = r.quantidade;
         eventoIds = r.eventoIds;
       } else {
         // FIXED_VALUE ou SUM_DAYS via RECORRENTE_MEDIDO
-        const r = apurarSumDays(eventosDoCt, item.metrica.id, referencePeriod);
+        const r = apurarSumDays(eventosDoCt, item.metrica.id, referencePeriod, item.id);
         quantidade = r.quantidade;
         eventoIds = r.eventoIds;
       }

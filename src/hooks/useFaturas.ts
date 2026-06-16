@@ -75,14 +75,17 @@ async function persistirFatura(
 export function useFaturas() {
   const user = useUser();
   const [faturas, setFaturas] = useState<Fatura[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     if (!user) return;
+    setLoading(true);
     const { data } = await client
       .from('faturas')
       .select('*')
       .order('created_at', { ascending: false });
     if (data) setFaturas(data.map(rowToFatura));
+    setLoading(false);
   }, [user]);
 
   useEffect(() => { void load(); }, [load]);
@@ -184,5 +187,5 @@ export function useFaturas() {
     setFaturas((prev) => prev.filter((f) => f.id !== faturaId));
   }, []);
 
-  return { faturas, gerarFatura, gerarFaturasPorEstabelecimento, setFaturaStatus, removeFatura, reload: load };
+  return { faturas, loading, gerarFatura, gerarFaturasPorEstabelecimento, setFaturaStatus, removeFatura, reload: load };
 }

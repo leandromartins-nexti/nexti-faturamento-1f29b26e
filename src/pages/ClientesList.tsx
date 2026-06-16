@@ -155,7 +155,17 @@ export function ClientesList({ onNavigate }: ClientesListProps) {
             </Card>
           );
         })}
-        {clientes.length === 0 && (
+        {loading && clientes.length === 0 && (
+          <div className="col-span-2">
+            <Card>
+              <CardBody className="py-12 text-center">
+                <Loader2 className="size-8 text-ink-300 mx-auto mb-3 animate-spin" />
+                <div className="text-sm text-ink-500">Carregando clientes…</div>
+              </CardBody>
+            </Card>
+          </div>
+        )}
+        {!loading && clientes.length === 0 && (
           <div className="col-span-2">
             <Card>
               <CardBody className="py-12 text-center">

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Button } from '@/ds';
-import { Edit3, Package, Plus, Ruler, Trash2 } from 'lucide-react';
+import { Edit3, Loader2, Package, Plus, Ruler, Trash2 } from 'lucide-react';
 import { Card, CardBody, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { ProdutoFormModal } from '../components/modals/ProdutoFormModal';
@@ -28,8 +28,8 @@ function fmtPrice(v?: number) {
 }
 
 export function Catalogo() {
-  const { produtos, addProduto, updateProduto, removeProduto } = useProdutos();
-  const { metricas, addMetrica, updateMetrica, removeMetrica } = useMetricas();
+  const { produtos, loading: loadingProdutos, addProduto, updateProduto, removeProduto } = useProdutos();
+  const { metricas, loading: loadingMetricas, addMetrica, updateMetrica, removeMetrica } = useMetricas();
   const { contratos } = useContratos();
 
   const [produtoModalOpen, setProdutoModalOpen] = useState(false);
@@ -159,7 +159,15 @@ export function Catalogo() {
                     </tr>
                   );
                 })}
-                {produtos.length === 0 && (
+                {loadingProdutos && produtos.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-ink-500">
+                      <Loader2 className="size-6 text-ink-300 mx-auto mb-2 animate-spin" />
+                      Carregando produtos…
+                    </td>
+                  </tr>
+                )}
+                {!loadingProdutos && produtos.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-5 py-10 text-center text-sm text-ink-500">
                       <Package className="size-7 text-ink-300 mx-auto mb-2" />
@@ -236,7 +244,15 @@ export function Catalogo() {
                     </tr>
                   );
                 })}
-                {metricas.length === 0 && (
+                {loadingMetricas && metricas.length === 0 && (
+                  <tr>
+                    <td colSpan={4} className="px-5 py-10 text-center text-sm text-ink-500">
+                      <Loader2 className="size-6 text-ink-300 mx-auto mb-2 animate-spin" />
+                      Carregando métricas…
+                    </td>
+                  </tr>
+                )}
+                {!loadingMetricas && metricas.length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-5 py-10 text-center text-sm text-ink-500">
                       <Ruler className="size-7 text-ink-300 mx-auto mb-2" />

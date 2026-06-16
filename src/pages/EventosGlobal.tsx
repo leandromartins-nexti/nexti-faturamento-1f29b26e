@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Button } from '@/ds';
-import { Plus, Activity, Lock, Trash2 } from 'lucide-react';
+import { Plus, Activity, Lock, Loader2, Trash2 } from 'lucide-react';
 import { Card, CardBody } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { EventoFormModal } from '../components/modals/EventoFormModal';
@@ -19,7 +19,7 @@ interface EventosGlobalProps {
 export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
   const { clientes } = useClientes();
   const { contratos } = useContratos();
-  const { eventos, addEvento, removeEvento } = useEventos();
+  const { eventos, loading, addEvento, removeEvento } = useEventos();
   const { metricas } = useMetricas();
   const [source, setSource] = useState<'ALL' | EventoSource>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
@@ -142,7 +142,15 @@ export function EventosGlobal({ onNavigate }: EventosGlobalProps) {
                   </tr>
                 );
               })}
-              {rows.length === 0 && (
+              {loading && eventos.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-5 py-12 text-center">
+                    <Loader2 className="size-7 text-ink-300 mx-auto mb-2 animate-spin" />
+                    <div className="text-sm text-ink-500">Carregando eventos…</div>
+                  </td>
+                </tr>
+              )}
+              {!loading && rows.length === 0 && (
                 <tr>
                   <td colSpan={8} className="px-5 py-12 text-center">
                     <Activity className="size-8 text-ink-300 mx-auto mb-2" />

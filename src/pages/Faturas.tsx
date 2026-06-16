@@ -9,6 +9,7 @@ import {
   Download,
   FileText,
   Info,
+  Loader2,
   RefreshCw,
   Trash2,
   X,
@@ -57,10 +58,10 @@ const TYPE_LABEL: Record<string, string> = {
 };
 
 export function Faturas() {
-  const { clientes } = useClientes();
-  const { contratos } = useContratos();
+  const { clientes, loading: loadingClientes } = useClientes();
+  const { contratos, loading: loadingContratos } = useContratos();
   const { eventos } = useEventos();
-  const { faturas, gerarFatura, gerarFaturasPorEstabelecimento, setFaturaStatus, removeFatura } = useFaturas();
+  const { faturas, loading: loadingFaturas, gerarFatura, gerarFaturasPorEstabelecimento, setFaturaStatus, removeFatura } = useFaturas();
   const [periodo, setPeriodo] = useState(PERIODO_ATUAL);
   const [previewId, setPreviewId] = useState<string | null>(null);
   const [expandidas, setExpandidas] = useState<Set<string>>(new Set());
@@ -138,7 +139,15 @@ export function Faturas() {
 
         {/* Lista */}
         <div className="space-y-3">
-          {contratosAtivos.length === 0 && (
+          {(loadingContratos || loadingClientes || loadingFaturas) && contratosAtivos.length === 0 && (
+            <Card>
+              <CardBody className="py-12 text-center text-sm text-ink-500">
+                <Loader2 className="size-6 text-ink-300 mx-auto mb-2 animate-spin" />
+                Carregando faturas…
+              </CardBody>
+            </Card>
+          )}
+          {!loadingContratos && !loadingClientes && contratosAtivos.length === 0 && (
             <Card>
               <CardBody className="py-12 text-center text-sm text-ink-500">
                 Nenhum contrato ativo para faturar.

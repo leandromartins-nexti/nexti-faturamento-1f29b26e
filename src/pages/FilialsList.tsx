@@ -96,7 +96,14 @@ export function FilialsList() {
         </div>
       </div>
 
-      {filiais.length === 0 ? (
+      {loading && filiais.length === 0 ? (
+        <Card>
+          <CardBody className="py-16 text-center">
+            <Loader2 className="size-8 text-ink-300 mx-auto mb-3 animate-spin" />
+            <div className="text-sm text-ink-500">Carregando filiais…</div>
+          </CardBody>
+        </Card>
+      ) : filiais.length === 0 ? (
         <Card>
           <CardBody className="py-16 text-center">
             <Building2 className="size-10 text-ink-300 mx-auto mb-3" />

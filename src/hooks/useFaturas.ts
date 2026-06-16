@@ -23,6 +23,12 @@ function rowToFatura(row: Record<string, unknown>): Fatura {
   };
 }
 
+// UUID v4 regex — IDs legacy/mock (ex: "fil1", "c1") não são UUIDs válidos
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function safeUuid(v: string | undefined | null): string | null {
+  return v && UUID_RE.test(v) ? v : null;
+}
+
 async function persistirFatura(
   fatura: Fatura,
   userId: string,
@@ -30,28 +36,32 @@ async function persistirFatura(
   referencePeriod: string,
   estabelecimentoId?: string,
 ) {
+  const safeContratoId = safeUuid(contratoId);
   // Remove rascunho existente para o mesmo contrato+período+estabelecimento
-  const del = client
-    .from('faturas')
-    .delete()
-    .eq('contrato_id', contratoId)
-    .eq('reference_period', referencePeriod)
-    .eq('status', 'DRAFT');
+  // (só faz sentido quando o contratoId é um UUID real)
+  if (safeContratoId) {
+    const del = client
+      .from('faturas')
+      .delete()
+      .eq('contrato_id', safeContratoId)
+      .eq('reference_period', referencePeriod)
+      .eq('status', 'DRAFT');
 
-  if (estabelecimentoId) {
-    await del.eq('estabelecimento_id', estabelecimentoId);
-  } else {
-    await del.is('estabelecimento_id', null);
+    if (estabelecimentoId) {
+      await del.eq('estabelecimento_id', estabelecimentoId);
+    } else {
+      await del.is('estabelecimento_id', null);
+    }
   }
 
   const { data, error } = await client
     .from('faturas')
     .insert({
-      id: fatura.id,
-      contrato_id: fatura.contratoId,
-      cliente_id: fatura.clienteId,
-      filial_id: fatura.filialId,
-      estabelecimento_id: fatura.estabelecimentoId ?? null,
+      id: safeUuid(fatura.id) ?? undefined,
+      contrato_id: safeUuid(fatura.contratoId),
+      cliente_id: safeUuid(fatura.clienteId),
+      filial_id: safeUuid(fatura.filialId),
+      estabelecimento_id: safeUuid(fatura.estabelecimentoId ?? null),
       reference_period: fatura.referencePeriod,
       issue_date: fatura.issueDate,
       due_date: fatura.dueDate,

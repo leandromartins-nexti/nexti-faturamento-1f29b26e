@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { client, useUser } from '../nexti-sdk';
+import { client, useUser, useSession } from '../nexti-sdk';
 import type {
   Contrato,
   ItemDeContrato,
@@ -187,6 +187,7 @@ function mapContrato(
 
 export function useContratos() {
   const user = useUser();
+  const session = useSession();
   const { produtos } = useProdutos();
   const { metricas } = useMetricas();
   const [contratos, setContratos] = useState<Contrato[]>([]);
@@ -243,6 +244,8 @@ export function useContratos() {
         readjustment_anchor: values.readjustmentAnchor,
         apresentacao_fatura: values.apresentacaoFatura,
         notes: values.notes || null,
+        user_id: session?.user.id,
+        org_id: session?.orgId,
       };
       const { data, error: err } = await client.from('contratos').insert(row).select().single();
       if (err || !data) { setError(String(err)); return null; }
@@ -328,6 +331,8 @@ export function useContratos() {
         haas_activation_date: null,
         atestai_valor_fixo: null,
         saas_billing_mode: null,
+        user_id: session?.user.id,
+        org_id: session?.orgId,
       };
 
       const { data, error: err } = await client
@@ -457,6 +462,8 @@ export function useContratos() {
       old_unit_price: it.unitPrice,
       new_unit_price: Number((it.unitPrice * (1 + values.percent / 100)).toFixed(4)),
       indice: values.indice,
+      user_id: session?.user.id,
+      org_id: session?.orgId,
     }));
 
     const { data: inserted, error: err } = await client
@@ -555,6 +562,8 @@ export function useContratos() {
       haas_activation_date: null,
       atestai_valor_fixo: null,
       saas_billing_mode: null,
+      user_id: session?.user.id,
+      org_id: session?.orgId,
     };
 
     const { data, error: err } = await client

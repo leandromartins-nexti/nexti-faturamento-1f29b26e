@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { client, useUser } from '../nexti-sdk';
+import { client, useUser, useSession } from '../nexti-sdk';
 import { gerarFatura as calcFatura } from '../lib/fatura';
 import type { Contrato, Estabelecimento, EventoDeUso, Fatura, FaturaStatus } from '../lib/types';
 
@@ -32,6 +32,7 @@ function safeUuid(v: string | undefined | null): string | null {
 async function persistirFatura(
   fatura: Fatura,
   userId: string,
+  orgId: string,
   contratoId: string,
   referencePeriod: string,
   estabelecimentoId?: string,
@@ -71,7 +72,7 @@ async function persistirFatura(
       linhas: fatura.linhas,
       total: fatura.total,
       user_id: userId,
-      org_id: 'nexti',
+      org_id: orgId,
     })
     .select()
     .single();
@@ -84,6 +85,7 @@ async function persistirFatura(
 
 export function useFaturas() {
   const user = useUser();
+  const session = useSession();
   const [faturas, setFaturas] = useState<Fatura[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -113,7 +115,8 @@ export function useFaturas() {
       const fatura = calcFatura(contrato, referencePeriod, eventos, issueDate, estabelecimentoId);
       const salva = await persistirFatura(
         fatura,
-        user?.id ?? 'demo',
+        session?.user.id ?? user?.id ?? 'demo',
+        session?.orgId ?? '',
         contratoId,
         referencePeriod,
         estabelecimentoId,

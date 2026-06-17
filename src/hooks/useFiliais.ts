@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { client, useUser } from '../nexti-sdk';
+import { client, useUser, useSession } from '../nexti-sdk';
 import type { Filial, RegimeTributario } from '../lib/types';
 import type { FilialFormValues } from '../components/modals/FilialFormModal';
 
@@ -47,6 +47,7 @@ function formValuesToRow(values: FilialFormValues) {
 
 export function useFiliais() {
   const user = useUser();
+  const session = useSession();
   const [filiais, setFiliais] = useState<Filial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +75,7 @@ export function useFiliais() {
   const addFilial = useCallback(async (values: FilialFormValues): Promise<Filial | null> => {
     const { data, error: err } = await client
       .from('filiais')
-      .insert(formValuesToRow(values))
+      .insert({ ...formValuesToRow(values), user_id: session?.user.id, org_id: session?.orgId })
       .select()
       .single();
     if (err || !data) {
@@ -133,7 +134,7 @@ export function useFiliais() {
   }, []);
 
   const importFiliais = useCallback(async (rows: FilialFormValues[]): Promise<number> => {
-    const payload = rows.map(formValuesToRow);
+    const payload = rows.map((v) => ({ ...formValuesToRow(v), user_id: session?.user.id, org_id: session?.orgId }));
     const { data, error: err } = await client.from('filiais').insert(payload).select();
     if (err) {
       setError(err.message);

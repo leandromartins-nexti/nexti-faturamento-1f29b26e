@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { client, useUser } from '../nexti-sdk';
+import { client, useUser, useSession } from '../nexti-sdk';
 import type { EventoDeUso } from '../lib/types';
 import type { EventoFormValues } from '../components/modals/EventoFormModal';
 
@@ -33,6 +33,7 @@ function mapEvento(r: DBEvento): EventoDeUso {
 
 export function useEventos() {
   const user = useUser();
+  const session = useSession();
   const [eventos, setEventos] = useState<EventoDeUso[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +71,8 @@ export function useEventos() {
       reference_period: values.referencePeriod,
       source: 'MANUAL',
       notes: values.notes || null,
+      user_id: session?.user.id,
+      org_id: session?.orgId,
     };
     const { data, error: err } = await client
       .from('eventos_de_uso')

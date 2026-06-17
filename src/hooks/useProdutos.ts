@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { client, useUser } from '../nexti-sdk';
+import { client, useUser, useSession } from '../nexti-sdk';
 import type { Produto, ProdutoType } from '../lib/types';
 import type { ProdutoFormValues } from '../components/modals/ProdutoFormModal';
 
@@ -30,6 +30,7 @@ function mapProduto(r: DBProduto): Produto {
 
 export function useProdutos() {
   const user = useUser();
+  const session = useSession();
   const [produtos, setProdutos] = useState<Produto[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +65,8 @@ export function useProdutos() {
       metrica_id: values.metricaId || null,
       codigo_servico: values.codigoServico || null,
       active: values.active,
+      user_id: session?.user.id,
+      org_id: session?.orgId,
     };
     const { data, error: err } = await client.from('produtos').insert(row).select().single();
     if (err || !data) { setError(String(err)); return null; }

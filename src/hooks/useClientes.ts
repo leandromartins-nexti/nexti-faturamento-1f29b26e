@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { client, useUser } from '../nexti-sdk';
+import { client, useUser, useSession } from '../nexti-sdk';
 import type { Cliente, ClienteStatus, Estabelecimento } from '../lib/types';
 import type { ClienteFormValues } from '../components/modals/ClienteFormModal';
 import type { EstabelecimentoFormValues } from '../components/modals/EstabelecimentoFormModal';
@@ -30,6 +30,7 @@ function rowToCliente(row: Record<string, unknown>, ests: Estabelecimento[]): Cl
 
 export function useClientes() {
   const user = useUser();
+  const session = useSession();
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +72,8 @@ export function useClientes() {
         email: values.email || null,
         phone: values.phone || null,
         notes: values.notes || null,
+        user_id: session?.user.id,
+        org_id: session?.orgId,
       })
       .select()
       .single();
@@ -112,7 +115,7 @@ export function useClientes() {
   const addEstabelecimento = useCallback(async (clienteId: string, values: EstabelecimentoFormValues): Promise<Estabelecimento | null> => {
     const { data, error: err } = await client
       .from('estabelecimentos')
-      .insert({ cliente_id: clienteId, nome: values.nome, cnpj: values.cnpj, cidade: values.cidade, uf: values.uf })
+      .insert({ cliente_id: clienteId, nome: values.nome, cnpj: values.cnpj, cidade: values.cidade, uf: values.uf, user_id: session?.user.id, org_id: session?.orgId })
       .select()
       .single();
     if (err || !data) { setError(err?.message ?? 'Erro ao criar estabelecimento'); return null; }

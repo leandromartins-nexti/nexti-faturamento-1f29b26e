@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { client, useUser } from '../nexti-sdk';
+import { client, useUser, useSession } from '../nexti-sdk';
 import type { ApuracaoType, Metrica } from '../lib/types';
 import type { MetricaFormValues } from '../components/modals/MetricaFormModal';
 
@@ -24,6 +24,7 @@ function mapMetrica(r: DBMetrica): Metrica {
 
 export function useMetricas() {
   const user = useUser();
+  const session = useSession();
   const [metricas, setMetricas] = useState<Metrica[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +56,8 @@ export function useMetricas() {
       unit: values.unit,
       apuracao_type: values.apuracaoType,
       description: values.description || null,
+      user_id: session?.user.id,
+      org_id: session?.orgId,
     };
     const { data, error: err } = await client.from('metricas').insert(row).select().single();
     if (err || !data) { setError(String(err)); return null; }
